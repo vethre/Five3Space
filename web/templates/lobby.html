@@ -371,7 +371,10 @@
             align-items: center;
             justify-content: center;
             z-index: 50;
+            opacity: 0;
+            transition: opacity 0.2s ease;
         }
+        .modal-backdrop.open { display: flex; opacity: 1; }
         .modal {
             background: #121212;
             border: 1px solid rgba(255,255,255,0.1);
@@ -379,7 +382,10 @@
             padding: 20px;
             width: min(420px, 90vw);
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            transform: scale(0.96);
+            transition: transform 0.2s ease;
         }
+        .modal-backdrop.open .modal { transform: scale(1); }
         .modal h3 { margin-bottom: 10px; font-weight: 900; }
         .modal label { display: block; margin: 8px 0 4px; font-size: 0.9rem; color: var(--text-muted); }
         .modal input {
@@ -693,10 +699,17 @@
         const loginModal = qs('login-modal');
         const friendModal = qs('friend-modal');
         const settingsModal = qs('settings-modal');
-        const show = (el) => { el.style.display = 'flex'; };
-        const hide = (el) => { el.style.display = 'none'; };
+        const show = (el) => { el.classList.add('open'); };
+        const hide = (el) => { el.classList.remove('open'); };
 
         let currentStatus = '{{.User.Status}}' || 'online';
+        const statusDot = document.querySelector('.status-dot');
+
+        function updateStatusDot(status) {
+            if (!statusDot) return;
+            statusDot.classList.remove('status-online', 'status-away', 'status-offline');
+            statusDot.classList.add(`status-${status}`);
+        }
 
         async function pingPresence() {
             try {
@@ -832,6 +845,7 @@
         settingsModal.querySelectorAll('[data-status]').forEach(btn => {
             btn.onclick = async () => {
                 currentStatus = btn.getAttribute('data-status');
+                updateStatusDot(currentStatus);
                 await pingPresence();
             };
         });

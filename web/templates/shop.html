@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="{{.Lang}}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop</title>
+    <style>
+        :root { --bg: #0f0502; --glass: rgba(255,255,255,0.06); --border: rgba(255,255,255,0.1); --text: #fff; --muted: rgba(255,255,255,0.6); }
+        body { margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
+        .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+        .top-bar { display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .brand { font-weight:900; letter-spacing:2px; color: var(--muted); }
+        .pill-btn { padding:8px 14px; border-radius:999px; border:1px solid var(--border); background: linear-gradient(135deg, #ff4e50, #f9d423); color: #0f0502; font-weight:800; text-decoration:none; }
+        .section { margin-bottom:24px; }
+        .section h2 { margin:0 0 10px; }
+        .cards { display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:12px; }
+        .card { background: var(--glass); border:1px solid var(--border); border-radius:14px; padding:14px; box-shadow:0 10px 30px rgba(0,0,0,0.25); }
+        .card-title { font-weight:900; margin-bottom:6px; }
+        .card-desc { color: var(--muted); font-size:0.9rem; margin-bottom:10px; }
+        .price { font-weight:800; }
+        .buy-btn { background:#fff; color:#000; border:none; padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:800; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="top-bar">
+            <div class="brand">{{.Text.LobbyName}} / {{.Text.Shop}}</div>
+            <div style="display:flex; gap:8px;">
+                <a class="pill-btn" href="/">Lobby</a>
+                <a class="pill-btn" href="/friends">Friends</a>
+                <a class="pill-btn" href="/customize">Customize</a>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Donate</h2>
+            <div class="cards">
+                <div class="card"><div class="card-title">Support Pack</div><div class="card-desc">Small thank-you bundle.</div><div class="price">$4.99</div></div>
+                <div class="card"><div class="card-title">Founder Pack</div><div class="card-desc">Show love & get a badge.</div><div class="price">$14.99</div></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Coins</h2>
+            <div class="cards">
+                <div class="card"><div class="card-title">1,000 Coins</div><div class="card-desc">Starter boost.</div><button class="buy-btn">Buy</button></div>
+                <div class="card"><div class="card-title">5,000 Coins</div><div class="card-desc">Best value.</div><button class="buy-btn">Buy</button></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Accessories</h2>
+            <div class="cards">
+                <div class="card"><div class="card-title">Avatar Frame</div><div class="card-desc">Epic glow frame.</div><button class="buy-btn">Buy</button></div>
+                <div class="card"><div class="card-title">Banner</div><div class="card-desc">Unique lobby banner.</div><button class="buy-btn">Buy</button></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Chests</h2>
+            <div class="cards">
+                <div class="card"><div class="card-title">Bronze Chest</div><div class="card-desc">Contains random cosmetics.</div><button class="buy-btn">Open</button></div>
+                <div class="card"><div class="card-title">Gold Chest</div><div class="card-desc">Better odds & rewards.</div><button class="buy-btn">Open</button></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

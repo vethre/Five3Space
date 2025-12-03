@@ -71,6 +71,9 @@ func main() {
 	http.HandleFunc("/friends/remove", authService.RemoveFriendHandler)
 	http.HandleFunc("/presence/ping", presenceService.PingHandler)
 	http.HandleFunc("/ws", chibiki.NewWebsocketHandler(gameInstance))
+	http.HandleFunc("/friends", lobby.NewFriendsHandler(store))
+	http.HandleFunc("/shop", lobby.NewShopHandler(store))
+	http.HandleFunc("/customize", lobby.NewCustomizeHandler(store))
 
 	fs := http.FileServer(http.Dir("./web/static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))

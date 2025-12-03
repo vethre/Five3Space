@@ -62,13 +62,14 @@ type PageData struct {
 	Lang         string // "en", "ua", "ru"
 	MedalDetails []data.Medal
 	ShowRegister bool
+	ActivePage   string
 }
 
 // --- Localization Data ---
 
 var texts = map[string]Translations{
 	"en": {
-		LobbyName:   "ANTEIKU LOBBY",
+		LobbyName:   "FIVE3 Game Space",
 		Level:       "LEVEL",
 		XP:          "XP",
 		DeployZone:  "DEPLOYMENT ZONE",
@@ -82,7 +83,7 @@ var texts = map[string]Translations{
 		LangCurrent: "ENG",
 	},
 	"ua": {
-		LobbyName:   "ANTEIKU LOBBY",
+		LobbyName:   "П'ЯТЬ3 Ігро-Space",
 		Level:       "Рівень",
 		XP:          "Досвід",
 		DeployZone:  "Зона висадки",
@@ -96,7 +97,7 @@ var texts = map[string]Translations{
 		LangCurrent: "UKR",
 	},
 	"ru": {
-		LobbyName:   "ANTEIKU LOBBY",
+		LobbyName:   "ПЯТЬ3 Игро-Space",
 		Level:       "Уровень",
 		XP:          "Опыт",
 		DeployZone:  "Зона высадки",
@@ -284,7 +285,8 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 		Text:         t,
 		Lang:         lang,
 		MedalDetails: medalDetails,
-		ShowRegister: !hadCookie, // <= главный флаг
+		ShowRegister: !hadCookie,
+		ActivePage:   "lobby",
 	}
 
 	tmplPath := filepath.Join("web", "templates", "lobby.html")
