@@ -105,6 +105,7 @@ func applySchema(db *sql.DB) error {
 			exp INTEGER NOT NULL DEFAULT 0,
 			max_exp INTEGER NOT NULL DEFAULT 1000,
 			coins INTEGER NOT NULL DEFAULT 0,
+			password_hash TEXT NOT NULL DEFAULT '',
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			UNIQUE (nickname, tag)
@@ -113,6 +114,7 @@ func applySchema(db *sql.DB) error {
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS coins INTEGER NOT NULL DEFAULT 0;`,
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'offline';`,
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW();`,
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT NOT NULL DEFAULT '';`,
 		`
 		CREATE TABLE IF NOT EXISTS medals (
 			id TEXT PRIMARY KEY,

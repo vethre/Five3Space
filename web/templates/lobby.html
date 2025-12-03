@@ -324,6 +324,45 @@
         .nav-info h4 { font-size: 1.2rem; font-weight: 800; }
         .nav-info span { font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); }
 
+        /* Sidebar */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 20px;
+        }
+        .sidebar {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        }
+        .sidebar h4 { font-size: 0.9rem; color: var(--text-muted); letter-spacing: 1px; }
+        .side-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            color: white;
+            text-decoration: none;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .side-link:hover { border-color: var(--glass-border); background: rgba(255,255,255,0.06); transform: translateX(2px); }
+        .side-pill {
+            width: 32px; height: 32px; border-radius: 10px;
+            display: inline-flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #ff4e50, #f9d423);
+            color: #0f0502; font-weight: 900;
+        }
+        .side-pill.blue { background: linear-gradient(135deg, #36d1dc, #5b86e5); }
+        .side-pill.green { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+
         /* Modal */
         .modal-backdrop {
             position: fixed; inset: 0;
@@ -394,6 +433,8 @@
             .name-row { flex-direction: column; gap: 10px; }
             .modes-grid { grid-template-columns: 1fr; }
             .footer-nav { grid-template-columns: 1fr; }
+            .main-grid { grid-template-columns: 1fr; }
+            .sidebar { order: -1; flex-direction: row; flex-wrap: wrap; }
         }
     </style>
 </head>
@@ -403,12 +444,19 @@
         <div class="top-bar">
             <div class="brand">{{.Text.LobbyName}}</div>
             <div class="header-actions">
-                <button class="pill-btn pill-btn--register" id="btn-header-register"><span>Register</span></button>
-                <button class="pill-btn pill-btn--login" id="btn-header-login"><span>Login</span></button>
                 <button class="pill-btn pill-btn--settings" id="btn-settings"><span>Settings</span></button>
             </div>
         </div>
 
+        <div class="main-grid">
+            <aside class="sidebar">
+                <h4>Menu</h4>
+                <a class="side-link" href="#shop"><span class="side-pill">S</span> <span>{{.Text.Shop}}</span></a>
+                <a class="side-link" href="#friends"><span class="side-pill green">F</span> <span>{{.Text.FriendsNav}}</span></a>
+                <a class="side-link" href="#customize"><span class="side-pill blue">C</span> <span>{{.Text.Customize}}</span></a>
+            </aside>
+
+            <div class="main-column" style="display:flex; flex-direction:column; gap:24px;">
         <!-- Profile -->
         <div class="profile-card">
             <div class="avatar-box">
@@ -548,6 +596,8 @@
                 </div>
             </a>
         </div>
+            </div>
+        </div>
     </div>
 
     <!-- Registration Modal -->
@@ -556,6 +606,8 @@
             <h3>Create your profile</h3>
             <label for="reg-nickname">Nickname</label>
             <input id="reg-nickname" placeholder="Enter nickname" />
+            <label for="reg-password">Password</label>
+            <input id="reg-password" type="password" placeholder="Enter password" />
             <div class="modal-actions">
                 <button class="ghost-btn" id="reg-cancel">Later</button>
                 <button class="primary-btn" id="reg-submit">Register</button>
@@ -572,6 +624,8 @@
             <input id="login-nickname" placeholder="Enter nickname" />
             <label for="login-tag">Tag</label>
             <input id="login-tag" placeholder="0001" />
+            <label for="login-password">Password</label>
+            <input id="login-password" type="password" placeholder="Password" />
             <div class="modal-actions">
                 <button class="ghost-btn" id="login-cancel">Cancel</button>
                 <button class="primary-btn" id="login-submit">Login</button>
@@ -600,22 +654,33 @@
     <div class="modal-backdrop" id="settings-modal" style="display:none">
         <div class="modal">
             <h3>Settings</h3>
-
-            <label>Language</label>
-            <div style="display:flex; gap:10px; margin-top:6px; margin-bottom:12px;">
-                <button class="ghost-btn" data-lang="en">EN</button>
-                <button class="ghost-btn" data-lang="ua">UA</button>
-                <button class="ghost-btn" data-lang="ru">RU</button>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                <div>
+                    <label>Language</label>
+                    <div style="display:flex; gap:10px; margin-top:6px; margin-bottom:6px; flex-wrap:wrap;">
+                        <button class="ghost-btn" data-lang="en">EN</button>
+                        <button class="ghost-btn" data-lang="ua">UA</button>
+                        <button class="ghost-btn" data-lang="ru">RU</button>
+                    </div>
+                </div>
+                <div>
+                    <label>Status</label>
+                    <div style="display:flex; gap:10px; margin-top:6px; flex-wrap:wrap;">
+                        <button class="ghost-btn" data-status="online">Online</button>
+                        <button class="ghost-btn" data-status="away">Away</button>
+                        <button class="ghost-btn" data-status="offline">Offline</button>
+                    </div>
+                </div>
+                <div>
+                    <label>Account</label>
+                    <div style="display:flex; gap:10px; margin-top:6px; flex-wrap:wrap;">
+                        <button class="pill-btn pill-btn--register" id="settings-register"><span>Register</span></button>
+                        <button class="pill-btn pill-btn--login" id="settings-login"><span>Login</span></button>
+                    </div>
+                </div>
             </div>
 
-            <label>Status</label>
-            <div style="display:flex; gap:10px; margin-top:6px;">
-                <button class="ghost-btn" data-status="online">Online</button>
-                <button class="ghost-btn" data-status="away">Away</button>
-                <button class="ghost-btn" data-status="offline">Offline</button>
-            </div>
-
-            <div class="modal-actions">
+            <div class="modal-actions" style="margin-top:12px;">
                 <button class="ghost-btn" id="settings-close">Close</button>
             </div>
         </div>
@@ -631,7 +696,7 @@
         const show = (el) => { el.style.display = 'flex'; };
         const hide = (el) => { el.style.display = 'none'; };
 
-        let currentStatus = 'online';
+        let currentStatus = '{{.User.Status}}' || 'online';
 
         async function pingPresence() {
             try {
@@ -655,14 +720,16 @@
         if (regSubmit) {
             regSubmit.onclick = async () => {
                 const nickname = qs('reg-nickname').value.trim();
+                const password = qs('reg-password').value.trim();
                 const errBox = qs('reg-error');
                 errBox.textContent = '';
-                if (!nickname) { errBox.textContent = 'Nickname required'; return; }
+                if (!nickname || !password) { errBox.textContent = 'Nickname and password required'; return; }
+                if (password.length < 6) { errBox.textContent = 'Password too short'; return; }
                 try {
                     const res = await fetch('/register', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ nickname })
+                        body: JSON.stringify({ nickname, password })
                     });
                     if (!res.ok) {
                         errBox.textContent = 'Failed to register';
@@ -676,23 +743,21 @@
             };
             qs('reg-cancel').onclick = () => hide(regModal);
         }
-        const headerRegister = qs('btn-header-register');
-        if (headerRegister) headerRegister.onclick = () => show(regModal);
-
         // Login
         const loginSubmit = qs('login-submit');
         if (loginSubmit) {
             loginSubmit.onclick = async () => {
                 const nickname = qs('login-nickname').value.trim();
                 const tag = qs('login-tag').value.trim();
+                const password = qs('login-password').value.trim();
                 const errBox = qs('login-error');
                 errBox.textContent = '';
-                if (!nickname || !tag) { errBox.textContent = 'Nickname and tag required'; return; }
+                if (!nickname || !tag || !password) { errBox.textContent = 'Nickname, tag and password required'; return; }
                 try {
                     const res = await fetch('/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ nickname, tag: parseInt(tag, 10) })
+                        body: JSON.stringify({ nickname, tag: parseInt(tag, 10), password })
                     });
                     if (!res.ok) {
                         errBox.textContent = res.status === 404 ? 'User not found' : 'Failed to login';
@@ -707,8 +772,6 @@
             };
             qs('login-cancel').onclick = () => hide(loginModal);
         }
-        const headerLogin = qs('btn-header-login');
-        if (headerLogin) headerLogin.onclick = () => show(loginModal);
 
         // Friends
         const friendState = { mode: 'add' };
@@ -750,6 +813,10 @@
         if (btnSettings) btnSettings.onclick = () => show(settingsModal);
 
         qs('settings-close').onclick = () => hide(settingsModal);
+        const settingsRegister = document.getElementById('settings-register');
+        const settingsLogin = document.getElementById('settings-login');
+        if (settingsRegister) settingsRegister.onclick = () => { hide(settingsModal); show(regModal); };
+        if (settingsLogin) settingsLogin.onclick = () => { hide(settingsModal); show(loginModal); };
 
         // Переключение языка
         settingsModal.querySelectorAll('[data-lang]').forEach(btn => {

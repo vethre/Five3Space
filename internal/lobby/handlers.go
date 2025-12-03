@@ -44,6 +44,9 @@ type Translations struct {
 	Level       string
 	XP          string
 	DeployZone  string
+	Shop        string
+	FriendsNav  string
+	Customize   string
 	Market      string
 	MarketSub   string
 	Hangar      string
@@ -69,6 +72,9 @@ var texts = map[string]Translations{
 		Level:       "LEVEL",
 		XP:          "XP",
 		DeployZone:  "DEPLOYMENT ZONE",
+		Shop:        "Shop",
+		FriendsNav:  "Friends",
+		Customize:   "Customization",
 		Market:      "Market",
 		MarketSub:   "Supplies",
 		Hangar:      "Hangar",
@@ -80,6 +86,9 @@ var texts = map[string]Translations{
 		Level:       "Рівень",
 		XP:          "Досвід",
 		DeployZone:  "Зона висадки",
+		Shop:        "Ринок",
+		FriendsNav:  "Друзі",
+		Customize:   "Налаштування",
 		Market:      "Ринок",
 		MarketSub:   "Постачання",
 		Hangar:      "Ангар",
@@ -91,6 +100,9 @@ var texts = map[string]Translations{
 		Level:       "Уровень",
 		XP:          "Опыт",
 		DeployZone:  "Зона высадки",
+		Shop:        "Рынок",
+		FriendsNav:  "Друзья",
+		Customize:   "Настройки",
 		Market:      "Рынок",
 		MarketSub:   "Поставки",
 		Hangar:      "Ангар",

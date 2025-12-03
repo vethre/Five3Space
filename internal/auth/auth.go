@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Auth struct {
@@ -24,6 +25,7 @@ func NewAuth(db *sql.DB) *Auth {
 
 type registerRequest struct {
 	Nickname string `json:"nickname"`
+	Password string `json:"password"`
 }
 
 type registerResponse struct {
@@ -35,6 +37,7 @@ type registerResponse struct {
 type loginRequest struct {
 	Nickname string `json:"nickname"`
 	Tag      int    `json:"tag"`
+	Password string `json:"password"`
 }
 
 type friendRequest struct {
@@ -56,12 +59,16 @@ func (a *Auth) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	nick := strings.TrimSpace(req.Nickname)
-	if nick == "" {
-		http.Error(w, "empty nickname", http.StatusBadRequest)
+	if nick == "" || strings.TrimSpace(req.Password) == "" {
+		http.Error(w, "missing nickname or password", http.StatusBadRequest)
+		return
+	}
+	if len(req.Password) < 6 {
+		http.Error(w, "password too short", http.StatusBadRequest)
 		return
 	}
 
-	tag, userID, err := a.insertUserWithTag(nick)
+	tag, userID, err := a.insertUserWithTag(nick, req.Password)
 	if err != nil {
 		log.Println("register:", err)
 		http.Error(w, "failed to create user", http.StatusInternalServerError)
@@ -99,13 +106,14 @@ func (a *Auth) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	nick := strings.TrimSpace(req.Nickname)
-	if nick == "" || req.Tag <= 0 {
+	if nick == "" || req.Tag <= 0 || strings.TrimSpace(req.Password) == "" {
 		http.Error(w, "invalid credentials", http.StatusBadRequest)
 		return
 	}
 
 	var userID string
-	err := a.DB.QueryRow(`SELECT id FROM users WHERE nickname = $1 AND tag = $2`, nick, req.Tag).Scan(&userID)
+	var storedHash string
+	err := a.DB.QueryRow(`SELECT id, password_hash FROM users WHERE nickname = $1 AND tag = $2`, nick, req.Tag).Scan(&userID, &storedHash)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			http.Error(w, "user not found", http.StatusNotFound)
@@ -114,6 +122,16 @@ func (a *Auth) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "lookup failed", http.StatusInternalServerError)
 		return
 	}
+	if storedHash == "" {
+		http.Error(w, "password not set for this user", http.StatusUnauthorized)
+		return
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(req.Password)); err != nil {
+		http.Error(w, "invalid password", http.StatusUnauthorized)
+		return
+	}
+
+	_, _ = a.DB.Exec(`UPDATE users SET status = 'online', last_seen = NOW(), updated_at = NOW() WHERE id = $1`, userID)
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "user_id",
@@ -234,8 +252,12 @@ func (a *Auth) RemoveFriendHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // insertUserWithTag retries random tag generation and inserts the user atomically.
-func (a *Auth) insertUserWithTag(nickname string) (int, string, error) {
+func (a *Auth) insertUserWithTag(nickname, password string) (int, string, error) {
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return 0, "", err
+	}
 
 	for i := 0; i < 20; i++ {
 		tag := rng.Intn(9999) + 1 // 1..9999
@@ -243,11 +265,11 @@ func (a *Auth) insertUserWithTag(nickname string) (int, string, error) {
 
 		var insertedID string
 		err := a.DB.QueryRow(`
-			INSERT INTO users (id, nickname, tag, level, exp, max_exp, status)
-			VALUES ($1, $2, $3, 1, 0, 1000, 'online')
+			INSERT INTO users (id, nickname, tag, level, exp, max_exp, status, password_hash)
+			VALUES ($1, $2, $3, 1, 0, 1000, 'online', $4)
 			ON CONFLICT (nickname, tag) DO NOTHING
 			RETURNING id
-		`, userID, nickname, tag).Scan(&insertedID)
+		`, userID, nickname, tag, string(hashed)).Scan(&insertedID)
 
 		if errors.Is(err, sql.ErrNoRows) {
 			continue // Tag collision, retry
