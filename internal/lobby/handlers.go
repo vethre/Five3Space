@@ -137,47 +137,61 @@ func NewHandler(store *data.Store) http.HandlerFunc {
 }
 
 func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
-	// 1. Language Selection (Query param > default "en")
+	// 1. Language
 	lang := r.URL.Query().Get("lang")
 	if lang != "ua" && lang != "ru" {
 		lang = "en"
 	}
-
 	t := texts[lang]
 
-	// 2. Load User Data from Store
-	userID := r.URL.Query().Get("userID")
+	// 2. Пытаемся достать userID
+	var userID string
 	hadCookie := false
-	if userID == "" {
-		if c, err := r.Cookie("user_id"); err == nil {
-			userID = c.Value
-			hadCookie = true
-		}
-	} else {
+
+	// сначала query-параметр
+	if q := r.URL.Query().Get("userID"); q != "" {
+		userID = q
+		hadCookie = true
+	} else if c, err := r.Cookie("user_id"); err == nil && c.Value != "" {
+		// потом кука
+		userID = c.Value
 		hadCookie = true
 	}
+
+	// 3. Пытаемся найти юзера в базе
 	var selected data.UserData
-	var ok bool
+	userFound := false
 	if userID != "" {
-		selected, ok = store.GetUser(userID)
-	}
-	if !ok {
-		if u, found := store.FirstUser(); found {
+		if u, ok := store.GetUser(userID); ok {
 			selected = u
-			ok = true
+			userFound = true
 		}
 	}
 
+	// 4. Если юзер не найден — сбрасываем куку и включаем регистрацию
+	if !userFound {
+		hadCookie = false
+		http.SetCookie(w, &http.Cookie{
+			Name:   "user_id",
+			Value:  "",
+			Path:   "/",
+			MaxAge: -1,
+		})
+	}
+
+	// 5. Маппим в view-модель
 	var user User
-	if !ok {
-		log.Printf("No user data available")
-		// Fallback to mock data
+	if !userFound {
 		user = User{
-			ID:        "guest",
-			Nickname:  "Error Loading",
+			ID:        "",
+			Nickname:  "ERROR LOADING",
 			Tag:       "----",
 			AvatarURL: "https://api.dicebear.com/7.x/avataaars/svg?seed=error&backgroundColor=ffdfbf",
 			Medals:    0,
+			Level:     0,
+			Exp:       0,
+			MaxExp:    1,
+			Coins:     0,
 		}
 	} else {
 		user = User{
@@ -193,15 +207,22 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 		}
 	}
 
-	// Calculate XP logic in Go
+	// 6. XP %
 	pct := 0
 	if user.MaxExp > 0 {
 		pct = (user.Exp * 100) / user.MaxExp
 	}
 	user.XPPercentage = fmt.Sprintf("%d%%", pct)
 
-	// 3. Prepare Game Modes with Localization
-	btn1, stat1 := getModeTexts(lang, false, false) // Chibiki is now playable
+	// 7. Друзья и медали
+	friendList, _ := store.ListFriends(user.ID)
+	medalDetails := []data.Medal{}
+	if userFound {
+		medalDetails = store.MedalDetails(selected.Medals)
+	}
+
+	// 8. Game modes
+	btn1, stat1 := getModeTexts(lang, false, false)
 	btn2, stat2 := getModeTexts(lang, false, true)
 	btn3, stat3 := getModeTexts(lang, true, false)
 
@@ -210,14 +231,12 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 		chibikiURL = fmt.Sprintf("/game?mode=chibiki&userID=%s&lang=%s", user.ID, lang)
 	}
 
-	friendList, _ := store.ListFriends(user.ID)
-
 	modes := []GameMode{
 		{
 			ID:           "chibiki",
 			Title:        "Chibiki Royale",
 			Subtitle:     "Clash Royale-style",
-			IsConstruct:  false, // No longer under construction
+			IsConstruct:  false,
 			SafeGradient: template.CSS("linear-gradient(135deg, #ff4e50 0%, #f9d423 100%)"),
 			BtnText:      btn1,
 			StatusText:   stat1,
@@ -238,7 +257,7 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 			Subtitle:     "Top Secret",
 			IsLocked:     true,
 			SafeGradient: template.CSS("linear-gradient(135deg, #232526 0%, #414345 100%)"),
-			BtnText:      btn3, // "Locked"
+			BtnText:      btn3,
 			StatusText:   stat3,
 		},
 	}
@@ -249,11 +268,10 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 		Modes:        modes,
 		Text:         t,
 		Lang:         lang,
-		MedalDetails: store.MedalDetails(selected.Medals),
-		ShowRegister: !hadCookie,
+		MedalDetails: medalDetails,
+		ShowRegister: !hadCookie, // <= главный флаг
 	}
 
-	// 4. Parse & Execute
 	tmplPath := filepath.Join("web", "templates", "lobby.html")
 	tmpl, err := template.ParseFiles(tmplPath)
 	if err != nil {
@@ -262,8 +280,7 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 		return
 	}
 
-	err = tmpl.Execute(w, data)
-	if err != nil {
+	if err := tmpl.Execute(w, data); err != nil {
 		log.Printf("Execution error: %v", err)
 	}
 }
