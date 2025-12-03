@@ -29,6 +29,7 @@ type UserData struct {
 	Level    int      `json:"level"`
 	Exp      int      `json:"exp"`
 	MaxExp   int      `json:"max_exp"`
+	Coins    int      `json:"coins"`
 	Medals   []string `json:"medals"`
 }
 
@@ -96,14 +97,14 @@ func (s *Store) loadMedals(path string) error {
 // FirstUser is a convenience helper used by the lobby when no ID is provided.
 func (s *Store) FirstUser() (UserData, bool) {
 	row := s.db.QueryRow(`
-        SELECT id, nickname, tag, level, exp, max_exp
+        SELECT id, nickname, tag, level, exp, max_exp, coins
         FROM users
         ORDER BY created_at ASC
         LIMIT 1
     `)
 
 	var u UserData
-	if err := row.Scan(&u.ID, &u.Nickname, &u.Tag, &u.Level, &u.Exp, &u.MaxExp); err != nil {
+	if err := row.Scan(&u.ID, &u.Nickname, &u.Tag, &u.Level, &u.Exp, &u.MaxExp, &u.Coins); err != nil {
 		return UserData{}, false
 	}
 
@@ -114,13 +115,13 @@ func (s *Store) FirstUser() (UserData, bool) {
 // GetUser returns a single user by ID.
 func (s *Store) GetUser(id string) (UserData, bool) {
 	row := s.db.QueryRow(`
-        SELECT id, nickname, tag, level, exp, max_exp
+        SELECT id, nickname, tag, level, exp, max_exp, coins
         FROM users
         WHERE id = $1
     `, id)
 
 	var u UserData
-	if err := row.Scan(&u.ID, &u.Nickname, &u.Tag, &u.Level, &u.Exp, &u.MaxExp); err != nil {
+	if err := row.Scan(&u.ID, &u.Nickname, &u.Tag, &u.Level, &u.Exp, &u.MaxExp, &u.Coins); err != nil {
 		return UserData{}, false
 	}
 
@@ -206,4 +207,39 @@ func (s *Store) MedalDetails(ids []string) []Medal {
 		}
 	}
 	return out
+}
+
+// Friend represents a basic friend profile.
+type Friend struct {
+	ID       string
+	Nickname string
+	Tag      int
+	Level    int
+}
+
+// ListFriends returns accepted friends for a user.
+func (s *Store) ListFriends(userID string) ([]Friend, error) {
+	rows, err := s.db.Query(`
+		SELECT u.id, u.nickname, u.tag, u.level
+		FROM friendships f
+		JOIN users u ON (
+			(u.id = f.requester_id AND f.addressee_id = $1)
+			OR (u.id = f.addressee_id AND f.requester_id = $1)
+		)
+		WHERE f.status = 'accepted' AND u.id <> $1
+	`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var friends []Friend
+	for rows.Next() {
+		var fr Friend
+		if err := rows.Scan(&fr.ID, &fr.Nickname, &fr.Tag, &fr.Level); err != nil {
+			continue
+		}
+		friends = append(friends, fr)
+	}
+	return friends, nil
 }

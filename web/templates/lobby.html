@@ -122,6 +122,17 @@
             -webkit-text-fill-color: #ffae00;
             margin-left: 8px;
         }
+        .coin-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255, 174, 0, 0.12);
+            border: 1px solid rgba(255, 174, 0, 0.35);
+            border-radius: 12px;
+            font-weight: 800;
+            color: #ffd166;
+        }
 
         /* --- VISIBLE MEDALS --- */
         .medal-display {
@@ -277,6 +288,42 @@
         .nav-info h4 { font-size: 1.2rem; font-weight: 800; }
         .nav-info span { font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); }
 
+        /* Modal */
+        .modal-backdrop {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.65);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+        .modal {
+            background: #121212;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 20px;
+            width: min(420px, 90vw);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .modal h3 { margin-bottom: 10px; font-weight: 900; }
+        .modal label { display: block; margin: 8px 0 4px; font-size: 0.9rem; color: var(--text-muted); }
+        .modal input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.04);
+            color: white;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+            justify-content: flex-end;
+        }
+        .ghost-btn { background: transparent; color: #ccc; border: 1px solid rgba(255,255,255,0.2); padding: 10px 14px; border-radius: 10px; cursor: pointer; }
+        .primary-btn { background: #ff4500; color: #fff; border: none; padding: 10px 14px; border-radius: 10px; cursor: pointer; font-weight: 800; }
+
         /* Mobile Adjustments */
         @media (max-width: 600px) {
             .profile-card { flex-direction: column; text-align: center; padding: 20px; }
@@ -315,6 +362,7 @@
                         </svg>
                         <span class="medal-count">{{.User.Medals}}</span>
                     </div>
+                    <div class="coin-chip">💰 {{.User.Coins}}</div>
                 </div>
 
                 <div class="xp-container">
@@ -370,6 +418,31 @@
             {{end}}
         </div>
 
+        <!-- Friends -->
+        <div class="section-label">Friends</div>
+        <div class="profile-card" style="flex-direction: column; align-items: flex-start; gap: 16px;">
+            <div style="display:flex; gap:12px; width:100%; flex-wrap:wrap;">
+                {{if .Friends}}
+                    {{range .Friends}}
+                        <div class="medal-chip">
+                            <div class="medal-chip-name">{{.Nickname}}</div>
+                            <div class="medal-chip-desc">#{{printf "%04d" .Tag}} · L{{.Level}}</div>
+                        </div>
+                    {{end}}
+                {{else}}
+                    <div class="medal-chip">
+                        <div class="medal-chip-name">No friends yet</div>
+                        <div class="medal-chip-desc">Add friends below</div>
+                    </div>
+                {{end}}
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="action-btn" id="btn-add-friend">Add Friend</button>
+                <button class="ghost-btn" id="btn-remove-friend">Remove Friend</button>
+                <button class="ghost-btn" id="btn-settings">Settings</button>
+            </div>
+        </div>
+
         <!-- Footer -->
         <div class="footer-nav">
             <a href="#" class="nav-item">
@@ -392,5 +465,137 @@
             </a>
         </div>
     </div>
+
+    <!-- Registration Modal -->
+    <div class="modal-backdrop" id="register-modal" {{if not .ShowRegister}}style="display:none"{{end}}>
+        <div class="modal">
+            <h3>Create your profile</h3>
+            <label for="reg-nickname">Nickname</label>
+            <input id="reg-nickname" placeholder="Enter nickname" />
+            <div class="modal-actions">
+                <button class="ghost-btn" id="reg-cancel">Later</button>
+                <button class="primary-btn" id="reg-submit">Register</button>
+            </div>
+            <div id="reg-error" style="color:#ff7676;font-size:0.85rem;margin-top:6px;"></div>
+        </div>
+    </div>
+
+    <!-- Friend Modal -->
+    <div class="modal-backdrop" id="friend-modal" style="display:none">
+        <div class="modal">
+            <h3 id="friend-modal-title">Add Friend</h3>
+            <label for="friend-nickname">Nickname</label>
+            <input id="friend-nickname" placeholder="Friend nickname" />
+            <label for="friend-tag">Tag</label>
+            <input id="friend-tag" placeholder="0001" />
+            <div class="modal-actions">
+                <button class="ghost-btn" id="friend-cancel">Cancel</button>
+                <button class="primary-btn" id="friend-submit">Submit</button>
+            </div>
+            <div id="friend-error" style="color:#ff7676;font-size:0.85rem;margin-top:6px;"></div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-backdrop" id="settings-modal" style="display:none">
+        <div class="modal">
+            <h3>Settings</h3>
+            <label>Language</label>
+            <div style="display:flex; gap:10px; margin-top:6px;">
+                <button class="ghost-btn" data-lang="en">EN</button>
+                <button class="ghost-btn" data-lang="ua">UA</button>
+                <button class="ghost-btn" data-lang="ru">RU</button>
+            </div>
+            <div class="modal-actions">
+                <button class="ghost-btn" id="settings-close">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        const qs = (id) => document.getElementById(id);
+        const regModal = qs('register-modal');
+        const friendModal = qs('friend-modal');
+        const settingsModal = qs('settings-modal');
+        const show = (el) => { el.style.display = 'flex'; };
+        const hide = (el) => { el.style.display = 'none'; };
+
+        // Registration
+        const regSubmit = qs('reg-submit');
+        if (regSubmit) {
+            regSubmit.onclick = async () => {
+                const nickname = qs('reg-nickname').value.trim();
+                const errBox = qs('reg-error');
+                errBox.textContent = '';
+                if (!nickname) { errBox.textContent = 'Nickname required'; return; }
+                try {
+                    const res = await fetch('/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nickname })
+                    });
+                    if (!res.ok) {
+                        errBox.textContent = 'Failed to register';
+                        return;
+                    }
+                    const data = await res.json();
+                    window.location = '/?userID=' + encodeURIComponent(data.user_id);
+                } catch (e) {
+                    errBox.textContent = 'Network error';
+                }
+            };
+            qs('reg-cancel').onclick = () => hide(regModal);
+        }
+
+        // Friends
+        const friendState = { mode: 'add' };
+        const setFriendMode = (mode) => {
+            friendState.mode = mode;
+            qs('friend-modal-title').textContent = mode === 'add' ? 'Add Friend' : 'Remove Friend';
+        };
+        const submitFriend = async () => {
+            const nickname = qs('friend-nickname').value.trim();
+            const tag = qs('friend-tag').value.trim();
+            const err = qs('friend-error');
+            err.textContent = '';
+            if (!nickname || !tag) { err.textContent = 'Nickname and tag required'; return; }
+            const endpoint = friendState.mode === 'add' ? '/friends/add' : '/friends/remove';
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nickname, tag: parseInt(tag, 10) })
+                });
+                if (!res.ok) {
+                    err.textContent = 'Failed (' + res.status + ')';
+                    return;
+                }
+                window.location.reload();
+            } catch (e) {
+                err.textContent = 'Network error';
+            }
+        };
+        const btnAdd = document.getElementById('btn-add-friend');
+        const btnRemove = document.getElementById('btn-remove-friend');
+        if (btnAdd) btnAdd.onclick = () => { setFriendMode('add'); show(friendModal); };
+        if (btnRemove) btnRemove.onclick = () => { setFriendMode('remove'); show(friendModal); };
+        qs('friend-submit').onclick = submitFriend;
+        qs('friend-cancel').onclick = () => hide(friendModal);
+
+        // Settings
+        const btnSettings = document.getElementById('btn-settings');
+        if (btnSettings) btnSettings.onclick = () => show(settingsModal);
+        qs('settings-close').onclick = () => hide(settingsModal);
+        settingsModal.querySelectorAll('[data-lang]').forEach(btn => {
+            btn.onclick = () => {
+                const lang = btn.getAttribute('data-lang');
+                const url = new URL(window.location.href);
+                url.searchParams.set('lang', lang);
+                window.location = url.toString();
+            };
+        });
+    })();
+    </script>
 </body>
 </html>

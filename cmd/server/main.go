@@ -63,6 +63,8 @@ func main() {
 	// 5. Configure Routes
 	authService := auth.NewAuth(db)
 	http.HandleFunc("/register", authService.RegisterHandler)
+	http.HandleFunc("/friends/add", authService.AddFriendHandler)
+	http.HandleFunc("/friends/remove", authService.RemoveFriendHandler)
 	http.HandleFunc("/ws", chibiki.NewWebsocketHandler(gameInstance))
 
 	fs := http.FileServer(http.Dir("./web/static"))
@@ -97,11 +99,13 @@ func applySchema(db *sql.DB) error {
 			level INTEGER NOT NULL DEFAULT 1,
 			exp INTEGER NOT NULL DEFAULT 0,
 			max_exp INTEGER NOT NULL DEFAULT 1000,
+			coins INTEGER NOT NULL DEFAULT 0,
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			UNIQUE (nickname, tag)
 		);
 		`,
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS coins INTEGER NOT NULL DEFAULT 0;`,
 		`
 		CREATE TABLE IF NOT EXISTS medals (
 			id TEXT PRIMARY KEY,

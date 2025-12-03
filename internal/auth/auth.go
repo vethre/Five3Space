@@ -32,6 +32,11 @@ type registerResponse struct {
 	Tag      int    `json:"tag"`
 }
 
+type friendRequest struct {
+	Nickname string `json:"nickname"`
+	Tag      int    `json:"tag"`
+}
+
 // RegisterHandler creates a user with a nickname and an auto-generated tag.
 func (a *Auth) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -75,6 +80,107 @@ func (a *Auth) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
+// AddFriendHandler accepts a nickname+tag and creates an accepted friendship row.
+func (a *Auth) AddFriendHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	reqUserID, err := readUserID(r)
+	if err != nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req friendRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "bad json", http.StatusBadRequest)
+		return
+	}
+	if strings.TrimSpace(req.Nickname) == "" || req.Tag <= 0 {
+		http.Error(w, "invalid payload", http.StatusBadRequest)
+		return
+	}
+
+	var targetID string
+	err = a.DB.QueryRow(`
+		SELECT id FROM users WHERE nickname = $1 AND tag = $2
+	`, req.Nickname, req.Tag).Scan(&targetID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "user not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "lookup failed", http.StatusInternalServerError)
+		return
+	}
+	if targetID == reqUserID {
+		http.Error(w, "cannot add yourself", http.StatusBadRequest)
+		return
+	}
+
+	_, err = a.DB.Exec(`
+		INSERT INTO friendships (requester_id, addressee_id, status)
+		VALUES ($1, $2, 'accepted')
+		ON CONFLICT (LEAST(requester_id, addressee_id), GREATEST(requester_id, addressee_id))
+		DO UPDATE SET status = 'accepted', updated_at = NOW()
+	`, reqUserID, targetID)
+	if err != nil {
+		log.Println("add friend:", err)
+		http.Error(w, "failed to add friend", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// RemoveFriendHandler removes a friendship row between the requester and the target nickname/tag.
+func (a *Auth) RemoveFriendHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	reqUserID, err := readUserID(r)
+	if err != nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req friendRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "bad json", http.StatusBadRequest)
+		return
+	}
+	if strings.TrimSpace(req.Nickname) == "" || req.Tag <= 0 {
+		http.Error(w, "invalid payload", http.StatusBadRequest)
+		return
+	}
+
+	var targetID string
+	err = a.DB.QueryRow(`
+		SELECT id FROM users WHERE nickname = $1 AND tag = $2
+	`, req.Nickname, req.Tag).Scan(&targetID)
+	if err != nil {
+		http.Error(w, "user not found", http.StatusNotFound)
+		return
+	}
+
+	_, err = a.DB.Exec(`
+		DELETE FROM friendships
+		WHERE LEAST(requester_id, addressee_id) = LEAST($1, $2)
+		AND GREATEST(requester_id, addressee_id) = GREATEST($1, $2)
+	`, reqUserID, targetID)
+	if err != nil {
+		log.Println("remove friend:", err)
+		http.Error(w, "failed to remove friend", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // insertUserWithTag retries random tag generation and inserts the user atomically.
 func (a *Auth) insertUserWithTag(nickname string) (int, string, error) {
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -102,4 +208,13 @@ func (a *Auth) insertUserWithTag(nickname string) (int, string, error) {
 	}
 
 	return 0, "", fmt.Errorf("failed to generate unique tag for %s", nickname)
+}
+
+// readUserID extracts the user_id cookie.
+func readUserID(r *http.Request) (string, error) {
+	c, err := r.Cookie("user_id")
+	if err != nil || c.Value == "" {
+		return "", errors.New("missing user id cookie")
+	}
+	return c.Value, nil
 }

@@ -21,6 +21,7 @@ type User struct {
 	MaxExp       int
 	Medals       int
 	Level        int
+	Coins        int
 	XPPercentage string
 }
 
@@ -51,10 +52,12 @@ type Translations struct {
 
 type PageData struct {
 	User         User
+	Friends      []data.Friend
 	Modes        []GameMode
 	Text         Translations
 	Lang         string // "en", "ua", "ru"
 	MedalDetails []data.Medal
+	ShowRegister bool
 }
 
 // --- Localization Data ---
@@ -144,6 +147,15 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 
 	// 2. Load User Data from Store
 	userID := r.URL.Query().Get("userID")
+	hadCookie := false
+	if userID == "" {
+		if c, err := r.Cookie("user_id"); err == nil {
+			userID = c.Value
+			hadCookie = true
+		}
+	} else {
+		hadCookie = true
+	}
 	var selected data.UserData
 	var ok bool
 	if userID != "" {
@@ -177,6 +189,7 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 			MaxExp:    selected.MaxExp,
 			Medals:    len(selected.Medals),
 			Level:     selected.Level,
+			Coins:     selected.Coins,
 		}
 	}
 
@@ -196,6 +209,8 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 	if user.ID != "" {
 		chibikiURL = fmt.Sprintf("/game?mode=chibiki&userID=%s&lang=%s", user.ID, lang)
 	}
+
+	friendList, _ := store.ListFriends(user.ID)
 
 	modes := []GameMode{
 		{
@@ -230,10 +245,12 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 
 	data := PageData{
 		User:         user,
+		Friends:      friendList,
 		Modes:        modes,
 		Text:         t,
 		Lang:         lang,
 		MedalDetails: store.MedalDetails(selected.Medals),
+		ShowRegister: !hadCookie,
 	}
 
 	// 4. Parse & Execute
