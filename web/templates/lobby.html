@@ -324,6 +324,34 @@
         .ghost-btn { background: transparent; color: #ccc; border: 1px solid rgba(255,255,255,0.2); padding: 10px 14px; border-radius: 10px; cursor: pointer; }
         .primary-btn { background: #ff4500; color: #fff; border: none; padding: 10px 14px; border-radius: 10px; cursor: pointer; font-weight: 800; }
 
+        .friend-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-online {
+            background: #3cff7c;
+            box-shadow: 0 0 8px rgba(60, 255, 124, 0.8);
+        }
+
+        .status-away {
+            background: #ffd166;
+            box-shadow: 0 0 8px rgba(255, 209, 102, 0.8);
+        }
+
+        .status-offline {
+            background: #666;
+        }
+
         /* Mobile Adjustments */
         @media (max-width: 600px) {
             .profile-card { flex-direction: column; text-align: center; padding: 20px; }
@@ -425,8 +453,25 @@
                 {{if .Friends}}
                     {{range .Friends}}
                         <div class="medal-chip">
-                            <div class="medal-chip-name">{{.Nickname}}</div>
-                            <div class="medal-chip-desc">#{{printf "%04d" .Tag}} · L{{.Level}}</div>
+                            <div>
+                                <div class="medal-chip-name">{{.Nickname}}</div>
+                                <div class="medal-chip-desc">#{{printf "%04d" .Tag}} · L{{.Level}}</div>
+                            </div>
+                            <div style="margin-left:auto;">
+                                <div class="friend-status-pill">
+                                    {{/* Выбираем CSS-класс по Presence */}}
+                                    <span class="status-dot
+                                        {{if eq .Presence `online`}}status-online{{end}}
+                                        {{if eq .Presence `away`}}status-away{{end}}
+                                        {{if eq .Presence `offline`}}status-offline{{end}}
+                                    "></span>
+                                    <span>
+                                        {{if eq .Presence `online`}}Online{{end}}
+                                        {{if eq .Presence `away`}}Away{{end}}
+                                        {{if eq .Presence `offline`}}Offline{{end}}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     {{end}}
                 {{else}}
@@ -500,12 +545,21 @@
     <div class="modal-backdrop" id="settings-modal" style="display:none">
         <div class="modal">
             <h3>Settings</h3>
+
             <label>Language</label>
-            <div style="display:flex; gap:10px; margin-top:6px;">
+            <div style="display:flex; gap:10px; margin-top:6px; margin-bottom:12px;">
                 <button class="ghost-btn" data-lang="en">EN</button>
                 <button class="ghost-btn" data-lang="ua">UA</button>
                 <button class="ghost-btn" data-lang="ru">RU</button>
             </div>
+
+            <label>Status</label>
+            <div style="display:flex; gap:10px; margin-top:6px;">
+                <button class="ghost-btn" data-status="online">Online</button>
+                <button class="ghost-btn" data-status="away">Away</button>
+                <button class="ghost-btn" data-status="offline">Offline</button>
+            </div>
+
             <div class="modal-actions">
                 <button class="ghost-btn" id="settings-close">Close</button>
             </div>
@@ -520,6 +574,25 @@
         const settingsModal = qs('settings-modal');
         const show = (el) => { el.style.display = 'flex'; };
         const hide = (el) => { el.style.display = 'none'; };
+
+        let currentStatus = 'online';
+
+        async function pingPresence() {
+            try {
+                await fetch('/presence/ping', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: currentStatus })
+                });
+            } catch (e) {
+                // тихо игнорим, это просто пинг
+            }
+        }
+
+        // Запускаем heartbeat
+        setInterval(pingPresence, 30000); // каждые 30 сек
+        // И сразу один пинг при загрузке
+        pingPresence();
 
         // Registration
         const regSubmit = qs('reg-submit');
@@ -586,13 +659,24 @@
         // Settings
         const btnSettings = document.getElementById('btn-settings');
         if (btnSettings) btnSettings.onclick = () => show(settingsModal);
+
         qs('settings-close').onclick = () => hide(settingsModal);
+
+        // Переключение языка
         settingsModal.querySelectorAll('[data-lang]').forEach(btn => {
             btn.onclick = () => {
                 const lang = btn.getAttribute('data-lang');
                 const url = new URL(window.location.href);
                 url.searchParams.set('lang', lang);
                 window.location = url.toString();
+            };
+        });
+
+        // Переключение статуса
+        settingsModal.querySelectorAll('[data-status]').forEach(btn => {
+            btn.onclick = async () => {
+                currentStatus = btn.getAttribute('data-status');
+                await pingPresence();
             };
         });
     })();

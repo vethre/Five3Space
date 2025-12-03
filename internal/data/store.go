@@ -215,12 +215,23 @@ type Friend struct {
 	Nickname string
 	Tag      int
 	Level    int
+	Presence string
 }
 
 // ListFriends returns accepted friends for a user.
 func (s *Store) ListFriends(userID string) ([]Friend, error) {
 	rows, err := s.db.Query(`
-		SELECT u.id, u.nickname, u.tag, u.level
+		SELECT
+			u.id,
+			u.nickname,
+			u.tag,
+			u.level,
+			CASE
+				WHEN u.status = 'offline' THEN 'offline'
+				WHEN NOW() - u.last_seen <= INTERVAL '60 seconds' THEN u.status
+				WHEN NOW() - u.last_seen <= INTERVAL '5 minutes' THEN 'away'
+				ELSE 'offline'
+			END AS presence
 		FROM friendships f
 		JOIN users u ON (
 			(u.id = f.requester_id AND f.addressee_id = $1)
@@ -228,6 +239,7 @@ func (s *Store) ListFriends(userID string) ([]Friend, error) {
 		)
 		WHERE f.status = 'accepted' AND u.id <> $1
 	`, userID)
+
 	if err != nil {
 		return nil, err
 	}
@@ -236,10 +248,11 @@ func (s *Store) ListFriends(userID string) ([]Friend, error) {
 	var friends []Friend
 	for rows.Next() {
 		var fr Friend
-		if err := rows.Scan(&fr.ID, &fr.Nickname, &fr.Tag, &fr.Level); err != nil {
+		if err := rows.Scan(&fr.ID, &fr.Nickname, &fr.Tag, &fr.Level, &fr.Presence); err != nil {
 			continue
 		}
 		friends = append(friends, fr)
 	}
+
 	return friends, nil
 }
