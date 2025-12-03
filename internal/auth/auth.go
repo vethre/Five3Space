@@ -32,6 +32,11 @@ type registerResponse struct {
 	Tag      int    `json:"tag"`
 }
 
+type loginRequest struct {
+	Nickname string `json:"nickname"`
+	Tag      int    `json:"tag"`
+}
+
 type friendRequest struct {
 	Nickname string `json:"nickname"`
 	Tag      int    `json:"tag"`
@@ -75,6 +80,53 @@ func (a *Auth) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		UserID:   userID,
 		Nickname: nick,
 		Tag:      tag,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
+// LoginHandler sets the cookie for an existing nickname+tag combo.
+func (a *Auth) LoginHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req loginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "bad json", http.StatusBadRequest)
+		return
+	}
+
+	nick := strings.TrimSpace(req.Nickname)
+	if nick == "" || req.Tag <= 0 {
+		http.Error(w, "invalid credentials", http.StatusBadRequest)
+		return
+	}
+
+	var userID string
+	err := a.DB.QueryRow(`SELECT id FROM users WHERE nickname = $1 AND tag = $2`, nick, req.Tag).Scan(&userID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "user not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "lookup failed", http.StatusInternalServerError)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "user_id",
+		Value:    userID,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	resp := registerResponse{
+		UserID:   userID,
+		Nickname: nick,
+		Tag:      req.Tag,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(resp)
@@ -191,8 +243,8 @@ func (a *Auth) insertUserWithTag(nickname string) (int, string, error) {
 
 		var insertedID string
 		err := a.DB.QueryRow(`
-			INSERT INTO users (id, nickname, tag, level, exp, max_exp)
-			VALUES ($1, $2, $3, 1, 0, 1000)
+			INSERT INTO users (id, nickname, tag, level, exp, max_exp, status)
+			VALUES ($1, $2, $3, 1, 0, 1000, 'online')
 			ON CONFLICT (nickname, tag) DO NOTHING
 			RETURNING id
 		`, userID, nickname, tag).Scan(&insertedID)

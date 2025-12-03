@@ -30,6 +30,7 @@ type UserData struct {
 	Exp      int      `json:"exp"`
 	MaxExp   int      `json:"max_exp"`
 	Coins    int      `json:"coins"`
+	Status   string   `json:"status"`
 	Medals   []string `json:"medals"`
 }
 
@@ -97,14 +98,14 @@ func (s *Store) loadMedals(path string) error {
 // FirstUser is a convenience helper used by the lobby when no ID is provided.
 func (s *Store) FirstUser() (UserData, bool) {
 	row := s.db.QueryRow(`
-        SELECT id, nickname, tag, level, exp, max_exp, coins
+        SELECT id, nickname, tag, level, exp, max_exp, coins, COALESCE(status, 'offline')
         FROM users
         ORDER BY created_at ASC
         LIMIT 1
     `)
 
 	var u UserData
-	if err := row.Scan(&u.ID, &u.Nickname, &u.Tag, &u.Level, &u.Exp, &u.MaxExp, &u.Coins); err != nil {
+	if err := row.Scan(&u.ID, &u.Nickname, &u.Tag, &u.Level, &u.Exp, &u.MaxExp, &u.Coins, &u.Status); err != nil {
 		return UserData{}, false
 	}
 
@@ -115,13 +116,13 @@ func (s *Store) FirstUser() (UserData, bool) {
 // GetUser returns a single user by ID.
 func (s *Store) GetUser(id string) (UserData, bool) {
 	row := s.db.QueryRow(`
-        SELECT id, nickname, tag, level, exp, max_exp, coins
+        SELECT id, nickname, tag, level, exp, max_exp, coins, COALESCE(status, 'offline')
         FROM users
         WHERE id = $1
     `, id)
 
 	var u UserData
-	if err := row.Scan(&u.ID, &u.Nickname, &u.Tag, &u.Level, &u.Exp, &u.MaxExp, &u.Coins); err != nil {
+	if err := row.Scan(&u.ID, &u.Nickname, &u.Tag, &u.Level, &u.Exp, &u.MaxExp, &u.Coins, &u.Status); err != nil {
 		return UserData{}, false
 	}
 

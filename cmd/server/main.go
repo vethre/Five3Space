@@ -66,6 +66,7 @@ func main() {
 	// 5. Configure Routes
 	authService := auth.NewAuth(db)
 	http.HandleFunc("/register", authService.RegisterHandler)
+	http.HandleFunc("/login", authService.LoginHandler)
 	http.HandleFunc("/friends/add", authService.AddFriendHandler)
 	http.HandleFunc("/friends/remove", authService.RemoveFriendHandler)
 	http.HandleFunc("/presence/ping", presenceService.PingHandler)

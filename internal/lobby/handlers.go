@@ -22,6 +22,7 @@ type User struct {
 	Medals       int
 	Level        int
 	Coins        int
+	Status       string
 	XPPercentage string
 }
 
@@ -192,6 +193,7 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 			Exp:       0,
 			MaxExp:    1,
 			Coins:     0,
+			Status:    "offline",
 		}
 	} else {
 		user = User{
@@ -204,6 +206,7 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 			Medals:    len(selected.Medals),
 			Level:     selected.Level,
 			Coins:     selected.Coins,
+			Status:    selected.Status,
 		}
 	}
 

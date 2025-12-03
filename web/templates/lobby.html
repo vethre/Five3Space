@@ -48,28 +48,51 @@
             animation: fadeIn 0.8s ease-out;
         }
 
-        /* Top Bar & Lang Switcher */
+        /* Header */
         .top-bar {
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 10px;
+            gap: 12px;
+        }
+        .brand {
+            font-weight: 900;
+            letter-spacing: 2px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        .header-actions {
+            display: flex;
             gap: 10px;
         }
-        .lang-link {
-            text-decoration: none;
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            font-weight: 800;
-            padding: 4px 8px;
-            border-radius: 6px;
-            border: 1px solid transparent;
-            transition: all 0.2s;
-        }
-        .lang-link:hover, .lang-link.active {
+        .pill-btn {
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.08);
             color: white;
-            border-color: var(--glass-border);
-            background: var(--glass-bg);
+            font-weight: 800;
+            text-decoration: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
+        .pill-btn::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(120deg, rgba(255,69,0,0.8), rgba(255,174,0,0.8));
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 0;
+        }
+        .pill-btn span { position: relative; z-index: 1; }
+        .pill-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+        .pill-btn:hover::before { opacity: 1; }
+        .pill-btn--register { background: linear-gradient(135deg, #ff4e50, #f9d423); }
+        .pill-btn--login { background: linear-gradient(135deg, #36d1dc, #5b86e5); }
+        .pill-btn--settings { background: linear-gradient(135deg, #8e2de2, #4a00e0); }
 
         /* Profile Card - Wider and cleaner */
         .profile-card {
@@ -89,6 +112,19 @@
 
         .avatar-box { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
         .avatar { width: 100%; height: 100%; border-radius: 50%; border: 3px solid var(--primary); background: #111; object-fit: cover; }
+        .status-dot {
+            position: absolute;
+            bottom: -2px;
+            left: -2px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid #0f0502;
+            box-shadow: 0 0 10px rgba(0,0,0,0.4);
+        }
+        .status-online { background: #4ade80; box-shadow: 0 0 12px rgba(74,222,128,0.8); }
+        .status-away { background: #facc15; box-shadow: 0 0 12px rgba(250,204,21,0.8); }
+        .status-offline { background: #737373; box-shadow: 0 0 12px rgba(115,115,115,0.6); }
         .level-badge { 
             position: absolute; bottom: -5px; right: -5px; 
             background: var(--primary); color: white; 
@@ -363,17 +399,21 @@
 </head>
 <body>
     <div class="container">
-        <!-- Language Switcher -->
+        <!-- Header -->
         <div class="top-bar">
-            <a href="?lang=en" class="lang-link {{if eq .Lang `en`}}active{{end}}">EN</a>
-            <a href="?lang=ua" class="lang-link {{if eq .Lang `ua`}}active{{end}}">UA</a>
-            <a href="?lang=ru" class="lang-link {{if eq .Lang `ru`}}active{{end}}">RU</a>
+            <div class="brand">{{.Text.LobbyName}}</div>
+            <div class="header-actions">
+                <button class="pill-btn pill-btn--register" id="btn-header-register"><span>Register</span></button>
+                <button class="pill-btn pill-btn--login" id="btn-header-login"><span>Login</span></button>
+                <button class="pill-btn pill-btn--settings" id="btn-settings"><span>Settings</span></button>
+            </div>
         </div>
 
         <!-- Profile -->
         <div class="profile-card">
             <div class="avatar-box">
                 <img src="{{.User.AvatarURL}}" class="avatar" alt="Avatar">
+                <div class="status-dot status-{{.User.Status}}"></div>
                 <div class="level-badge">{{.Text.Level}} {{.User.Level}}</div>
             </div>
             <div class="profile-details">
@@ -484,7 +524,6 @@
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
                 <button class="action-btn" id="btn-add-friend">Add Friend</button>
                 <button class="ghost-btn" id="btn-remove-friend">Remove Friend</button>
-                <button class="ghost-btn" id="btn-settings">Settings</button>
             </div>
         </div>
 
@@ -522,6 +561,22 @@
                 <button class="primary-btn" id="reg-submit">Register</button>
             </div>
             <div id="reg-error" style="color:#ff7676;font-size:0.85rem;margin-top:6px;"></div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal-backdrop" id="login-modal" style="display:none">
+        <div class="modal">
+            <h3>Login</h3>
+            <label for="login-nickname">Nickname</label>
+            <input id="login-nickname" placeholder="Enter nickname" />
+            <label for="login-tag">Tag</label>
+            <input id="login-tag" placeholder="0001" />
+            <div class="modal-actions">
+                <button class="ghost-btn" id="login-cancel">Cancel</button>
+                <button class="primary-btn" id="login-submit">Login</button>
+            </div>
+            <div id="login-error" style="color:#ff7676;font-size:0.85rem;margin-top:6px;"></div>
         </div>
     </div>
 
@@ -570,6 +625,7 @@
     (function() {
         const qs = (id) => document.getElementById(id);
         const regModal = qs('register-modal');
+        const loginModal = qs('login-modal');
         const friendModal = qs('friend-modal');
         const settingsModal = qs('settings-modal');
         const show = (el) => { el.style.display = 'flex'; };
@@ -620,6 +676,39 @@
             };
             qs('reg-cancel').onclick = () => hide(regModal);
         }
+        const headerRegister = qs('btn-header-register');
+        if (headerRegister) headerRegister.onclick = () => show(regModal);
+
+        // Login
+        const loginSubmit = qs('login-submit');
+        if (loginSubmit) {
+            loginSubmit.onclick = async () => {
+                const nickname = qs('login-nickname').value.trim();
+                const tag = qs('login-tag').value.trim();
+                const errBox = qs('login-error');
+                errBox.textContent = '';
+                if (!nickname || !tag) { errBox.textContent = 'Nickname and tag required'; return; }
+                try {
+                    const res = await fetch('/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nickname, tag: parseInt(tag, 10) })
+                    });
+                    if (!res.ok) {
+                        errBox.textContent = res.status === 404 ? 'User not found' : 'Failed to login';
+                        return;
+                    }
+                    const data = await res.json();
+                    const uid = data.user_id || data.userID || data.UserID;
+                    window.location = '/?userID=' + encodeURIComponent(uid);
+                } catch (e) {
+                    errBox.textContent = 'Network error';
+                }
+            };
+            qs('login-cancel').onclick = () => hide(loginModal);
+        }
+        const headerLogin = qs('btn-header-login');
+        if (headerLogin) headerLogin.onclick = () => show(loginModal);
 
         // Friends
         const friendState = { mode: 'add' };
