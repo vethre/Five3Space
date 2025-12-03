@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chibiki Royale</title>
+    <link rel="stylesheet" href="/static/css/chibiki.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="top-hud">
+            <a class="hud-pill" id="hud-back" data-lobby-link href="/">← Lobby</a>
+            <div id="timer">2:00</div>
+            <div class="hud-pill live">LIVE</div>
+        </div>
+
+        <div id="ui-layer">
+            <div id="deck-area">
+                <div id="next-card-container" aria-label="Next card"></div>
+                <div id="hand"></div>
+            </div>
+            <div id="elixir-container" aria-label="Elixir">
+                <div id="elixir-bar"></div>
+                <div id="elixir-text">5</div>
+            </div>
+        </div>
+
+        <div id="game-over-screen" style="display: none;">
+            <h1 id="game-over-title">VICTORY</h1>
+            <div class="game-over-actions">
+                <button id="play-again" class="primary-btn">Play Again</button>
+                <a id="back-to-lobby" class="ghost-btn" data-lobby-link href="/">Back to Lobby</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/net.js"></script>
+    <script src="/static/js/game.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "users": [
+    {
+      "id": "user1",
+      "nickname": "Mr. Bobr",
+      "level": 24,
+      "exp": 8500,
+      "max_exp": 10000,
+      "medals": ["first_win"]
+    }
+  ]
+}

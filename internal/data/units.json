@@ -1,0 +1,92 @@
+{
+  "units": {
+    "morphilina": {
+      "name": "Morphilina",
+      "elixir": 3,
+      "hp": 600,
+      "damage": 180,
+      "hit_speed": 0.8,
+      "speed": 6.0,
+      "range": 1.0,
+      "target_type": "ground",
+      "ability": "none"
+    },
+    "dangerlyoha": {
+      "name": "Dangerlyoha",
+      "elixir": 4,
+      "hp": 1000,
+      "damage": 150,
+      "hit_speed": 1.5,
+      "speed": 4.0,
+      "range": 1.0,
+      "target_type": "ground",
+      "ability": "ramp"
+    },
+    "yuuechka": {
+      "name": "Yuuechka",
+      "elixir": 4,
+      "hp": 800,
+      "damage": 80,
+      "hit_speed": 1.2,
+      "speed": 4.0,
+      "range": 5.0,
+      "target_type": "all",
+      "ability": "heal"
+    },
+    "morphe": {
+      "name": "Morphe",
+      "elixir": 3,
+      "hp": 1100,
+      "damage": 90,
+      "hit_speed": 1.4,
+      "speed": 5.5,
+      "range": 5.5,
+      "target_type": "all",
+      "ability": "shield"
+    },
+    "classic_morphe": {
+      "name": "Classic Morphe",
+      "elixir": 4,
+      "hp": 1200,
+      "damage": 160,
+      "hit_speed": 1.0,
+      "speed": 4.0,
+      "range": 1.0,
+      "target_type": "ground",
+      "ability": "none"
+    },
+    "classic_yuu": {
+      "name": "Classic Yuu",
+      "elixir": 5,
+      "hp": 1600,
+      "damage": 100,
+      "hit_speed": 1.2,
+      "speed": 4.0,
+      "range": 1.0,
+      "target_type": "ground",
+      "ability": "stun"
+    },
+    "sasavot": {
+      "name": "Sasavot",
+      "elixir": 5,
+      "hp": 2200,
+      "damage": 200,
+      "hit_speed": 1.5,
+      "speed": 2.5,
+      "range": 1.0,
+      "target_type": "ground",
+      "ability": "slow"
+    },
+    "murzik": {
+      "name": "Murzik",
+      "elixir": 7,
+      "hp": 800,
+      "damage": 350,
+      "hit_speed": 2.0,
+      "speed": 3.0,
+      "range": 6.0,
+      "target_type": "ground",
+      "ability": "hunger"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "first_win",
+    "name": "First Victory",
+    "description": "Win your first match.",
+    "icon": "path/to/icon.png"
+  },
+  {
+    "id": "ten_wins",
+    "name": "Ten Victories",
+    "description": "Win 10 matches.",
+    "icon": "path/to/icon.png"
+  },
+  {
+    "id": "flawless_victory",
+    "name": "Flawless Victory",
+    "description": "Win a match without losing a tower.",
+    "icon": "path/to/icon.png"
+  }
+]
