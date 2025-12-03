@@ -607,7 +607,7 @@
     </div>
 
     <!-- Registration Modal -->
-    <div class="modal-backdrop" id="register-modal" {{if not .ShowRegister}}style="display:none"{{end}}>
+    <div class="modal-backdrop {{if .ShowRegister}}open{{end}}" id="register-modal">
         <div class="modal">
             <h3>Create your profile</h3>
             <label for="reg-nickname">Nickname</label>
@@ -623,7 +623,7 @@
     </div>
 
     <!-- Login Modal -->
-    <div class="modal-backdrop" id="login-modal" style="display:none">
+    <div class="modal-backdrop" id="login-modal">
         <div class="modal">
             <h3>Login</h3>
             <label for="login-nickname">Nickname</label>
@@ -641,7 +641,7 @@
     </div>
 
     <!-- Friend Modal -->
-    <div class="modal-backdrop" id="friend-modal" style="display:none">
+    <div class="modal-backdrop" id="friend-modal">
         <div class="modal">
             <h3 id="friend-modal-title">Add Friend</h3>
             <label for="friend-nickname">Nickname</label>
@@ -657,7 +657,7 @@
     </div>
 
     <!-- Settings Modal -->
-    <div class="modal-backdrop" id="settings-modal" style="display:none">
+    <div class="modal-backdrop" id="settings-modal">
         <div class="modal">
             <h3>Settings</h3>
             <div style="display:flex; flex-direction:column; gap:12px;">
@@ -699,8 +699,9 @@
         const loginModal = qs('login-modal');
         const friendModal = qs('friend-modal');
         const settingsModal = qs('settings-modal');
-        const show = (el) => { el.classList.add('open'); };
-        const hide = (el) => { el.classList.remove('open'); };
+        [regModal, loginModal, friendModal, settingsModal].forEach(el => { if (el) el.style.display = ''; });
+        const show = (el) => { if (el) el.classList.add('open'); };
+        const hide = (el) => { if (el) el.classList.remove('open'); };
 
         let currentStatus = '{{.User.Status}}' || 'online';
         const statusDot = document.querySelector('.status-dot');

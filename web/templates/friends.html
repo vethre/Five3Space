@@ -8,35 +8,42 @@
         :root {
             --bg-dark: #0f0502;
             --primary: #ff4500;
+            --accent: #ffae00;
             --glass-bg: rgba(255, 255, 255, 0.05);
             --glass-border: rgba(255, 255, 255, 0.1);
             --text-main: #ffffff;
-            --text-muted: rgba(255, 255, 255, 0.6);
+            --text-muted: rgba(255, 255, 255, 0.5);
             --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-        body { margin:0; font-family: var(--font-main); background: var(--bg-dark); color: var(--text-main); }
-        .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+        body {
+            margin:0;
+            font-family: var(--font-main);
+            background: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         .top-bar { display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .brand { font-weight: 900; letter-spacing: 2px; color: var(--text-muted); }
-        .pill-btn { padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.08); color: white; background: linear-gradient(135deg, #8e2de2, #4a00e0); cursor:pointer; }
-        .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap:16px; }
-        .card { background: var(--glass-bg); border:1px solid var(--glass-border); border-radius:16px; padding:16px; position:relative; }
-        .avatar { width:64px; height:64px; border-radius:50%; border:2px solid var(--primary); object-fit: cover; }
+        .header-actions { display:flex; gap:10px; }
+        .pill-btn { padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.08); color: white; text-decoration:none; font-weight:800; background: linear-gradient(135deg, #8e2de2, #4a00e0); }
+        .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:16px; }
+        .card { background: var(--glass-bg); border:1px solid var(--glass-border); border-radius:16px; padding:16px; position:relative; box-shadow:0 10px 30px rgba(0,0,0,0.25); }
+        .avatar { width:72px; height:72px; border-radius:50%; border:3px solid var(--primary); object-fit: cover; }
         .nickname { font-weight:900; font-size:1.1rem; margin-top:8px; }
         .tag { color: var(--text-muted); }
         .status-dot { position:absolute; top:14px; right:14px; width:12px; height:12px; border-radius:50%; border:2px solid #0f0502; }
         .status-online { background:#4ade80; box-shadow:0 0 10px rgba(74,222,128,0.9); }
         .status-away { background:#facc15; box-shadow:0 0 10px rgba(250,204,21,0.9); }
         .status-offline { background:#737373; box-shadow:0 0 10px rgba(115,115,115,0.6); }
-        .meta { font-size:0.85rem; color: var(--text-muted); }
-        a { color: inherit; text-decoration: none; }
+        .meta { font-size:0.9rem; color: var(--text-muted); }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="top-bar">
             <div class="brand">{{.Text.LobbyName}} / {{.Text.FriendsNav}}</div>
-            <div style="display:flex; gap:8px;">
+            <div class="header-actions">
                 <a class="pill-btn" href="/">Lobby</a>
                 <a class="pill-btn" href="/shop">Shop</a>
                 <a class="pill-btn" href="/customize">Customize</a>
@@ -51,6 +58,7 @@
                     <img class="avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed={{.Nickname}}&backgroundColor=ffdfbf" alt="avatar">
                     <div class="nickname">{{.Nickname}}</div>
                     <div class="tag">#{{printf "%04d" .Tag}} · Level {{.Level}}</div>
+                    <div class="meta">Status: {{.Presence}}</div>
                 </div>
                 {{end}}
             {{else}}

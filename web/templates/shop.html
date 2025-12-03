@@ -5,19 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shop</title>
     <style>
-        :root { --bg: #0f0502; --glass: rgba(255,255,255,0.06); --border: rgba(255,255,255,0.1); --text: #fff; --muted: rgba(255,255,255,0.6); }
-        body { margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
-        .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
-        .top-bar { display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .brand { font-weight:900; letter-spacing:2px; color: var(--muted); }
-        .pill-btn { padding:8px 14px; border-radius:999px; border:1px solid var(--border); background: linear-gradient(135deg, #ff4e50, #f9d423); color: #0f0502; font-weight:800; text-decoration:none; }
+        :root {
+            --bg-dark: #0f0502;
+            --primary: #ff4500;
+            --accent: #ffae00;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        body { margin:0; font-family: var(--font-main); background: var(--bg-dark); color: var(--text-main); }
+        .container { max-width: 1200px; margin:0 auto; padding:20px; }
+        .top-bar { display:flex; justify-content: space-between; align-items:center; margin-bottom: 20px; }
+        .brand { font-weight:900; letter-spacing:2px; color: var(--text-muted); }
+        .header-actions { display:flex; gap:10px; }
+        .pill-btn { padding:8px 14px; border-radius:999px; border:1px solid rgba(255,255,255,0.08); color:white; text-decoration:none; font-weight:800; background: linear-gradient(135deg, #ff4e50, #f9d423); }
         .section { margin-bottom:24px; }
         .section h2 { margin:0 0 10px; }
-        .cards { display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:12px; }
-        .card { background: var(--glass); border:1px solid var(--border); border-radius:14px; padding:14px; box-shadow:0 10px 30px rgba(0,0,0,0.25); }
+        .cards { display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap:14px; }
+        .card { background: var(--glass-bg); border:1px solid var(--glass-border); border-radius:16px; padding:14px; box-shadow:0 10px 30px rgba(0,0,0,0.25); }
         .card-title { font-weight:900; margin-bottom:6px; }
-        .card-desc { color: var(--muted); font-size:0.9rem; margin-bottom:10px; }
-        .price { font-weight:800; }
+        .card-desc { color: var(--text-muted); font-size:0.9rem; margin-bottom:10px; }
+        .price { font-weight:800; color: var(--accent); }
         .buy-btn { background:#fff; color:#000; border:none; padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:800; }
     </style>
 </head>
@@ -25,7 +35,7 @@
     <div class="container">
         <div class="top-bar">
             <div class="brand">{{.Text.LobbyName}} / {{.Text.Shop}}</div>
-            <div style="display:flex; gap:8px;">
+            <div class="header-actions">
                 <a class="pill-btn" href="/">Lobby</a>
                 <a class="pill-btn" href="/friends">Friends</a>
                 <a class="pill-btn" href="/customize">Customize</a>
