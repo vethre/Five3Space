@@ -15,6 +15,7 @@ import (
 type User struct {
 	ID           string
 	Nickname     string
+	Tag          string
 	AvatarURL    string
 	Exp          int
 	MaxExp       int
@@ -162,6 +163,7 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 		user = User{
 			ID:        "guest",
 			Nickname:  "Error Loading",
+			Tag:       "----",
 			AvatarURL: "https://api.dicebear.com/7.x/avataaars/svg?seed=error&backgroundColor=ffdfbf",
 			Medals:    0,
 		}
@@ -169,6 +171,7 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 		user = User{
 			ID:        selected.ID,
 			Nickname:  selected.Nickname,
+			Tag:       fmt.Sprintf("%04d", selected.Tag),
 			AvatarURL: fmt.Sprintf("https://api.dicebear.com/7.x/avataaars/svg?seed=%s&backgroundColor=ffdfbf", selected.Nickname),
 			Exp:       selected.Exp,
 			MaxExp:    selected.MaxExp,

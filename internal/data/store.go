@@ -1,13 +1,19 @@
 package data
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"sync"
+	"time"
+
+	_ "github.com/lib/pq"
 )
 
-// Medal represents an achievement that can be earned.
+// Medal represents metadata for an achievement.
 type Medal struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
@@ -15,92 +21,131 @@ type Medal struct {
 	Icon        string `json:"icon"`
 }
 
+// UserData is the public-facing user payload.
 type UserData struct {
 	ID       string   `json:"id"`
 	Nickname string   `json:"nickname"`
+	Tag      int      `json:"tag"`
 	Level    int      `json:"level"`
 	Exp      int      `json:"exp"`
 	MaxExp   int      `json:"max_exp"`
 	Medals   []string `json:"medals"`
 }
 
-type UsersFile struct {
-	Users []UserData `json:"users"`
-}
-
-// Store keeps user progress and medal metadata in memory and flushes updates back to disk.
+// Store persists user progress and medal metadata in Postgres.
 type Store struct {
-	mu        sync.Mutex
-	usersPath string
-	users     UsersFile
-	medals    map[string]Medal
+	mu     sync.Mutex
+	db     *sql.DB
+	medals map[string]Medal
 }
 
-func NewStore(usersPath, medalsPath string) (*Store, error) {
-	store := &Store{
-		usersPath: usersPath,
-		medals:    make(map[string]Medal),
+// NewStore accepts an existing DB handle.
+func NewStore(db *sql.DB, medalsPath string) (*Store, error) {
+	s := &Store{
+		db:     db,
+		medals: make(map[string]Medal),
 	}
-
-	if err := store.loadUsers(); err != nil {
+	if err := s.loadMedals(medalsPath); err != nil {
 		return nil, err
 	}
-	if err := store.loadMedals(medalsPath); err != nil {
-		return nil, err
-	}
-	return store, nil
+	return s, nil
 }
 
-func (s *Store) loadUsers() error {
-	raw, err := os.ReadFile(s.usersPath)
+// NewStoreFromDB builds the store from a connection string (e.g. os.Getenv("DATABASE_URL")).
+func NewStoreFromDB(connStr, medalsPath string) (*Store, error) {
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return json.Unmarshal(raw, &s.users)
+	if err := db.Ping(); err != nil {
+		return nil, err
+	}
+	return NewStore(db, medalsPath)
 }
 
+// loadMedals keeps medal metadata in memory and mirrors it into the DB table.
 func (s *Store) loadMedals(path string) error {
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
-	var medals []Medal
-	if err := json.Unmarshal(raw, &medals); err != nil {
+	var list []Medal
+	if err := json.Unmarshal(raw, &list); err != nil {
 		return err
 	}
-	for _, m := range medals {
+	for _, m := range list {
 		s.medals[m.ID] = m
+	}
+
+	// Best-effort upsert into DB to keep table in sync with JSON source.
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	for _, m := range list {
+		_, _ = s.db.ExecContext(ctx, `
+			INSERT INTO medals (id, name, description, icon)
+			VALUES ($1, $2, $3, $4)
+			ON CONFLICT (id) DO UPDATE
+			SET name = EXCLUDED.name,
+			    description = EXCLUDED.description,
+			    icon = EXCLUDED.icon
+		`, m.ID, m.Name, m.Description, m.Icon)
 	}
 	return nil
 }
 
-func (s *Store) save() error {
-	data, err := json.MarshalIndent(s.users, "", "  ")
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(s.usersPath, data, 0644)
-}
-
-// FirstUser returns the first user for quick demo purposes.
+// FirstUser is a convenience helper used by the lobby when no ID is provided.
 func (s *Store) FirstUser() (UserData, bool) {
-	if len(s.users.Users) == 0 {
+	row := s.db.QueryRow(`
+        SELECT id, nickname, tag, level, exp, max_exp
+        FROM users
+        ORDER BY created_at ASC
+        LIMIT 1
+    `)
+
+	var u UserData
+	if err := row.Scan(&u.ID, &u.Nickname, &u.Tag, &u.Level, &u.Exp, &u.MaxExp); err != nil {
 		return UserData{}, false
 	}
-	return s.users.Users[0], true
+
+	u.Medals = s.getUserMedalIDs(u.ID)
+	return u, true
 }
 
-// GetUser returns a copy of the user by id.
+// GetUser returns a single user by ID.
 func (s *Store) GetUser(id string) (UserData, bool) {
-	for _, u := range s.users.Users {
-		if u.ID == id {
-			return u, true
+	row := s.db.QueryRow(`
+        SELECT id, nickname, tag, level, exp, max_exp
+        FROM users
+        WHERE id = $1
+    `, id)
+
+	var u UserData
+	if err := row.Scan(&u.ID, &u.Nickname, &u.Tag, &u.Level, &u.Exp, &u.MaxExp); err != nil {
+		return UserData{}, false
+	}
+
+	u.Medals = s.getUserMedalIDs(id)
+	return u, true
+}
+
+func (s *Store) getUserMedalIDs(userID string) []string {
+	rows, err := s.db.Query(`SELECT medal_id FROM user_medals WHERE user_id = $1`, userID)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+
+	var ids []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err == nil {
+			ids = append(ids, id)
 		}
 	}
-	return UserData{}, false
+	return ids
 }
 
-// MedalCount returns how many medals the user currently has.
+// MedalCount returns how many medals the user currently holds.
 func (s *Store) MedalCount(id string) int {
 	user, ok := s.GetUser(id)
 	if !ok {
@@ -109,54 +154,55 @@ func (s *Store) MedalCount(id string) int {
 	return len(user.Medals)
 }
 
-// AwardMedals grants the provided medals to the user, avoiding duplicates and persisting the change.
+// AwardMedals inserts new medals for a user, ignoring duplicates.
 func (s *Store) AwardMedals(userID string, medalIDs ...string) (UserData, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	idx := -1
-	for i, u := range s.users.Users {
-		if u.ID == userID {
-			idx = i
-			break
-		}
+	tx, err := s.db.Begin()
+	if err != nil {
+		return UserData{}, err
 	}
-	if idx == -1 {
+	defer tx.Rollback()
+
+	var exists bool
+	if err := tx.QueryRow(`SELECT EXISTS(SELECT 1 FROM users WHERE id = $1)`, userID).Scan(&exists); err != nil {
+		return UserData{}, err
+	}
+	if !exists {
 		return UserData{}, errors.New("user not found")
 	}
 
-	user := s.users.Users[idx]
-	existing := make(map[string]bool, len(user.Medals))
-	for _, id := range user.Medals {
-		existing[id] = true
-	}
-
-	changed := false
 	for _, id := range medalIDs {
-		if !existing[id] {
-			if _, known := s.medals[id]; known {
-				user.Medals = append(user.Medals, id)
-				existing[id] = true
-				changed = true
-			}
+		if _, ok := s.medals[id]; !ok {
+			continue // Ignore unknown medals
+		}
+		if _, err := tx.Exec(`
+            INSERT INTO user_medals (user_id, medal_id)
+            VALUES ($1, $2)
+            ON CONFLICT (user_id, medal_id) DO NOTHING
+        `, userID, id); err != nil {
+			return UserData{}, fmt.Errorf("insert medal %s: %w", id, err)
 		}
 	}
 
-	if changed {
-		s.users.Users[idx] = user
-		if err := s.save(); err != nil {
-			return UserData{}, err
-		}
+	if err := tx.Commit(); err != nil {
+		return UserData{}, err
+	}
+
+	user, ok := s.GetUser(userID)
+	if !ok {
+		return UserData{}, errors.New("user not found after awarding medals")
 	}
 	return user, nil
 }
 
-// MedalDetails returns a slice with the medal metadata for the provided IDs.
+// MedalDetails returns metadata for the provided medal IDs.
 func (s *Store) MedalDetails(ids []string) []Medal {
 	out := make([]Medal, 0, len(ids))
 	for _, id := range ids {
-		if medal, ok := s.medals[id]; ok {
-			out = append(out, medal)
+		if m, ok := s.medals[id]; ok {
+			out = append(out, m)
 		}
 	}
 	return out

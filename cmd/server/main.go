@@ -1,7 +1,10 @@
 package main
 
 import (
+	"database/sql"
+	"fmt"
 	"log"
+	"main/internal/auth"
 	"main/internal/chibiki"
 	"main/internal/data"
 	"main/internal/lobby"
@@ -10,9 +13,27 @@ import (
 )
 
 func main() {
-	store, err := data.NewStore("internal/data/users.json", "internal/data/medals.json")
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		log.Fatal("DATABASE_URL is not set")
+	}
+
+	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
-		log.Fatalf("failed to load data store: %v", err)
+		log.Fatalf("failed to open database: %v", err)
+	}
+	defer db.Close()
+
+	db.SetMaxOpenConns(10)
+	db.SetMaxIdleConns(5)
+
+	if err := applySchema(db); err != nil {
+		log.Fatalf("failed to apply schema: %v", err)
+	}
+
+	store, err := data.NewStore(db, "internal/data/medals.json")
+	if err != nil {
+		log.Fatalf("failed to init store: %v", err)
 	}
 
 	// 1. Initialize the Game Engine
@@ -40,6 +61,8 @@ func main() {
 	go gameInstance.StartLoop()
 
 	// 5. Configure Routes
+	authService := auth.NewAuth(db)
+	http.HandleFunc("/register", authService.RegisterHandler)
 	http.HandleFunc("/ws", chibiki.NewWebsocketHandler(gameInstance))
 
 	fs := http.FileServer(http.Dir("./web/static"))
@@ -61,4 +84,61 @@ func main() {
 		log.Fatal("ListenAndServe: ", err)
 	}
 
+}
+
+// applySchema creates/updates the minimal tables needed for auth, medals, and friendships.
+func applySchema(db *sql.DB) error {
+	statements := []string{
+		`
+		CREATE TABLE IF NOT EXISTS users (
+			id TEXT PRIMARY KEY,
+			nickname TEXT NOT NULL,
+			tag INTEGER NOT NULL,
+			level INTEGER NOT NULL DEFAULT 1,
+			exp INTEGER NOT NULL DEFAULT 0,
+			max_exp INTEGER NOT NULL DEFAULT 1000,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			UNIQUE (nickname, tag)
+		);
+		`,
+		`
+		CREATE TABLE IF NOT EXISTS medals (
+			id TEXT PRIMARY KEY,
+			name TEXT NOT NULL,
+			description TEXT NOT NULL,
+			icon TEXT NOT NULL,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		);
+		`,
+		`
+		CREATE TABLE IF NOT EXISTS user_medals (
+			user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			medal_id TEXT NOT NULL REFERENCES medals(id) ON DELETE CASCADE,
+			awarded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			PRIMARY KEY (user_id, medal_id)
+		);
+		`,
+		`
+		CREATE TABLE IF NOT EXISTS friendships (
+			id BIGSERIAL PRIMARY KEY,
+			requester_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			addressee_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','accepted','blocked')),
+			CONSTRAINT friendships_not_self CHECK (requester_id <> addressee_id),
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		);
+		`,
+		`CREATE INDEX IF NOT EXISTS idx_users_nickname ON users (nickname);`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_friendships_pair ON friendships (LEAST(requester_id, addressee_id), GREATEST(requester_id, addressee_id));`,
+		`CREATE INDEX IF NOT EXISTS idx_user_medals_user ON user_medals (user_id);`,
+	}
+
+	for _, stmt := range statements {
+		if _, err := db.Exec(stmt); err != nil {
+			return fmt.Errorf("schema exec failed: %w", err)
+		}
+	}
+	return nil
 }
