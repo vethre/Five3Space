@@ -9,6 +9,28 @@ import (
 	"main/internal/data"
 )
 
+type ShopPageData struct {
+	User     User
+	Text     Translations
+	Lang     string
+	Currency string
+}
+
+func getCurrency(lang string) string {
+	switch lang {
+	case "ua":
+		return "₴"
+	case "ru":
+		return "₽"
+	case "cz":
+		return "Kč"
+	case "eu":
+		return "€"
+	default:
+		return "$"
+	}
+}
+
 // commonPage builds the shared data model for all pages.
 func commonPage(w http.ResponseWriter, r *http.Request, store *data.Store) PageData {
 	requestedLang := normalizeLang(r.URL.Query().Get("lang"))
@@ -74,6 +96,7 @@ func commonPage(w http.ResponseWriter, r *http.Request, store *data.Store) PageD
 			Exp:       selected.Exp,
 			MaxExp:    selected.MaxExp,
 			Medals:    len(selected.Medals),
+			Trophies:  selected.Trophies,
 			Level:     selected.Level,
 			Coins:     selected.Coins,
 			Status:    selected.Status,
@@ -118,8 +141,20 @@ func NewFriendsHandler(store *data.Store) http.HandlerFunc {
 
 func NewShopHandler(store *data.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data := commonPage(w, r, store)
-		data.ActivePage = "shop"
+		// 1. Get Base Data (User, Lang, etc.)
+		base := commonPage(w, r, store)
+
+		// 2. Determine Currency based on Lang
+		currency := getCurrency(base.Lang)
+
+		// 3. Map to Shop Page Data
+		data := ShopPageData{
+			User:     base.User,
+			Text:     base.Text,
+			Lang:     base.Lang,
+			Currency: currency,
+		}
+
 		tmpl, err := template.ParseFiles(filepath.Join("web", "templates", "shop.html"))
 		if err != nil {
 			http.Error(w, "Could not load template", http.StatusInternalServerError)
