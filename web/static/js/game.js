@@ -52,8 +52,11 @@ const copyInvite = document.getElementById('copy-invite');
 const medalDelta = document.getElementById('medal-delta');
 
 if (lobbyLinks && window.netParams) {
-    const { userID, lang } = window.netParams;
-    const href = `/?userID=${encodeURIComponent(userID)}&lang=${encodeURIComponent(lang)}`;
+    // We only pass the language. We DO NOT pass userID. 
+    // This forces the Lobby to look at your Cookies to decide who you are.
+    const { lang } = window.netParams; 
+    const href = `/?lang=${encodeURIComponent(lang)}`;
+    
     lobbyLinks.forEach((link) => {
         link.setAttribute('href', href);
     });
@@ -64,6 +67,9 @@ if (playAgainBtn) {
             window.net.sendReset();
         }
         gameOverScreen.style.display = 'none';
+        // Re-hide the top lobby button when playing again
+        const topBackBtn = document.getElementById('hud-back');
+        if (topBackBtn) topBackBtn.style.display = 'none'; 
     });
 }
 
@@ -107,13 +113,19 @@ function updateUI() {
             cardDiv = document.createElement('div');
             cardDiv.className = 'card';
             handDiv.appendChild(cardDiv);
-            cardDiv.onclick = () => {
-                if (selectedCard === key) selectedCard = null;
-                else selectedCard = key;
-                updateUI();
-            };
+            
+            // --- REMOVED onclick FROM HERE --- 
+            // Do not assign onclick inside this if-block!
         }
         
+        // --- NEW LOCATION: UPDATE ONCLICK EVERY TIME ---
+        // This ensures the click handler always knows the CURRENT card key (key)
+        cardDiv.onclick = () => {
+            if (selectedCard === key) selectedCard = null;
+            else selectedCard = key;
+            updateUI();
+        };
+
         if (cardDiv.dataset.cardKey !== key) {
             cardDiv.innerHTML = '';
             const img = sprites[key];
@@ -167,6 +179,9 @@ function updateUI() {
     // GAME OVER
     if (window.gameState.gameOver) {
         gameOverScreen.style.display = 'flex';
+
+        const topBackBtn = document.getElementById('hud-back');
+        if (topBackBtn) topBackBtn.style.display = 'flex';
         const win = window.gameState.winner === myTeam;
         gameOverTitle.innerText = win ? "VICTORY!" : "DEFEAT";
         gameOverTitle.style.color = win ? "#4f4" : "#f44";
@@ -176,6 +191,8 @@ function updateUI() {
         }
     } else {
         gameOverScreen.style.display = 'none';
+        const topBackBtn = document.getElementById('hud-back');
+        if (topBackBtn) topBackBtn.style.display = 'none';
     }
 }
 
@@ -273,7 +290,9 @@ window.addEventListener('resize', resizeCanvas);
 window.onload = () => {
     resizeCanvas();
     const url = new URL(window.location.href);
+    url.searchParams.delete('userID'); // Remove ID so friend doesn't become you
     const link = url.toString();
+    
     if (inviteLink) inviteLink.value = link;
     loadAssets(() => { render(); });
 };

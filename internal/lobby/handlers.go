@@ -169,12 +169,12 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 	hadCookie := false
 
 	// сначала query-параметр
-	if q := r.URL.Query().Get("userID"); q != "" {
-		userID = q
-		hadCookie = true
-	} else if c, err := r.Cookie("user_id"); err == nil && c.Value != "" {
-		// потом кука
+	if c, err := r.Cookie("user_id"); err == nil && c.Value != "" {
 		userID = c.Value
+		hadCookie = true
+	} else if q := r.URL.Query().Get("userID"); q != "" {
+		// Only use URL param if NO cookie is present
+		userID = q
 		hadCookie = true
 	}
 
