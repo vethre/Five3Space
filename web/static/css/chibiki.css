@@ -167,6 +167,13 @@ canvas {
     margin-top: 20px;
 }
 
+.medal-delta {
+    margin-top: 8px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: #4f4;
+}
+
 .primary-btn,
 .ghost-btn {
     padding: 12px 20px;
@@ -192,6 +199,51 @@ canvas {
     transform: translateY(-2px);
     border-color: var(--accent);
 }
+
+.waiting-card {
+    background: rgba(0,0,0,0.75);
+    border: 1px solid var(--glass-border);
+    padding: 20px;
+    border-radius: 14px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.45);
+    text-align: center;
+    color: var(--text-main);
+    max-width: 420px;
+}
+.invite-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+.invite-row input {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.05);
+    color: white;
+}
+.spinner {
+    width: 32px; height: 32px;
+    border: 3px solid rgba(255,255,255,0.2);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    margin: 0 auto 10px;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Waiting overlay */
+#waiting-screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    pointer-events: none;
+}
+#waiting-screen .waiting-card { pointer-events: auto; }
 
 /* Deck Area */
 #deck-area {

@@ -34,10 +34,23 @@
         </aside>
 
         <div id="stage">
+            <div id="waiting-screen">
+                <div class="waiting-card">
+                    <div class="spinner"></div>
+                    <h3>Waiting for an opponent…</h3>
+                    <p>Share this link with a friend to join your match.</p>
+                    <div class="invite-row">
+                        <input id="invite-link" readonly />
+                        <button id="copy-invite" class="ghost-btn">Copy</button>
+                    </div>
+                </div>
+            </div>
+
             <canvas id="gameCanvas"></canvas>
 
             <div id="game-over-screen" style="display: none;">
                 <h1 id="game-over-title">VICTORY</h1>
+                <div id="medal-delta" class="medal-delta">+30 medals</div>
                 <div class="game-over-actions">
                     <button id="play-again" class="primary-btn">Play Again</button>
                     <a id="back-to-lobby" class="ghost-btn" data-lobby-link href="/">Back to Lobby</a>

@@ -18,6 +18,7 @@ socket.onmessage = (event) => {
             window.gameState.winner = msg.winner;
             window.gameState.overtime = msg.overtime;
             window.gameState.tiebreaker = msg.tiebreaker;
+            window.gameState.playerCount = msg.playerCount || 0;
             if (msg.me) {
                 window.gameState.me = msg.me;
                 window.gameState.myTeam = msg.myTeam;

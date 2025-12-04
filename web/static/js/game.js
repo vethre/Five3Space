@@ -1,6 +1,6 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-window.gameState = { entities: [], me: { elixir: 5, hand: [], next: "" }, time: 0, myTeam: 0 };
+window.gameState = { entities: [], me: { elixir: 5, hand: [], next: "" }, time: 0, myTeam: 0, playerCount: 0 };
 
 const ASSET_PATH = '/static/assets/';
 const sprites = {};
@@ -46,6 +46,10 @@ const gameOverScreen = document.getElementById('game-over-screen');
 const gameOverTitle = document.getElementById('game-over-title');
 const playAgainBtn = document.getElementById('play-again');
 const lobbyLinks = document.querySelectorAll('[data-lobby-link]');
+const waitingScreen = document.getElementById('waiting-screen');
+const inviteLink = document.getElementById('invite-link');
+const copyInvite = document.getElementById('copy-invite');
+const medalDelta = document.getElementById('medal-delta');
 
 if (lobbyLinks && window.netParams) {
     const { userID, lang } = window.netParams;
@@ -70,6 +74,7 @@ function updateUI() {
 
     const me = window.gameState.me;
     if (!me) return;
+    const myTeam = window.gameState.myTeam || 0;
 
     // ELIXIR
     const pct = (me.elixir / 10) * 100;
@@ -150,16 +155,24 @@ function updateUI() {
     }
 
 
+    // WAITING
+    if (waitingScreen) {
+        if ((window.gameState.playerCount || 0) < 2 && !window.gameState.gameOver) {
+            waitingScreen.style.display = 'flex';
+        } else {
+            waitingScreen.style.display = 'none';
+        }
+    }
+
     // GAME OVER
     if (window.gameState.gameOver) {
         gameOverScreen.style.display = 'flex';
-        const myTeam = window.gameState.myTeam;
-        if (window.gameState.winner === myTeam) {
-            gameOverTitle.innerText = "VICTORY!";
-            gameOverTitle.style.color = "#4f4";
-        } else {
-            gameOverTitle.innerText = "DEFEAT";
-            gameOverTitle.style.color = "#f44";
+        const win = window.gameState.winner === myTeam;
+        gameOverTitle.innerText = win ? "VICTORY!" : "DEFEAT";
+        gameOverTitle.style.color = win ? "#4f4" : "#f44";
+        if (medalDelta) {
+            medalDelta.textContent = win ? "+30 medals" : "-15 medals";
+            medalDelta.style.color = win ? "#4f4" : "#f99";
         }
     } else {
         gameOverScreen.style.display = 'none';
@@ -177,6 +190,11 @@ canvas.addEventListener('mousedown', (e) => {
     // Clamp clicks into board bounds to reduce missed spawns near edges
     if (y < 0) y = 0;
     if (y > 32) y = 32;
+
+    // Flip for top team so everyone spawns from the "bottom" view
+    if ((window.gameState.myTeam || 0) === 1) {
+        y = 32 - y;
+    }
 
     if (window.net && window.net.sendSpawn) {
         net.sendSpawn(selectedCard, x, y);
@@ -215,10 +233,12 @@ function render() {
 
     const entities = window.gameState.entities || [];
     const sorted = entities.sort((a, b) => a.y - b.y);
+    const myTeam = window.gameState.myTeam || 0;
 
     sorted.forEach(ent => {
         const screenX = ent.x * SCALE;
-        const screenY = ent.y * SCALE;
+        const viewY = myTeam === 1 ? (32 - ent.y) : ent.y;
+        const screenY = viewY * SCALE;
         const img = sprites[ent.key];
 
         ctx.fillStyle = "rgba(0,0,0,0.3)";
@@ -257,4 +277,22 @@ function resizeCanvas() {
 }
 
 window.addEventListener('resize', resizeCanvas);
-window.onload = () => { resizeCanvas(); loadAssets(() => { render(); }); };
+window.onload = () => {
+    resizeCanvas();
+    const url = new URL(window.location.href);
+    const link = url.toString();
+    if (inviteLink) inviteLink.value = link;
+    loadAssets(() => { render(); });
+};
+
+if (copyInvite && inviteLink) {
+    copyInvite.onclick = async () => {
+        try {
+            await navigator.clipboard.writeText(inviteLink.value);
+            copyInvite.textContent = 'Copied';
+            setTimeout(() => copyInvite.textContent = 'Copy', 1200);
+        } catch (e) {
+            copyInvite.textContent = 'Failed';
+        }
+    };
+}

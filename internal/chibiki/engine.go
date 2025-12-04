@@ -217,6 +217,8 @@ func (g *GameInstance) Update(dt float64) {
 	activeEntities := g.Entities[:0]
 	towersTeam0 := 0
 	towersTeam1 := 0
+	king0Alive := false
+	king1Alive := false
 
 	// Mark if a tower drops during overtime/tiebreaker for sudden death.
 	suddenDeath := g.IsOvertime || g.IsTiebreaker
@@ -230,6 +232,13 @@ func (g *GameInstance) Update(dt float64) {
 					towersTeam1++
 				}
 			}
+			if e.Key == "king_tower" {
+				if e.Team == 0 {
+					king0Alive = true
+				} else {
+					king1Alive = true
+				}
+			}
 		} else {
 			if e.Key == "king_tower" {
 				g.finishGame((e.Team + 1) % 2)
@@ -241,6 +250,21 @@ func (g *GameInstance) Update(dt float64) {
 	g.Entities = activeEntities
 	if g.GameOver {
 		return
+	}
+
+	// End of regulation: decide winner if towers differ, otherwise go to overtime
+	if !g.IsOvertime && !g.IsTiebreaker && g.GameTime >= DurationNormal {
+		score0 := towersTeam0 + boolToInt(king0Alive)
+		score1 := towersTeam1 + boolToInt(king1Alive)
+		if score0 != score1 {
+			winner := 0
+			if score1 > score0 {
+				winner = 1
+			}
+			g.finishGame(winner)
+			return
+		}
+		g.IsOvertime = true
 	}
 
 	now := float64(time.Now().UnixMilli()) / 1000.0
@@ -293,25 +317,27 @@ func (g *GameInstance) BroadcastCustomState() {
 	defer g.Mutex.RUnlock()
 
 	type stateMessage struct {
-		Type       string       `json:"type"`
-		Entities   []*Entity    `json:"entities"`
-		Time       float64      `json:"time"`
-		GameOver   bool         `json:"gameOver"`
-		Winner     int          `json:"winner"`
-		Overtime   bool         `json:"overtime"`
-		Tiebreaker bool         `json:"tiebreaker"`
-		Me         *PlayerState `json:"me,omitempty"`
-		MyTeam     int          `json:"myTeam,omitempty"`
+		Type        string       `json:"type"`
+		Entities    []*Entity    `json:"entities"`
+		Time        float64      `json:"time"`
+		GameOver    bool         `json:"gameOver"`
+		Winner      int          `json:"winner"`
+		Overtime    bool         `json:"overtime"`
+		Tiebreaker  bool         `json:"tiebreaker"`
+		Me          *PlayerState `json:"me,omitempty"`
+		MyTeam      int          `json:"myTeam,omitempty"`
+		PlayerCount int          `json:"playerCount"`
 	}
 
 	base := stateMessage{
-		Type:       "state",
-		Entities:   g.Entities,
-		Time:       g.GameTime,
-		GameOver:   g.GameOver,
-		Winner:     g.WinnerTeam,
-		Overtime:   g.IsOvertime,
-		Tiebreaker: g.IsTiebreaker,
+		Type:        "state",
+		Entities:    g.Entities,
+		Time:        g.GameTime,
+		GameOver:    g.GameOver,
+		Winner:      g.WinnerTeam,
+		Overtime:    g.IsOvertime,
+		Tiebreaker:  g.IsTiebreaker,
+		PlayerCount: len(g.Players),
 	}
 
 	for player := range g.Players {
@@ -454,4 +480,11 @@ func (g *GameInstance) finishGame(winningTeam int) {
 		}
 		go g.OnGameOver(winningTeam, playersCopy)
 	}
+}
+
+func boolToInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
 }
