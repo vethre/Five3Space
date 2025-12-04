@@ -119,6 +119,18 @@
         .buy-btn.coins { background: linear-gradient(135deg, #ffae00, #ff4e50); color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .currency-select {
+            background: rgba(0,0,0,0.3);
+            color: var(--text-muted);
+            border: 1px solid var(--glass-border);
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+        .currency-select:hover { color: white; border-color: rgba(255,255,255,0.3); }
     </style>
 </head>
 <body>
@@ -126,9 +138,17 @@
         <div class="top-bar">
             <div class="brand">{{.Text.LobbyName}} <span>/ {{.Text.Shop}}</span></div>
             
-            <div style="display:flex; gap: 15px; align-items:center;">
-                <div class="coin-balance">
-                    <span>💰</span> {{.User.Coins}}
+            <div style="display:flex; align-items:center;">
+                <select id="currency-picker" class="currency-select">
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="UAH">UAH (₴)</option>
+                    <option value="CZK">CZK (Kč)</option>
+                    <option value="RUB">RUB (₽)</option>
+                </select>
+
+                <div class="coin-balance" style="margin-right:15px;">
+                    <span>💰</span> <span id="user-coins">{{.User.Coins}}</span>
                 </div>
                 
                 <a class="close-btn" href="/?lang={{.Lang}}&userID={{.User.ID}}">✕</a>
@@ -141,10 +161,10 @@
                 <div class="card-icon">🎁</div>
                 <div class="card-content">
                     <div class="card-title">Support Pack</div>
-                    <div class="card-desc">Get a small thank-you bundle + 500 Coins.</div>
+                    <div class="card-desc">Get a small thank-you bundle + 1000 Coins.</div>
                     <div class="price-tag">
-                        <div class="price-val">4.99 <span class="price-currency">{{.Currency}}</span></div>
-                        <button class="buy-btn real">Buy</button>
+                        <div class="price-val" data-base-price="4.99">4.99 <span class="price-currency">$</span></div>
+                        <button class="buy-btn real" onclick="buyItem('pack_support')">Buy</button>
                     </div>
                 </div>
             </div>
@@ -152,10 +172,10 @@
                 <div class="card-icon">👑</div>
                 <div class="card-content">
                     <div class="card-title">Founder Pack</div>
-                    <div class="card-desc">Exclusive Founder Badge + 2000 Coins.</div>
+                    <div class="card-desc">Exclusive Founder Badge + 5000 Coins.</div>
                     <div class="price-tag">
-                        <div class="price-val">14.99 <span class="price-currency">{{.Currency}}</span></div>
-                        <button class="buy-btn real">Buy</button>
+                        <div class="price-val" data-base-price="14.99">14.99 <span class="price-currency">$</span></div>
+                        <button class="buy-btn real" onclick="buyItem('pack_founder')">Buy</button>
                     </div>
                 </div>
             </div>
@@ -169,8 +189,8 @@
                     <div class="card-title">Handful of Coins</div>
                     <div class="card-desc">1,000 Coins to start your journey.</div>
                     <div class="price-tag">
-                        <div class="price-val">0.99 <span class="price-currency">{{.Currency}}</span></div>
-                        <button class="buy-btn real">Buy</button>
+                        <div class="price-val" data-base-price="0.99">0.99 <span class="price-currency">$</span></div>
+                        <button class="buy-btn real" onclick="buyItem('coins_1000')">Buy</button>
                     </div>
                 </div>
             </div>
@@ -180,8 +200,8 @@
                     <div class="card-title">Sack of Coins</div>
                     <div class="card-desc">5,000 Coins. Best value for beginners!</div>
                     <div class="price-tag">
-                        <div class="price-val">3.99 <span class="price-currency">{{.Currency}}</span></div>
-                        <button class="buy-btn real">Buy</button>
+                        <div class="price-val" data-base-price="3.99">3.99 <span class="price-currency">$</span></div>
+                        <button class="buy-btn real" onclick="buyItem('coins_5000')">Buy</button>
                     </div>
                 </div>
             </div>
@@ -196,7 +216,7 @@
                     <div class="card-desc">Epic glow frame for your avatar.</div>
                     <div class="price-tag">
                         <div class="price-val">2500 <span class="price-currency">Coins</span></div>
-                        <button class="buy-btn coins">Purchase</button>
+                        <button class="buy-btn coins" onclick="buyItem('frame_neon')">Purchase</button>
                     </div>
                 </div>
             </div>
@@ -207,7 +227,7 @@
                     <div class="card-desc">Unique lobby background banner.</div>
                     <div class="price-tag">
                         <div class="price-val">5000 <span class="price-currency">Coins</span></div>
-                        <button class="buy-btn coins">Purchase</button>
+                        <button class="buy-btn coins" onclick="buyItem('banner_gold')">Purchase</button>
                     </div>
                 </div>
             </div>
@@ -215,12 +235,84 @@
     </div>
 
     <script>
-        // Simple visual feedback for buttons
-        document.querySelectorAll('.buy-btn').forEach(btn => {
-            btn.onclick = () => {
-                alert('Shop integration coming soon!');
-            };
-        });
+        // Exchange Rates (Approximate)
+        const RATES = {
+            'USD': { rate: 1.0, sym: '$' },
+            'EUR': { rate: 0.95, sym: '€' },
+            'UAH': { rate: 41.5, sym: '₴' },
+            'CZK': { rate: 23.5, sym: 'Kč' },
+            'RUB': { rate: 92.0, sym: '₽' }
+        };
+
+        const picker = document.getElementById('currency-picker');
+        
+        // 1. Load preference or default to Language
+        const pageLang = document.documentElement.lang; // "en", "ru", "ua"
+        let savedCurr = localStorage.getItem('shop_currency');
+        
+        if (!savedCurr) {
+            // Smart Default based on Lang
+            if (pageLang === 'ua') savedCurr = 'UAH';
+            else if (pageLang === 'ru') savedCurr = 'RUB';
+            else if (pageLang === 'cz') savedCurr = 'CZK';
+            else savedCurr = 'USD';
+        }
+        picker.value = savedCurr;
+
+        // 2. Function to Update Prices
+        function updatePrices() {
+            const code = picker.value;
+            const data = RATES[code];
+            localStorage.setItem('shop_currency', code);
+
+            document.querySelectorAll('.price-val[data-base-price]').forEach(el => {
+                const base = parseFloat(el.getAttribute('data-base-price'));
+                const converted = (base * data.rate).toFixed(2);
+                
+                // Find the currency span inside
+                const span = el.querySelector('.price-currency');
+                // Update text
+                el.childNodes[0].nodeValue = converted + " "; // Update the number part
+                if (span) span.innerText = data.sym;
+            });
+        }
+
+        picker.onchange = updatePrices;
+        updatePrices(); // Run on load
+
+        // 3. Buy Logic
+        async function buyItem(itemId) {
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "Processing...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/shop/buy', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        item_id: itemId,
+                        currency: picker.value
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert(data.message);
+                    // Update Coin UI
+                    document.getElementById('user-coins').innerText = data.coins;
+                } else {
+                    alert("Error: " + (data.error || "Purchase failed"));
+                }
+            } catch (e) {
+                alert("Network error");
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
     </script>
 </body>
 </html>

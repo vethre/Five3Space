@@ -109,6 +109,7 @@ func main() {
 	http.HandleFunc("/ws", chibiki.NewWebsocketHandler(gameInstance))
 	http.HandleFunc("/friends", lobby.NewFriendsHandler(store))
 	http.HandleFunc("/shop", lobby.NewShopHandler(store))
+	http.HandleFunc("/shop/buy", lobby.NewBuyHandler(store))
 	http.HandleFunc("/customize", lobby.NewCustomizeHandler(store))
 
 	fs := http.FileServer(http.Dir("./web/static"))
@@ -185,6 +186,16 @@ func applySchema(db *sql.DB) error {
 		`CREATE INDEX IF NOT EXISTS idx_users_nickname ON users (nickname);`,
 		`CREATE UNIQUE INDEX IF NOT EXISTS idx_friendships_pair ON friendships (LEAST(requester_id, addressee_id), GREATEST(requester_id, addressee_id));`,
 		`CREATE INDEX IF NOT EXISTS idx_user_medals_user ON user_medals (user_id);`,
+
+		`
+		CREATE TABLE IF NOT EXISTS inventory (
+			user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			item_id TEXT NOT NULL,
+			acquired_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			PRIMARY KEY (user_id, item_id)
+		);
+		`,
+		`CREATE INDEX IF NOT EXISTS idx_inventory_user ON inventory (user_id);`,
 	}
 
 	for _, stmt := range statements {

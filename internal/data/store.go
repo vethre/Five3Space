@@ -270,3 +270,45 @@ func (s *Store) ListFriends(userID string) ([]Friend, error) {
 
 	return friends, nil
 }
+
+func (s *Store) AdjustCoins(userID string, amount int) error {
+	_, err := s.db.Exec(`
+		UPDATE users SET coins = coins + $1 WHERE id = $2
+	`, amount, userID)
+	return err
+}
+
+// HasItem checks inventory.
+func (s *Store) HasItem(userID, itemID string) bool {
+	var exists bool
+	_ = s.db.QueryRow(`SELECT EXISTS(SELECT 1 FROM inventory WHERE user_id=$1 AND item_id=$2)`, userID, itemID).Scan(&exists)
+	return exists
+}
+
+// Transaction for buying items.
+func (s *Store) DeductCoinsAndAddItem(userID, itemID string, cost int) error {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Deduct
+	res, err := tx.Exec(`UPDATE users SET coins = coins - $1 WHERE id = $2 AND coins >= $1`, cost, userID)
+	if err != nil {
+		return err
+	}
+
+	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return fmt.Errorf("insufficient funds")
+	}
+
+	// Add Item
+	_, err = tx.Exec(`INSERT INTO inventory (user_id, item_id) VALUES ($1, $2)`, userID, itemID)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
