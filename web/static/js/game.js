@@ -9,8 +9,16 @@ const ALL_UNITS = ['morphilina', 'dangerlyoha', 'yuuechka', 'morphe', 'classic_m
 // VIEW SETTINGS
 let SCALE = 32;
 let BOARD_OFFSET_Y = 0;
-
 let selectedCard = null;
+
+function getVisualCoords(x, y) {
+    const myTeam = window.gameState.myTeam || 0;
+    // If I am Team 1 (Top), flip the board so I appear at the bottom
+    if (myTeam === 1) {
+        return { x: 18 - x, y: 32 - y };
+    }
+    return { x, y };
+}
 
 function loadAssets(onComplete) {
     let loaded = 0;
@@ -71,15 +79,6 @@ if (playAgainBtn) {
         const topBackBtn = document.getElementById('hud-back');
         if (topBackBtn) topBackBtn.style.display = 'none'; 
     });
-}
-
-function getVisualCoords(x, y) {
-    const myTeam = window.gameState.myTeam || 0;
-    // If I am Team 1 (Top), flip the board so I appear at the bottom
-    if (myTeam === 1) {
-        return { x: 18 - x, y: 32 - y };
-    }
-    return { x, y };
 }
 
 function updateUI() {
@@ -197,6 +196,11 @@ function updateUI() {
         if (medalDelta) {
             medalDelta.textContent = win ? "+30 medals" : "-15 medals";
             medalDelta.style.color = win ? "#4f4" : "#f99";
+        }
+        const backBtn = document.getElementById('back-to-lobby');
+        if (backBtn && window.SERVER_USER_ID) {
+            // Force return to profile with ID
+            backBtn.href = `/?userID=${window.SERVER_USER_ID}&lang=${window.SERVER_LANG}`;
         }
     } else {
         gameOverScreen.style.display = 'none';

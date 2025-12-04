@@ -109,9 +109,7 @@ func main() {
 	fs := http.FileServer(http.Dir("./web/static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
-	http.HandleFunc("/game", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./web/templates/game.html")
-	})
+	http.HandleFunc("/game", lobby.NewGameHandler(store))
 
 	http.HandleFunc("/", lobby.NewHandler(store))
 

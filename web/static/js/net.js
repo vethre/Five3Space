@@ -4,8 +4,8 @@ const getCookie = (name) => {
     return m ? decodeURIComponent(m[1]) : '';
 };
 const cookieUser = getCookie('user_id');
-const userID = urlParams.get('userID') || cookieUser || 'guest';
-const lang = urlParams.get('lang') || 'en';
+const userID = window.SERVER_USER_ID || urlParams.get('userID') || 'guest';
+const lang = window.SERVER_LANG || urlParams.get('lang') || 'en';
 window.netParams = { userID, lang };
 document.documentElement.lang = lang;
 

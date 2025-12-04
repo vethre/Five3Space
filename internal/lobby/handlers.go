@@ -161,25 +161,67 @@ func NewHandler(store *data.Store) http.HandlerFunc {
 	}
 }
 
+func NewGameHandler(store *data.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		renderGame(w, r, store)
+	}
+}
+
+func renderGame(w http.ResponseWriter, r *http.Request, store *data.Store) {
+	// 1. Resolve UserID (Cookie > URL > Guest)
+	userID := "guest"
+	if c, err := r.Cookie("user_id"); err == nil && c.Value != "" {
+		userID = c.Value
+	} else if q := r.URL.Query().Get("userID"); q != "" {
+		userID = q
+	}
+
+	// 2. Language
+	lang := normalizeLang(r.URL.Query().Get("lang"))
+	if lang == "" {
+		lang = "en"
+	}
+
+	// 3. Data payload for the template
+	data := struct {
+		UserID string
+		Lang   string
+	}{
+		UserID: userID,
+		Lang:   lang,
+	}
+
+	// 4. Render template
+	tmplPath := filepath.Join("web", "templates", "game.html")
+	tmpl, err := template.ParseFiles(tmplPath)
+	if err != nil {
+		log.Printf("Error parsing game template: %v", err)
+		http.Error(w, "Could not load game", http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		log.Printf("Game execution error: %v", err)
+	}
+}
+
 func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 	// 1. Language
 	requestedLang := normalizeLang(r.URL.Query().Get("lang"))
 
-	// 2. Пытаемся достать userID
+	// 2. Resolve UserID (Cookie Priority)
 	var userID string
 	hadCookie := false
 
-	// сначала query-параметр
 	if c, err := r.Cookie("user_id"); err == nil && c.Value != "" {
 		userID = c.Value
 		hadCookie = true
 	} else if q := r.URL.Query().Get("userID"); q != "" {
-		// Only use URL param if NO cookie is present
 		userID = q
 		hadCookie = true
 	}
 
-	// 3. Пытаемся найти юзера в базе
+	// 3. Find User
 	var selected data.UserData
 	userFound := false
 	if userID != "" {
@@ -198,26 +240,25 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 	}
 	t := texts[lang]
 
-	// 4. Если юзер не найден — сбрасываем куку и включаем регистрацию
+	// 4. Cookie Management
 	if !userFound {
 		hadCookie = false
-		http.SetCookie(w, &http.Cookie{
-			Name:   "user_id",
-			Value:  "",
-			Path:   "/",
-			MaxAge: -1,
-		})
+		http.SetCookie(w, &http.Cookie{Name: "user_id", Value: "", Path: "/", MaxAge: -1})
+	} else if userID != "" {
+		// Refresh cookie
+		http.SetCookie(w, &http.Cookie{Name: "user_id", Value: userID, Path: "/", MaxAge: 86400 * 30})
 	}
 
-	// 5. Маппим в view-модель
+	// 5. Map Data
 	var user User
 	if !userFound {
 		user = User{
 			ID:        "",
-			Nickname:  "ERROR LOADING",
+			Nickname:  "Guest",
 			Tag:       "----",
-			AvatarURL: "https://api.dicebear.com/7.x/avataaars/svg?seed=error&backgroundColor=ffdfbf",
+			AvatarURL: "https://api.dicebear.com/7.x/avataaars/svg?seed=guest",
 			Medals:    0,
+			Trophies:  0, // Default
 			Level:     0,
 			Exp:       0,
 			MaxExp:    1,
@@ -234,7 +275,7 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 			Exp:       selected.Exp,
 			MaxExp:    selected.MaxExp,
 			Medals:    len(selected.Medals),
-			Trophies:  selected.Trophies,
+			Trophies:  selected.Trophies, // <--- POPULATE FROM DB
 			Level:     selected.Level,
 			Coins:     selected.Coins,
 			Status:    selected.Status,
@@ -249,18 +290,19 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 	}
 	user.XPPercentage = fmt.Sprintf("%d%%", pct)
 
-	// 7. Друзья и медали
+	// 7. Friends/Medals
 	friendList, _ := store.ListFriends(user.ID)
 	medalDetails := []data.Medal{}
 	if userFound {
 		medalDetails = store.MedalDetails(selected.Medals)
 	}
 
-	// 8. Game modes
+	// 8. Modes (Keep your existing mode logic)
 	btn1, stat1 := getModeTexts(lang, false, false)
 	btn2, stat2 := getModeTexts(lang, false, true)
 	btn3, stat3 := getModeTexts(lang, true, false)
 
+	// Use generic link for game
 	chibikiURL := fmt.Sprintf("/game?mode=chibiki&lang=%s", lang)
 
 	modes := []GameMode{
@@ -294,14 +336,14 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 		},
 	}
 
-	data := PageData{
+	pageData := PageData{
 		User:         user,
 		Friends:      friendList,
 		Modes:        modes,
 		Text:         t,
 		Lang:         lang,
 		MedalDetails: medalDetails,
-		ShowRegister: !hadCookie,
+		ShowRegister: !hadCookie && !userFound,
 		ActivePage:   "lobby",
 	}
 
@@ -313,7 +355,7 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 		return
 	}
 
-	if err := tmpl.Execute(w, data); err != nil {
+	if err := tmpl.Execute(w, pageData); err != nil {
 		log.Printf("Execution error: %v", err)
 	}
 }
