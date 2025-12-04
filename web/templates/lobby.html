@@ -591,7 +591,7 @@
                                 <div class="medal-chip-name">{{.Nickname}}</div>
                                 <div class="medal-chip-desc">#{{printf "%04d" .Tag}} · L{{.Level}}</div>
                             </div>
-                            <div style="margin-left:auto;">
+                            <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
                                 <div class="friend-status-pill">
                                     {{/* Выбираем CSS-класс по Presence */}}
                                     <span class="status-dot
@@ -605,6 +605,11 @@
                                         {{if eq .Presence `offline`}}Offline{{end}}
                                     </span>
                                 </div>
+                                <button class="ghost-btn invite-btn"
+                                    data-invite="{{`/game?mode=chibiki&userID=`}}{{$.User.ID}}{{`&lang=`}}{{$.Lang}}"
+                                    {{if ne .Presence `online`}}disabled{{end}}>
+                                    Invite
+                                </button>
                             </div>
                         </div>
                     {{end}}
@@ -618,6 +623,7 @@
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
                 <button class="action-btn" id="btn-add-friend">Add Friend</button>
                 <button class="ghost-btn" id="btn-remove-friend">Remove Friend</button>
+                <button class="ghost-btn" id="btn-copy-invite">Copy invite link</button>
             </div>
         </div>
 
@@ -947,6 +953,34 @@
         if (btnRemove) btnRemove.onclick = () => { setFriendMode('remove'); show(friendModal); };
         qs('friend-submit').onclick = submitFriend;
         qs('friend-cancel').onclick = () => hide(friendModal);
+
+        // Friend Invites
+        const baseInvite = `/game?mode=chibiki&userID=${encodeURIComponent(userId)}&lang=${encodeURIComponent(currentLang)}`;
+        const inviteButtons = document.querySelectorAll('.invite-btn');
+        inviteButtons.forEach(btn => {
+            btn.onclick = async () => {
+                const link = btn.getAttribute('data-invite') || baseInvite;
+                try {
+                    await navigator.clipboard.writeText(new URL(link, window.location.origin).toString());
+                    btn.textContent = 'Copied';
+                    setTimeout(() => btn.textContent = 'Invite', 1200);
+                } catch (e) {
+                    alert('Copy failed');
+                }
+            };
+        });
+        const copyInviteFallback = document.getElementById('btn-copy-invite');
+        if (copyInviteFallback) {
+            copyInviteFallback.onclick = async () => {
+                try {
+                    await navigator.clipboard.writeText(new URL(baseInvite, window.location.origin).toString());
+                    copyInviteFallback.textContent = 'Copied';
+                    setTimeout(() => copyInviteFallback.textContent = 'Copy invite link', 1200);
+                } catch (e) {
+                    alert('Copy failed');
+                }
+            };
+        }
 
         // Settings
         const btnSettings = document.getElementById('btn-settings');

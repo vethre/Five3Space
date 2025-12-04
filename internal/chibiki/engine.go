@@ -174,6 +174,11 @@ func (g *GameInstance) Update(dt float64) {
 		return
 	}
 
+	// Pause the clock and entities until two players are present.
+	if len(g.Players) < 2 {
+		return
+	}
+
 	g.GameTime += dt
 
 	if !g.IsOvertime && !g.IsTiebreaker {
