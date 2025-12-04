@@ -67,6 +67,8 @@ func main() {
 	authService := auth.NewAuth(db)
 	http.HandleFunc("/register", authService.RegisterHandler)
 	http.HandleFunc("/login", authService.LoginHandler)
+	http.HandleFunc("/logout", authService.LogoutHandler)
+	http.HandleFunc("/settings/language", authService.UpdateLanguageHandler)
 	http.HandleFunc("/friends/add", authService.AddFriendHandler)
 	http.HandleFunc("/friends/remove", authService.RemoveFriendHandler)
 	http.HandleFunc("/presence/ping", presenceService.PingHandler)
@@ -118,6 +120,7 @@ func applySchema(db *sql.DB) error {
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'offline';`,
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW();`,
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT NOT NULL DEFAULT '';`,
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS language TEXT NOT NULL DEFAULT 'en';`,
 		`
 		CREATE TABLE IF NOT EXISTS medals (
 			id TEXT PRIMARY KEY,

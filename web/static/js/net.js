@@ -2,6 +2,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const userID = urlParams.get('userID') || 'guest';
 const lang = urlParams.get('lang') || 'en';
 window.netParams = { userID, lang };
+document.documentElement.lang = lang;
 
 const protocol = window.location.protocol === "https:" ? "wss" : "ws";
 const socket = new WebSocket(`${protocol}://${window.location.host}/ws?userID=${userID}`);

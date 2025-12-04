@@ -8,30 +8,40 @@
 </head>
 <body>
     <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
-
-        <div id="top-hud">
-            <a class="hud-pill" id="hud-back" data-lobby-link href="/">← Lobby</a>
-            <div id="timer">2:00</div>
-            <div class="hud-pill live">LIVE</div>
-        </div>
-
-        <div id="ui-layer">
-            <div id="deck-area">
-                <div id="next-card-container" aria-label="Next card"></div>
-                <div id="hand"></div>
+        <aside id="left-rail">
+            <div id="top-hud">
+                <a class="hud-pill" id="hud-back" data-lobby-link href="/">← Lobby</a>
+                <div id="timer">2:00</div>
+                <div class="hud-pill live">LIVE</div>
             </div>
-            <div id="elixir-container" aria-label="Elixir">
-                <div id="elixir-bar"></div>
-                <div id="elixir-text">5</div>
-            </div>
-        </div>
 
-        <div id="game-over-screen" style="display: none;">
-            <h1 id="game-over-title">VICTORY</h1>
-            <div class="game-over-actions">
-                <button id="play-again" class="primary-btn">Play Again</button>
-                <a id="back-to-lobby" class="ghost-btn" data-lobby-link href="/">Back to Lobby</a>
+            <div id="ui-layer">
+                <div class="rail-card">
+                    <div class="rail-title">Deck</div>
+                    <div id="deck-area">
+                        <div id="next-card-container" aria-label="Next card"></div>
+                        <div id="hand"></div>
+                    </div>
+                </div>
+                <div class="rail-card">
+                    <div class="rail-title">Elixir</div>
+                    <div id="elixir-container" aria-label="Elixir">
+                        <div id="elixir-bar"></div>
+                        <div id="elixir-text">5</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div id="stage">
+            <canvas id="gameCanvas"></canvas>
+
+            <div id="game-over-screen" style="display: none;">
+                <h1 id="game-over-title">VICTORY</h1>
+                <div class="game-over-actions">
+                    <button id="play-again" class="primary-btn">Play Again</button>
+                    <a id="back-to-lobby" class="ghost-btn" data-lobby-link href="/">Back to Lobby</a>
+                </div>
             </div>
         </div>
     </div>

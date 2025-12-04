@@ -24,6 +24,7 @@ type User struct {
 	Coins        int
 	Status       string
 	XPPercentage string
+	Language     string
 }
 
 type GameMode struct {
@@ -63,6 +64,15 @@ type PageData struct {
 	MedalDetails []data.Medal
 	ShowRegister bool
 	ActivePage   string
+}
+
+func normalizeLang(raw string) string {
+	switch raw {
+	case "ua", "ru", "en":
+		return raw
+	default:
+		return ""
+	}
 }
 
 // --- Localization Data ---
@@ -152,11 +162,7 @@ func NewHandler(store *data.Store) http.HandlerFunc {
 
 func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 	// 1. Language
-	lang := r.URL.Query().Get("lang")
-	if lang != "ua" && lang != "ru" {
-		lang = "en"
-	}
-	t := texts[lang]
+	requestedLang := normalizeLang(r.URL.Query().Get("lang"))
 
 	// 2. Пытаемся достать userID
 	var userID string
@@ -181,6 +187,15 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 			userFound = true
 		}
 	}
+
+	lang := requestedLang
+	if lang == "" && selected.Language != "" {
+		lang = normalizeLang(selected.Language)
+	}
+	if lang == "" {
+		lang = "en"
+	}
+	t := texts[lang]
 
 	// 4. Если юзер не найден — сбрасываем куку и включаем регистрацию
 	if !userFound {
@@ -207,6 +222,7 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 			MaxExp:    1,
 			Coins:     0,
 			Status:    "offline",
+			Language:  lang,
 		}
 	} else {
 		user = User{
@@ -220,6 +236,7 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 			Level:     selected.Level,
 			Coins:     selected.Coins,
 			Status:    selected.Status,
+			Language:  lang,
 		}
 	}
 

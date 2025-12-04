@@ -34,9 +34,9 @@
         <div class="top-bar">
             <div class="brand">{{.Text.LobbyName}} / {{.Text.Customize}}</div>
             <div class="header-actions">
-                <a class="pill-btn" href="/">Lobby</a>
-                <a class="pill-btn" href="/friends">Friends</a>
-                <a class="pill-btn" href="/shop">Shop</a>
+                <a class="pill-btn" href="/?lang={{.Lang}}&userID={{.User.ID}}">Lobby</a>
+                <a class="pill-btn" href="/friends?lang={{.Lang}}&userID={{.User.ID}}">Friends</a>
+                <a class="pill-btn" href="/shop?lang={{.Lang}}&userID={{.User.ID}}">Shop</a>
             </div>
         </div>
 

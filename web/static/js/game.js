@@ -15,10 +15,25 @@ let selectedCard = null;
 function loadAssets(onComplete) {
     let loaded = 0;
     if (ALL_UNITS.length === 0) { onComplete(); return; }
+    const markLoaded = () => { loaded++; if (loaded === ALL_UNITS.length) onComplete(); };
+
     ALL_UNITS.forEach(key => {
-        const img = new Image(); img.src = `${ASSET_PATH}${key}.png`;
-        img.onload = () => { sprites[key] = img; loaded++; if (loaded === ALL_UNITS.length) onComplete(); };
-        img.onerror = () => { loaded++; if (loaded === ALL_UNITS.length) onComplete(); };
+        const attempts = [`${ASSET_PATH}${key}.png`, `${ASSET_PATH}${key}.PNG`];
+        let attempt = 0;
+        const img = new Image();
+
+        const tryNext = () => {
+            if (attempt >= attempts.length) {
+                markLoaded();
+                return;
+            }
+            img.src = attempts[attempt++];
+        };
+
+        img.onload = () => { sprites[key] = img; markLoaded(); };
+        img.onerror = tryNext;
+
+        tryNext();
     });
 }
 

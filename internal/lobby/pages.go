@@ -11,11 +11,7 @@ import (
 
 // commonPage builds the shared data model for all pages.
 func commonPage(w http.ResponseWriter, r *http.Request, store *data.Store) PageData {
-	lang := r.URL.Query().Get("lang")
-	if lang != "ua" && lang != "ru" {
-		lang = "en"
-	}
-	t := texts[lang]
+	requestedLang := normalizeLang(r.URL.Query().Get("lang"))
 
 	userID := r.URL.Query().Get("userID")
 	hadCookie := false
@@ -34,6 +30,15 @@ func commonPage(w http.ResponseWriter, r *http.Request, store *data.Store) PageD
 			userFound = true
 		}
 	}
+
+	lang := requestedLang
+	if lang == "" && selected.Language != "" {
+		lang = normalizeLang(selected.Language)
+	}
+	if lang == "" {
+		lang = "en"
+	}
+	t := texts[lang]
 
 	if !userFound {
 		hadCookie = false
@@ -58,6 +63,7 @@ func commonPage(w http.ResponseWriter, r *http.Request, store *data.Store) PageD
 			MaxExp:    1,
 			Coins:     0,
 			Status:    "offline",
+			Language:  lang,
 		}
 	} else {
 		user = User{
@@ -71,6 +77,7 @@ func commonPage(w http.ResponseWriter, r *http.Request, store *data.Store) PageD
 			Level:     selected.Level,
 			Coins:     selected.Coins,
 			Status:    selected.Status,
+			Language:  lang,
 		}
 	}
 

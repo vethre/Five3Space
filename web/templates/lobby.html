@@ -405,6 +405,41 @@
         .ghost-btn { background: transparent; color: #ccc; border: 1px solid rgba(255,255,255,0.2); padding: 10px 14px; border-radius: 10px; cursor: pointer; }
         .primary-btn { background: #ff4500; color: #fff; border: none; padding: 10px 14px; border-radius: 10px; cursor: pointer; font-weight: 800; }
 
+        .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 10px; }
+        .settings-card {
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px;
+            padding: 14px;
+            background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+            box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+        }
+        .settings-card h4 { margin: 0 0 8px; font-size: 0.95rem; letter-spacing: 0.5px; color: var(--text-muted); }
+        .settings-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+        .settings-note { font-size: 0.85rem; color: var(--text-muted); margin-top: 6px; }
+        .settings-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+        .logout-btn { background: linear-gradient(135deg, #1f1f1f, #111); border: 1px solid rgba(255,255,255,0.15); color: #ffb4b4; }
+
+        .remember-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; color: var(--text-muted); font-size: 0.9rem; }
+        .remember-row input { width: auto; accent-color: var(--primary); }
+
+        .status-dot { cursor: pointer; }
+        .status-menu {
+            position: absolute;
+            top: 90px;
+            left: 0;
+            background: #161616;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px;
+            padding: 10px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.45);
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 20;
+        }
+        .status-menu.open { display: flex; }
+        .status-menu button { width: 100%; text-align: left; }
+
         .friend-status-pill {
             display: inline-flex;
             align-items: center;
@@ -457,9 +492,9 @@
         <div class="main-grid">
             <aside class="sidebar">
                 <h4>Menu</h4>
-                <a class="side-link" href="/shop"><span class="side-pill">S</span> <span>{{.Text.Shop}}</span></a>
-                <a class="side-link" href="/friends"><span class="side-pill green">F</span> <span>{{.Text.FriendsNav}}</span></a>
-                <a class="side-link" href="/customize"><span class="side-pill blue">C</span> <span>{{.Text.Customize}}</span></a>
+                <a class="side-link" href="/shop?lang={{.Lang}}&userID={{.User.ID}}"><span class="side-pill">S</span> <span>{{.Text.Shop}}</span></a>
+                <a class="side-link" href="/friends?lang={{.Lang}}&userID={{.User.ID}}"><span class="side-pill green">F</span> <span>{{.Text.FriendsNav}}</span></a>
+                <a class="side-link" href="/customize?lang={{.Lang}}&userID={{.User.ID}}"><span class="side-pill blue">C</span> <span>{{.Text.Customize}}</span></a>
             </aside>
 
             <div class="main-column" style="display:flex; flex-direction:column; gap:24px;">
@@ -469,6 +504,11 @@
                 <img src="{{.User.AvatarURL}}" class="avatar" alt="Avatar">
                 <div class="status-dot status-{{.User.Status}}"></div>
                 <div class="level-badge">{{.Text.Level}} {{.User.Level}}</div>
+                <div class="status-menu" id="status-menu">
+                    <button class="ghost-btn" data-status="online">Online</button>
+                    <button class="ghost-btn" data-status="away">Away</button>
+                    <button class="ghost-btn" data-status="offline">Offline</button>
+                </div>
             </div>
             <div class="profile-details">
                 <div class="name-row">
@@ -614,6 +654,10 @@
             <input id="reg-nickname" placeholder="Enter nickname" />
             <label for="reg-password">Password</label>
             <input id="reg-password" type="password" placeholder="Enter password" />
+            <div class="remember-row">
+                <input type="checkbox" id="reg-remember" />
+                <label for="reg-remember">Remember me on this device</label>
+            </div>
             <div class="modal-actions">
                 <button class="ghost-btn" id="reg-cancel">Later</button>
                 <button class="primary-btn" id="reg-submit">Register</button>
@@ -632,6 +676,10 @@
             <input id="login-tag" placeholder="0001" />
             <label for="login-password">Password</label>
             <input id="login-password" type="password" placeholder="Password" />
+            <div class="remember-row">
+                <input type="checkbox" id="login-remember" />
+                <label for="login-remember">Remember me on this device</label>
+            </div>
             <div class="modal-actions">
                 <button class="ghost-btn" id="login-cancel">Cancel</button>
                 <button class="primary-btn" id="login-submit">Login</button>
@@ -660,29 +708,33 @@
     <div class="modal-backdrop" id="settings-modal">
         <div class="modal">
             <h3>Settings</h3>
-            <div style="display:flex; flex-direction:column; gap:12px;">
-                <div>
-                    <label>Language</label>
-                    <div style="display:flex; gap:10px; margin-top:6px; margin-bottom:6px; flex-wrap:wrap;">
-                        <button class="ghost-btn" data-lang="en">EN</button>
-                        <button class="ghost-btn" data-lang="ua">UA</button>
-                        <button class="ghost-btn" data-lang="ru">RU</button>
+            <div class="settings-grid">
+                <div class="settings-card">
+                    <h4>Language</h4>
+                    <div class="settings-chips">
+                        <button class="ghost-btn" data-lang="en">English</button>
+                        <button class="ghost-btn" data-lang="ua">Українська</button>
+                        <button class="ghost-btn" data-lang="ru">Русский</button>
                     </div>
+                    <div class="settings-note">We save this to your account so every page and the game uses it.</div>
                 </div>
-                <div>
-                    <label>Status</label>
-                    <div style="display:flex; gap:10px; margin-top:6px; flex-wrap:wrap;">
+                <div class="settings-card">
+                    <h4>Status</h4>
+                    <div class="settings-chips">
                         <button class="ghost-btn" data-status="online">Online</button>
                         <button class="ghost-btn" data-status="away">Away</button>
                         <button class="ghost-btn" data-status="offline">Offline</button>
                     </div>
+                    <div class="settings-note">Tip: click the status dot on your avatar to toggle quickly.</div>
                 </div>
-                <div>
-                    <label>Account</label>
-                    <div style="display:flex; gap:10px; margin-top:6px; flex-wrap:wrap;">
+                <div class="settings-card">
+                    <h4>Account</h4>
+                    <div class="settings-actions">
                         <button class="pill-btn pill-btn--register" id="settings-register"><span>Register</span></button>
                         <button class="pill-btn pill-btn--login" id="settings-login"><span>Login</span></button>
+                        <button class="pill-btn logout-btn" id="settings-logout"><span>Log Out</span></button>
                     </div>
+                    <div class="settings-note">Remember me keeps you signed in on this device.</div>
                 </div>
             </div>
 
@@ -703,8 +755,11 @@
         const show = (el) => { if (el) el.classList.add('open'); };
         const hide = (el) => { if (el) el.classList.remove('open'); };
 
+        const userId = '{{.User.ID}}';
+        const currentLang = document.documentElement.lang || '{{.Lang}}' || 'en';
         let currentStatus = '{{.User.Status}}' || 'online';
         const statusDot = document.querySelector('.status-dot');
+        const statusMenu = document.getElementById('status-menu');
 
         function updateStatusDot(status) {
             if (!statusDot) return;
@@ -713,6 +768,7 @@
         }
 
         async function pingPresence() {
+            if (!userId) return;
             try {
                 await fetch('/presence/ping', {
                     method: 'POST',
@@ -725,9 +781,60 @@
         }
 
         // Запускаем heartbeat
-        setInterval(pingPresence, 30000); // каждые 30 сек
-        // И сразу один пинг при загрузке
-        pingPresence();
+        if (userId) {
+            setInterval(pingPresence, 30000); // каждые 30 сек
+            // И сразу один пинг при загрузке
+            pingPresence();
+        }
+
+        async function saveLanguage(lang) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('lang', lang);
+
+            if (!userId) {
+                window.location = url.toString();
+                return;
+            }
+
+            try {
+                const res = await fetch('/settings/language', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ language: lang })
+                });
+                if (!res.ok) throw new Error('save failed');
+            } catch (err) {
+                console.warn('language save failed', err);
+            } finally {
+                window.location = url.toString();
+            }
+        }
+
+        async function setStatus(status) {
+            currentStatus = status;
+            updateStatusDot(currentStatus);
+            await pingPresence();
+            if (statusMenu) statusMenu.classList.remove('open');
+        }
+
+        if (statusDot) {
+            statusDot.onclick = (e) => {
+                e.stopPropagation();
+                if (statusMenu) statusMenu.classList.toggle('open');
+            };
+        }
+        document.addEventListener('click', (e) => {
+            if (!statusMenu || !statusMenu.classList.contains('open')) return;
+            if (!statusMenu.contains(e.target) && (!statusDot || !statusDot.contains(e.target))) {
+                statusMenu.classList.remove('open');
+            }
+        });
+
+        if (statusMenu) {
+            statusMenu.querySelectorAll('[data-status]').forEach(btn => {
+                btn.onclick = () => setStatus(btn.getAttribute('data-status'));
+            });
+        }
 
         // Registration
         const regSubmit = qs('reg-submit');
@@ -743,14 +850,23 @@
                     const res = await fetch('/register', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ nickname, password })
+                        body: JSON.stringify({
+                            nickname,
+                            password,
+                            remember_me: qs('reg-remember').checked,
+                            language: currentLang
+                        })
                     });
                     if (!res.ok) {
                         errBox.textContent = 'Failed to register';
                         return;
                     }
                     const data = await res.json();
-                    window.location = '/?userID=' + encodeURIComponent(data.user_id);
+                    const lang = data.language || currentLang;
+                    const next = new URL('/', window.location.origin);
+                    next.searchParams.set('userID', data.user_id);
+                    next.searchParams.set('lang', lang);
+                    window.location = next.toString();
                 } catch (e) {
                     errBox.textContent = 'Network error';
                 }
@@ -771,7 +887,13 @@
                     const res = await fetch('/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ nickname, tag: parseInt(tag, 10), password })
+                        body: JSON.stringify({
+                            nickname,
+                            tag: parseInt(tag, 10),
+                            password,
+                            remember_me: qs('login-remember').checked,
+                            language: currentLang
+                        })
                     });
                     if (!res.ok) {
                         errBox.textContent = res.status === 404 ? 'User not found' : 'Failed to login';
@@ -779,7 +901,11 @@
                     }
                     const data = await res.json();
                     const uid = data.user_id || data.userID || data.UserID;
-                    window.location = '/?userID=' + encodeURIComponent(uid);
+                    const lang = data.language || currentLang;
+                    const next = new URL('/', window.location.origin);
+                    next.searchParams.set('userID', uid);
+                    next.searchParams.set('lang', lang);
+                    window.location = next.toString();
                 } catch (e) {
                     errBox.textContent = 'Network error';
                 }
@@ -829,25 +955,28 @@
         qs('settings-close').onclick = () => hide(settingsModal);
         const settingsRegister = document.getElementById('settings-register');
         const settingsLogin = document.getElementById('settings-login');
+        const settingsLogout = document.getElementById('settings-logout');
         if (settingsRegister) settingsRegister.onclick = () => { hide(settingsModal); show(regModal); };
         if (settingsLogin) settingsLogin.onclick = () => { hide(settingsModal); show(loginModal); };
+        if (settingsLogout) settingsLogout.onclick = async () => {
+            try { await fetch('/logout', { method: 'POST' }); } catch (e) {}
+            const next = new URL('/', window.location.origin);
+            next.searchParams.set('lang', currentLang);
+            window.location = next.toString();
+        };
 
         // Переключение языка
         settingsModal.querySelectorAll('[data-lang]').forEach(btn => {
             btn.onclick = () => {
                 const lang = btn.getAttribute('data-lang');
-                const url = new URL(window.location.href);
-                url.searchParams.set('lang', lang);
-                window.location = url.toString();
+                saveLanguage(lang);
             };
         });
 
         // Переключение статуса
         settingsModal.querySelectorAll('[data-status]').forEach(btn => {
             btn.onclick = async () => {
-                currentStatus = btn.getAttribute('data-status');
-                updateStatusDot(currentStatus);
-                await pingPresence();
+                await setStatus(btn.getAttribute('data-status'));
             };
         });
     })();

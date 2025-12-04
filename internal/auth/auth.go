@@ -26,23 +26,41 @@ func NewAuth(db *sql.DB) *Auth {
 type registerRequest struct {
 	Nickname string `json:"nickname"`
 	Password string `json:"password"`
+	Language string `json:"language"`
+	Remember bool   `json:"remember_me"`
 }
 
 type registerResponse struct {
 	UserID   string `json:"user_id"`
 	Nickname string `json:"nickname"`
 	Tag      int    `json:"tag"`
+	Language string `json:"language"`
 }
 
 type loginRequest struct {
 	Nickname string `json:"nickname"`
 	Tag      int    `json:"tag"`
 	Password string `json:"password"`
+	Language string `json:"language"`
+	Remember bool   `json:"remember_me"`
 }
 
 type friendRequest struct {
 	Nickname string `json:"nickname"`
 	Tag      int    `json:"tag"`
+}
+
+func normalizeLanguage(raw string) string {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "ua", "uk":
+		return "ua"
+	case "ru", "rus":
+		return "ru"
+	case "en", "eng":
+		return "en"
+	default:
+		return ""
+	}
 }
 
 // RegisterHandler creates a user with a nickname and an auto-generated tag.
@@ -68,11 +86,21 @@ func (a *Auth) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tag, userID, err := a.insertUserWithTag(nick, req.Password)
+	lang := normalizeLanguage(req.Language)
+	if lang == "" {
+		lang = "en"
+	}
+
+	tag, userID, err := a.insertUserWithTag(nick, req.Password, lang)
 	if err != nil {
 		log.Println("register:", err)
 		http.Error(w, "failed to create user", http.StatusInternalServerError)
 		return
+	}
+
+	maxAge := 0
+	if req.Remember {
+		maxAge = 60 * 60 * 24 * 30 // 30 days
 	}
 
 	http.SetCookie(w, &http.Cookie{
@@ -81,12 +109,14 @@ func (a *Auth) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
+		MaxAge:   maxAge,
 	})
 
 	resp := registerResponse{
 		UserID:   userID,
 		Nickname: nick,
 		Tag:      tag,
+		Language: lang,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(resp)
@@ -113,7 +143,8 @@ func (a *Auth) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	var userID string
 	var storedHash string
-	err := a.DB.QueryRow(`SELECT id, password_hash FROM users WHERE nickname = $1 AND tag = $2`, nick, req.Tag).Scan(&userID, &storedHash)
+	var storedLang string
+	err := a.DB.QueryRow(`SELECT id, password_hash, COALESCE(language, 'en') FROM users WHERE nickname = $1 AND tag = $2`, nick, req.Tag).Scan(&userID, &storedHash, &storedLang)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			http.Error(w, "user not found", http.StatusNotFound)
@@ -131,23 +162,103 @@ func (a *Auth) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, _ = a.DB.Exec(`UPDATE users SET status = 'online', last_seen = NOW(), updated_at = NOW() WHERE id = $1`, userID)
+	lang := storedLang
+	if forced := normalizeLanguage(req.Language); forced != "" {
+		lang = forced
+	}
 
+	_, _ = a.DB.Exec(`
+		UPDATE users
+		SET status = 'online',
+		    language = $1,
+		    last_seen = NOW(),
+		    updated_at = NOW()
+		WHERE id = $2
+	`, lang, userID)
+
+	maxAge := 0
+	if req.Remember {
+		maxAge = 60 * 60 * 24 * 30
+	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     "user_id",
 		Value:    userID,
 		Path:     "/",
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
+		MaxAge:   maxAge,
 	})
 
 	resp := registerResponse{
 		UserID:   userID,
 		Nickname: nick,
 		Tag:      req.Tag,
+		Language: lang,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(resp)
+}
+
+type languageRequest struct {
+	Language string `json:"language"`
+}
+
+// UpdateLanguageHandler persists the user's language preference.
+func (a *Auth) UpdateLanguageHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID, err := readUserID(r)
+	if err != nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req languageRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "bad json", http.StatusBadRequest)
+		return
+	}
+
+	lang := normalizeLanguage(req.Language)
+	if lang == "" {
+		http.Error(w, "invalid language", http.StatusBadRequest)
+		return
+	}
+
+	if _, err := a.DB.Exec(`UPDATE users SET language = $1, updated_at = NOW() WHERE id = $2`, lang, userID); err != nil {
+		log.Println("update language:", err)
+		http.Error(w, "failed to save language", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]string{"language": lang})
+}
+
+// LogoutHandler clears the auth cookie and marks the user offline.
+func (a *Auth) LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID, err := readUserID(r)
+	if err == nil && userID != "" {
+		_, _ = a.DB.Exec(`UPDATE users SET status = 'offline', last_seen = NOW(), updated_at = NOW() WHERE id = $1`, userID)
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "user_id",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // AddFriendHandler accepts a nickname+tag and creates an accepted friendship row.
@@ -252,7 +363,7 @@ func (a *Auth) RemoveFriendHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // insertUserWithTag retries random tag generation and inserts the user atomically.
-func (a *Auth) insertUserWithTag(nickname, password string) (int, string, error) {
+func (a *Auth) insertUserWithTag(nickname, password, language string) (int, string, error) {
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -265,11 +376,11 @@ func (a *Auth) insertUserWithTag(nickname, password string) (int, string, error)
 
 		var insertedID string
 		err := a.DB.QueryRow(`
-			INSERT INTO users (id, nickname, tag, level, exp, max_exp, status, password_hash)
-			VALUES ($1, $2, $3, 1, 0, 1000, 'online', $4)
+			INSERT INTO users (id, nickname, tag, level, exp, max_exp, status, password_hash, language)
+			VALUES ($1, $2, $3, 1, 0, 1000, 'online', $4, $5)
 			ON CONFLICT (nickname, tag) DO NOTHING
 			RETURNING id
-		`, userID, nickname, tag, string(hashed)).Scan(&insertedID)
+		`, userID, nickname, tag, string(hashed), language).Scan(&insertedID)
 
 		if errors.Is(err, sql.ErrNoRows) {
 			continue // Tag collision, retry

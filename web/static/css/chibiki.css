@@ -23,8 +23,26 @@ body {
     width: 100vw;
     height: 100vh;
     display: flex;
-    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+    box-sizing: border-box;
+    align-items: stretch;
+}
+
+#left-rail {
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+#stage {
+    flex: 1;
+    position: relative;
+    display: flex;
     align-items: center;
+    justify-content: center;
+    padding: 10px;
 }
 
 canvas {
@@ -32,16 +50,18 @@ canvas {
     box-shadow: 0 10px 40px rgba(0,0,0,0.6);
     border: 2px solid var(--glass-border);
     border-radius: 12px;
+    max-width: 100%;
+    max-height: calc(100vh - 100px);
 }
 
 /* HUD Improvements */
 #top-hud {
-    position: absolute;
-    top: 20px;
+    position: static;
     width: 100%;
     display: flex;
-    justify-content: center;
-    pointer-events: none;
+    align-items: center;
+    gap: 10px;
+    pointer-events: auto;
     z-index: 10;
 }
 
@@ -90,23 +110,33 @@ canvas {
 }
 
 #ui-layer {
-    position: absolute;
-    bottom: 20px;
-    width: 100%;
-    max-width: 480px; /* Slightly wider */
     display: flex;
     flex-direction: column;
-    align-items: center;
-    pointer-events: none;
+    gap: 12px;
+    pointer-events: auto;
+}
+
+.rail-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    padding: 12px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+    backdrop-filter: blur(10px);
+}
+.rail-title {
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    font-size: 0.85rem;
 }
 
 /* Game Over Overlay - More impactful */
 #game-over-screen {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background: rgba(0, 0, 0, 0.9);
     display: flex;
     flex-direction: column;
@@ -167,24 +197,23 @@ canvas {
 #deck-area {
     display: flex;
     flex-direction: row;
-    align-items: flex-end;
+    align-items: flex-start;
     gap: 12px;
-    margin-bottom: 20px;
-    pointer-events: auto;
     width: 100%;
-    justify-content: center;
+    justify-content: flex-start;
 }
 
 #next-card-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-right: 20px;
+    min-height: 80px;
 }
 
 #hand {
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 /* Card Improvements */
