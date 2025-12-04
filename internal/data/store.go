@@ -30,6 +30,7 @@ type UserData struct {
 	Exp      int      `json:"exp"`
 	MaxExp   int      `json:"max_exp"`
 	Coins    int      `json:"coins"`
+	Trophies int      `json:"trophies"`
 	Status   string   `json:"status"`
 	Medals   []string `json:"medals"`
 	Language string   `json:"language"`
@@ -99,14 +100,14 @@ func (s *Store) loadMedals(path string) error {
 // FirstUser is a convenience helper used by the lobby when no ID is provided.
 func (s *Store) FirstUser() (UserData, bool) {
 	row := s.db.QueryRow(`
-        SELECT id, nickname, tag, level, exp, max_exp, coins, COALESCE(status, 'offline'), COALESCE(language, 'en')
+        SELECT id, nickname, tag, level, exp, max_exp, coins, trophies, COALESCE(status, 'offline'), COALESCE(language, 'en')
         FROM users
         ORDER BY created_at ASC
         LIMIT 1
     `)
 
 	var u UserData
-	if err := row.Scan(&u.ID, &u.Nickname, &u.Tag, &u.Level, &u.Exp, &u.MaxExp, &u.Coins, &u.Status, &u.Language); err != nil {
+	if err := row.Scan(&u.ID, &u.Nickname, &u.Tag, &u.Level, &u.Exp, &u.MaxExp, &u.Coins, &u.Trophies, &u.Status, &u.Language); err != nil {
 		return UserData{}, false
 	}
 
@@ -117,13 +118,13 @@ func (s *Store) FirstUser() (UserData, bool) {
 // GetUser returns a single user by ID.
 func (s *Store) GetUser(id string) (UserData, bool) {
 	row := s.db.QueryRow(`
-        SELECT id, nickname, tag, level, exp, max_exp, coins, COALESCE(status, 'offline'), COALESCE(language, 'en')
+        SELECT id, nickname, tag, level, exp, max_exp, coins, trophies, COALESCE(status, 'offline'), COALESCE(language, 'en')
         FROM users
         WHERE id = $1
     `, id)
 
 	var u UserData
-	if err := row.Scan(&u.ID, &u.Nickname, &u.Tag, &u.Level, &u.Exp, &u.MaxExp, &u.Coins, &u.Status, &u.Language); err != nil {
+	if err := row.Scan(&u.ID, &u.Nickname, &u.Tag, &u.Level, &u.Exp, &u.MaxExp, &u.Coins, &u.Trophies, &u.Status, &u.Language); err != nil {
 		return UserData{}, false
 	}
 
@@ -209,6 +210,17 @@ func (s *Store) MedalDetails(ids []string) []Medal {
 		}
 	}
 	return out
+}
+
+// AdjustTrophies adds/subtracts and clamps to zero.
+func (s *Store) AdjustTrophies(userID string, delta int) error {
+	_, err := s.db.Exec(`
+		UPDATE users
+		SET trophies = GREATEST(0, trophies + $1),
+		    updated_at = NOW()
+		WHERE id = $2
+	`, delta, userID)
+	return err
 }
 
 // Friend represents a basic friend profile.

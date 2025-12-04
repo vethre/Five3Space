@@ -1,5 +1,10 @@
 const urlParams = new URLSearchParams(window.location.search);
-const userID = urlParams.get('userID') || 'guest';
+const getCookie = (name) => {
+    const m = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([$?*|{}()[\]\\/+^])/g, '\\$1') + '=([^;]*)'));
+    return m ? decodeURIComponent(m[1]) : '';
+};
+const cookieUser = getCookie('user_id');
+const userID = urlParams.get('userID') || cookieUser || 'guest';
 const lang = urlParams.get('lang') || 'en';
 window.netParams = { userID, lang };
 document.documentElement.lang = lang;

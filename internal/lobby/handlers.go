@@ -259,10 +259,7 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 	btn2, stat2 := getModeTexts(lang, false, true)
 	btn3, stat3 := getModeTexts(lang, true, false)
 
-	chibikiURL := ""
-	if user.ID != "" {
-		chibikiURL = fmt.Sprintf("/game?mode=chibiki&userID=%s&lang=%s", user.ID, lang)
-	}
+	chibikiURL := fmt.Sprintf("/game?mode=chibiki&lang=%s", lang)
 
 	modes := []GameMode{
 		{

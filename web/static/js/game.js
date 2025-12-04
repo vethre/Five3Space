@@ -191,11 +191,6 @@ canvas.addEventListener('mousedown', (e) => {
     if (y < 0) y = 0;
     if (y > 32) y = 32;
 
-    // Flip for top team so everyone spawns from the "bottom" view
-    if ((window.gameState.myTeam || 0) === 1) {
-        y = 32 - y;
-    }
-
     if (window.net && window.net.sendSpawn) {
         net.sendSpawn(selectedCard, x, y);
         selectedCard = null;
@@ -233,12 +228,10 @@ function render() {
 
     const entities = window.gameState.entities || [];
     const sorted = entities.sort((a, b) => a.y - b.y);
-    const myTeam = window.gameState.myTeam || 0;
 
     sorted.forEach(ent => {
         const screenX = ent.x * SCALE;
-        const viewY = myTeam === 1 ? (32 - ent.y) : ent.y;
-        const screenY = viewY * SCALE;
+        const screenY = ent.y * SCALE;
         const img = sprites[ent.key];
 
         ctx.fillStyle = "rgba(0,0,0,0.3)";

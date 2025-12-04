@@ -606,7 +606,7 @@
                                     </span>
                                 </div>
                                 <button class="ghost-btn invite-btn"
-                                    data-invite="{{`/game?mode=chibiki&userID=`}}{{$.User.ID}}{{`&lang=`}}{{$.Lang}}"
+                                    data-invite="{{`/game?mode=chibiki&lang=`}}{{$.Lang}}"
                                     {{if ne .Presence `online`}}disabled{{end}}>
                                     Invite
                                 </button>
@@ -955,7 +955,7 @@
         qs('friend-cancel').onclick = () => hide(friendModal);
 
         // Friend Invites
-        const baseInvite = `/game?mode=chibiki&userID=${encodeURIComponent(userId)}&lang=${encodeURIComponent(currentLang)}`;
+        const baseInvite = `/game?mode=chibiki&lang=${encodeURIComponent(currentLang)}`;
         const inviteButtons = document.querySelectorAll('.invite-btn');
         inviteButtons.forEach(btn => {
             btn.onclick = async () => {

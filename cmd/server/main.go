@@ -45,6 +45,13 @@ func main() {
 				if _, err := store.AwardMedals(p.UserID, "first_win"); err != nil {
 					log.Printf("failed to award medal to %s: %v", p.UserID, err)
 				}
+				if err := store.AdjustTrophies(p.UserID, 30); err != nil {
+					log.Printf("failed to add trophies to %s: %v", p.UserID, err)
+				}
+			} else if p.UserID != "" && p.UserID != "guest" {
+				if err := store.AdjustTrophies(p.UserID, -15); err != nil {
+					log.Printf("failed to subtract trophies from %s: %v", p.UserID, err)
+				}
 			}
 		}
 	}
@@ -121,6 +128,7 @@ func applySchema(db *sql.DB) error {
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW();`,
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT NOT NULL DEFAULT '';`,
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS language TEXT NOT NULL DEFAULT 'en';`,
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS trophies INTEGER NOT NULL DEFAULT 0;`,
 		`
 		CREATE TABLE IF NOT EXISTS medals (
 			id TEXT PRIMARY KEY,
