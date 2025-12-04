@@ -187,22 +187,36 @@ function updateUI() {
     // GAME OVER
     if (window.gameState.gameOver) {
         gameOverScreen.style.display = 'flex';
-
-        const topBackBtn = document.getElementById('hud-back');
-        if (topBackBtn) topBackBtn.style.display = 'flex';
+        
+        // --- Logic for Game Over text ---
+        const myTeam = window.gameState.myTeam || 0;
         const win = window.gameState.winner === myTeam;
         gameOverTitle.innerText = win ? "VICTORY!" : "DEFEAT";
         gameOverTitle.style.color = win ? "#4f4" : "#f44";
+        
         if (medalDelta) {
             medalDelta.textContent = win ? "+30 medals" : "-15 medals";
             medalDelta.style.color = win ? "#4f4" : "#f99";
         }
+
+        // --- FIX: Ensure Return Button keeps identity ---
         const backBtn = document.getElementById('back-to-lobby');
+        const topBackBtn = document.getElementById('hud-back');
+        
+        // Show the top button too
+        if (topBackBtn) {
+            topBackBtn.style.display = 'flex';
+            if (window.SERVER_USER_ID) {
+                 const href = `/?userID=${window.SERVER_USER_ID}&lang=${window.SERVER_LANG}`;
+                 topBackBtn.href = href;
+            }
+        }
+
         if (backBtn && window.SERVER_USER_ID) {
-            // Force return to profile with ID
             backBtn.href = `/?userID=${window.SERVER_USER_ID}&lang=${window.SERVER_LANG}`;
         }
     } else {
+        // Hide during gameplay
         gameOverScreen.style.display = 'none';
         const topBackBtn = document.getElementById('hud-back');
         if (topBackBtn) topBackBtn.style.display = 'none';

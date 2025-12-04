@@ -40,30 +40,32 @@ func main() {
 	// 1. Initialize the Game Engine
 	gameInstance := chibiki.NewGame()
 	gameInstance.OnGameOver = func(winnerTeam int, players map[*chibiki.Player]bool) {
+		log.Printf("GAME OVER! Winner Team: %d", winnerTeam)
+
 		for p := range players {
 			// Skip guests
 			if p.UserID == "" || p.UserID == "guest" {
+				log.Printf("Skipping rewards for guest/empty user (Team %d)", p.Team)
 				continue
 			}
 
 			var trophyChange, coinChange, expChange int
 
 			if p.Team == winnerTeam {
-				// WINNER REWARDS
 				trophyChange = 30
 				coinChange = 50
 				expChange = 25
-				// Award 'first_win' medal logic if needed (optional)
 				store.AwardMedals(p.UserID, "first_win")
 			} else {
-				// LOSER REWARDS (Consolation)
 				trophyChange = -15
 				coinChange = 10
 				expChange = 5
 			}
 
-			// Update DB with EVERYTHING (Trophies, Coins, XP)
-			_, err := db.Exec(`
+			log.Printf("Awarding User %s (Team %d): %+d Trophies, %+d Coins", p.UserID, p.Team, trophyChange, coinChange)
+
+			// Update DB
+			res, err := db.Exec(`
 				UPDATE users
 				SET trophies = GREATEST(0, trophies + $1),
 					coins = coins + $2,
@@ -73,7 +75,10 @@ func main() {
 			`, trophyChange, coinChange, expChange, p.UserID)
 
 			if err != nil {
-				log.Printf("Failed to update rewards for %s: %v", p.UserID, err)
+				log.Printf("ERROR updating DB for %s: %v", p.UserID, err)
+			} else {
+				rows, _ := res.RowsAffected()
+				log.Printf("DB Update Success. Rows affected: %d", rows)
 			}
 		}
 	}

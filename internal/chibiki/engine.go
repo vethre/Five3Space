@@ -36,7 +36,6 @@ type GameInstance struct {
 	Mutex        sync.RWMutex
 	Register     chan *Player
 	Unregister   chan *Player
-	nextTeamID   int
 	Players      map[*Player]bool
 
 	OnGameOver func(winnerTeam int, players map[*Player]bool)
@@ -58,7 +57,6 @@ func NewGame() *GameInstance {
 		Register:     make(chan *Player),
 		Unregister:   make(chan *Player),
 		Players:      make(map[*Player]bool),
-		nextTeamID:   0,
 		GameTime:     0,
 		GameOver:     false,
 		WinnerTeam:   -1,
@@ -150,19 +148,37 @@ func (g *GameInstance) handleConnections() {
 		case player := <-g.Register:
 			g.Mutex.Lock()
 			g.Players[player] = true
+
+			// --- FIX: Dynamic Team Assignment ---
+			// Count how many players are currently in Team 0
+			team0Count := 0
+			for p := range g.Players {
+				if p != player && p.Team == 0 {
+					team0Count++
+				}
+			}
+
+			// If Team 0 is empty, take it. Otherwise, take Team 1.
+			if team0Count == 0 {
+				player.Team = 0
+			} else {
+				player.Team = 1
+			}
+
+			// Initialize State
 			if _, exists := g.PlayerStates[player.ID]; !exists {
-				player.Team = g.nextTeamID
-				g.nextTeamID = (g.nextTeamID + 1) % 2
 				g.InitPlayer(player.ID)
 			}
 			g.Mutex.Unlock()
-			fmt.Println("Player joined:", player.ID)
+
+			fmt.Printf("Player joined: %s (User: %s) -> Team %d\n", player.ID, player.UserID, player.Team)
+
 		case player := <-g.Unregister:
 			g.Mutex.Lock()
 			delete(g.Players, player)
 			close(player.Send)
 			g.Mutex.Unlock()
-			fmt.Println("Player left")
+			fmt.Println("Player left:", player.ID)
 		}
 	}
 }
