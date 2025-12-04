@@ -218,6 +218,8 @@ func (g *GameInstance) Update(dt float64) {
 	towersTeam0 := 0
 	towersTeam1 := 0
 
+	// Mark if a tower drops during overtime/tiebreaker for sudden death.
+	suddenDeath := g.IsOvertime || g.IsTiebreaker
 	for _, e := range g.Entities {
 		if e.HP > 0 {
 			activeEntities = append(activeEntities, e)
@@ -230,6 +232,8 @@ func (g *GameInstance) Update(dt float64) {
 			}
 		} else {
 			if e.Key == "king_tower" {
+				g.finishGame((e.Team + 1) % 2)
+			} else if suddenDeath && (e.Key == "princess_tower") {
 				g.finishGame((e.Team + 1) % 2)
 			}
 		}

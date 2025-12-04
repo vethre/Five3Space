@@ -172,9 +172,11 @@ canvas.addEventListener('mousedown', (e) => {
     if (!selectedCard) return;
     const rect = canvas.getBoundingClientRect();
     const x = (e.clientX - rect.left) / SCALE;
-    const y = ((e.clientY - rect.top) - BOARD_OFFSET_Y) / SCALE;
+    let y = ((e.clientY - rect.top) - BOARD_OFFSET_Y) / SCALE;
 
-    if (y > 32) return;
+    // Clamp clicks into board bounds to reduce missed spawns near edges
+    if (y < 0) y = 0;
+    if (y > 32) y = 32;
 
     if (window.net && window.net.sendSpawn) {
         net.sendSpawn(selectedCard, x, y);
@@ -251,7 +253,7 @@ function resizeCanvas() {
     if (w > window.innerWidth) { w = window.innerWidth; h = w / (9/16); }
     canvas.width = w; canvas.height = h;
     SCALE = w / 18;
-    BOARD_OFFSET_Y = -2 * SCALE;
+    BOARD_OFFSET_Y = 0;
 }
 
 window.addEventListener('resize', resizeCanvas);
