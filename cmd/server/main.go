@@ -41,17 +41,39 @@ func main() {
 	gameInstance := chibiki.NewGame()
 	gameInstance.OnGameOver = func(winnerTeam int, players map[*chibiki.Player]bool) {
 		for p := range players {
-			if p.Team == winnerTeam && p.UserID != "" && p.UserID != "guest" {
-				if _, err := store.AwardMedals(p.UserID, "first_win"); err != nil {
-					log.Printf("failed to award medal to %s: %v", p.UserID, err)
-				}
-				if err := store.AdjustTrophies(p.UserID, 30); err != nil {
-					log.Printf("failed to add trophies to %s: %v", p.UserID, err)
-				}
-			} else if p.UserID != "" && p.UserID != "guest" {
-				if err := store.AdjustTrophies(p.UserID, -15); err != nil {
-					log.Printf("failed to subtract trophies from %s: %v", p.UserID, err)
-				}
+			// Skip guests
+			if p.UserID == "" || p.UserID == "guest" {
+				continue
+			}
+
+			var trophyChange, coinChange, expChange int
+
+			if p.Team == winnerTeam {
+				// WINNER REWARDS
+				trophyChange = 30
+				coinChange = 50
+				expChange = 25
+				// Award 'first_win' medal logic if needed (optional)
+				store.AwardMedals(p.UserID, "first_win")
+			} else {
+				// LOSER REWARDS (Consolation)
+				trophyChange = -15
+				coinChange = 10
+				expChange = 5
+			}
+
+			// Update DB with EVERYTHING (Trophies, Coins, XP)
+			_, err := db.Exec(`
+				UPDATE users
+				SET trophies = GREATEST(0, trophies + $1),
+					coins = coins + $2,
+					exp = exp + $3,
+					updated_at = NOW()
+				WHERE id = $4
+			`, trophyChange, coinChange, expChange, p.UserID)
+
+			if err != nil {
+				log.Printf("Failed to update rewards for %s: %v", p.UserID, err)
 			}
 		}
 	}

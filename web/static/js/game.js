@@ -73,6 +73,15 @@ if (playAgainBtn) {
     });
 }
 
+function getVisualCoords(x, y) {
+    const myTeam = window.gameState.myTeam || 0;
+    // If I am Team 1 (Top), flip the board so I appear at the bottom
+    if (myTeam === 1) {
+        return { x: 18 - x, y: 32 - y };
+    }
+    return { x, y };
+}
+
 function updateUI() {
     if (!handDiv || !nextCardDiv || !elixirBar || !elixirText || !timer) {
         return;
@@ -201,20 +210,111 @@ window.onGameStateUpdate = updateUI;
 canvas.addEventListener('mousedown', (e) => {
     if (!selectedCard) return;
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / SCALE;
-    let y = ((e.clientY - rect.top) - BOARD_OFFSET_Y) / SCALE;
+    
+    // 1. Get Click Coordinates relative to screen
+    let rawX = (e.clientX - rect.left) / SCALE;
+    let rawY = ((e.clientY - rect.top) - BOARD_OFFSET_Y) / SCALE;
 
-    // Clamp clicks into board bounds to reduce missed spawns near edges
-    if (y < 0) y = 0;
-    if (y > 32) y = 32;
+    // 2. UN-FLIP coordinates to send correct Server X/Y
+    const myTeam = window.gameState.myTeam || 0;
+    let serverX = rawX;
+    let serverY = rawY;
+
+    if (myTeam === 1) {
+        serverX = 18 - rawX;
+        serverY = 32 - rawY;
+    }
+
+    // 3. Clamp
+    if (serverY < 0) serverY = 0;
+    if (serverY > 32) serverY = 32;
 
     if (window.net && window.net.sendSpawn) {
-        net.sendSpawn(selectedCard, x, y);
+        // Send SERVER coordinates
+        window.net.sendSpawn(selectedCard, serverX, serverY);
         selectedCard = null;
         updateUI();
     }
 });
 
+function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(0, BOARD_OFFSET_Y);
+
+    // --- MAP DRAWING ---
+    // We draw the map static, because we flip entities on top of it.
+    // However, we want the "Enemy Side" tint to always be at the top visually.
+    
+    ctx.fillStyle = "rgba(255, 0, 0, 0.1)"; 
+    ctx.fillRect(0, 0, 18 * SCALE, 16 * SCALE); // Top half is enemy
+
+    // River (Center)
+    ctx.fillStyle = "#4da6ff"; 
+    ctx.fillRect(0, 15.5 * SCALE, 18 * SCALE, 1 * SCALE);
+    
+    // Bridges
+    ctx.fillStyle = "#8B4513";
+    ctx.fillRect(2.5 * SCALE, 14.5 * SCALE, 2 * SCALE, 3 * SCALE);
+    ctx.fillRect(13.5 * SCALE, 14.5 * SCALE, 2 * SCALE, 3 * SCALE);
+
+    // Spawn Hint
+    if (selectedCard) {
+        // Visual cue where you can drop
+        ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+        // Logic: You can always spawn in bottom half visually
+        ctx.fillRect(0, 16 * SCALE, 18 * SCALE, 16 * SCALE);
+        // ... (dashed line code) ...
+    }
+
+    const entities = window.gameState.entities || [];
+    const myTeam = window.gameState.myTeam || 0;
+
+    // Sort by VISUAL Y so they layer correctly
+    const sorted = entities.map(e => {
+        const v = getVisualCoords(e.x, e.y);
+        return { ...e, visX: v.x, visY: v.y };
+    }).sort((a, b) => a.visY - b.visY);
+
+    sorted.forEach(ent => {
+        const screenX = ent.visX * SCALE;
+        const screenY = ent.visY * SCALE;
+        const img = sprites[ent.key];
+
+        ctx.fillStyle = "rgba(0,0,0,0.3)";
+        ctx.beginPath(); 
+        ctx.ellipse(screenX, screenY, SCALE/3, SCALE/6, 0, 0, Math.PI * 2); 
+        ctx.fill();
+
+        if (img) {
+            let size = SCALE * 2;
+            if (ent.key.includes("tower")) size = SCALE * 3;
+            ctx.drawImage(img, screenX - size/2, screenY - size + 5, size, size);
+        } else {
+            // Fallback Box
+            ctx.fillStyle = ent.team === myTeam ? 'blue' : 'red';
+            let w=SCALE*0.8, h=SCALE;
+            ctx.fillRect(screenX - w/2, screenY - h, w, h);
+        }
+
+        // HP Bar
+        if (ent.hp < ent.max_hp) {
+             const hpPct = ent.hp / ent.max_hp;
+             const barW = SCALE;
+             // Color logic: My team is always Green, Enemy always Red
+             const barColor = (ent.team === myTeam) ? '#4f4' : '#f44';
+             
+             ctx.fillStyle = 'black'; 
+             ctx.fillRect(screenX - barW/2, screenY - SCALE*1.2, barW, 5);
+             ctx.fillStyle = barColor; 
+             ctx.fillRect(screenX - barW/2, screenY - SCALE*1.2, barW * hpPct, 5);
+        }
+    });
+
+    ctx.restore();
+    requestAnimationFrame(render);
+}
+/*
 function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -276,6 +376,7 @@ function render() {
     ctx.restore();
     requestAnimationFrame(render);
 }
+    */
 
 function resizeCanvas() {
     let h = window.innerHeight;

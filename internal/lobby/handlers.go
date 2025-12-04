@@ -20,6 +20,7 @@ type User struct {
 	Exp          int
 	MaxExp       int
 	Medals       int
+	Trophies     int
 	Level        int
 	Coins        int
 	Status       string
@@ -233,6 +234,7 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 			Exp:       selected.Exp,
 			MaxExp:    selected.MaxExp,
 			Medals:    len(selected.Medals),
+			Trophies:  selected.Trophies,
 			Level:     selected.Level,
 			Coins:     selected.Coins,
 			Status:    selected.Status,
