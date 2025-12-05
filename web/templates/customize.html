@@ -201,7 +201,7 @@
                     payload.custom_avatar = newAvatarBase64;
                 }
 
-                const res = await fetch('/customize/save', {
+                const res = await fetch('/customize/save?userID={{.User.ID}}', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(payload)

@@ -311,7 +311,7 @@ func NewCustomizeSaveHandler(store *data.Store) http.HandlerFunc {
 		}
 
 		// 2) Обмежуємо розмір JSON (аватарка + решта)
-		r.Body = http.MaxBytesReader(w, r.Body, 2*1024*1024)
+		r.Body = http.MaxBytesReader(w, r.Body, 5*1024*1024)
 
 		var req struct {
 			NameColor    string `json:"name_color"`
