@@ -4,27 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Friends</title>
-    <!-- Link to the GLOBAL CSS which now has Name colors -->
+    <!-- Use GLOBAL CSS -->
     <link rel="stylesheet" href="/static/css/chibiki.css">
     <style>
-        /* Specific page overrides only */
-        .container { margin-top: 0; }
+        /* Specific Page Overrides */
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .top-bar { display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: 20px; }
+        .brand { font-weight: 900; letter-spacing: 2px; color: var(--text-muted); font-size: 1.1rem; }
+        .brand span { color: var(--primary); }
+        .header-actions { display:flex; gap:10px; }
+        .pill-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid var(--glass-border); color: white; text-decoration:none; font-weight:800; background: var(--glass-bg); transition: all 0.2s; cursor: pointer; }
+        .pill-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+        .pill-btn.add { background: linear-gradient(135deg, #ff4e50, #f9d423); color: black; border: none; }
         
-        .card {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 20px;
-            display: flex; flex-direction: column; gap: 12px;
-            backdrop-filter: blur(10px);
-        }
+        .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:20px; }
+        .card { background: var(--glass-bg); border:1px solid var(--glass-border); border-radius: 20px; padding: 20px; position:relative; box-shadow:0 10px 30px rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 12px; backdrop-filter: blur(10px); }
         
         .card-header { display: flex; align-items: center; gap: 14px; }
         .avatar { width:64px; height:64px; border-radius:50%; border:2px solid var(--accent); object-fit: cover; background: #222; }
         .info { flex: 1; }
-        
-        .nickname { font-size:1.2rem; } /* Colors handled by global CSS classes */
-        
+        .nickname { font-weight:900; font-size:1.2rem; }
         .tag { color: var(--text-muted); font-size: 0.9rem; font-weight: 700; }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
         .status-online { background:#4ade80; box-shadow:0 0 8px #4ade80; }
@@ -50,7 +49,7 @@
         .modal input { width: 100%; padding: 12px; margin: 8px 0; background: #333; border: 1px solid #555; color: white; border-radius: 8px; box-sizing: border-box; }
         .modal-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
 
-        /* Chat Box */
+        /* --- CHAT BOX STYLES --- */
         #chat-box {
             position: fixed; bottom: 0; right: 20px; width: 320px; height: 400px;
             background: #1a1a1a; border-radius: 16px 16px 0 0;
@@ -67,6 +66,10 @@
         .msg { padding: 8px 12px; border-radius: 12px; max-width: 80%; font-size: 0.9rem; word-wrap: break-word; }
         .msg.me { background: var(--primary); align-self: flex-end; color: black; font-weight: 600; }
         .msg.them { background: #333; align-self: flex-start; }
+        
+        /* Customization Overrides for this page */
+        .name-gold { color: #ffd700; text-shadow: 0 0 5px #ffd700; }
+        .name-rainbow { background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     </style>
 </head>
 <body>
@@ -85,7 +88,7 @@
                 <div class="card-header">
                     <img class="avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed={{.Nickname}}&backgroundColor=ffdfbf">
                     <div class="info">
-                        <!-- Apply NameColor class here -->
+                        <!-- Apply customization class -->
                         <div class="nickname {{.NameColor}}">{{.Nickname}}</div>
                         <div class="tag">#{{printf "%04d" .Tag}}</div>
                         <div class="presence-text">
@@ -159,6 +162,7 @@
         // Initialize WebSocket for Chat
         function initChat() {
             if (!myUserID) return;
+            // Note: Make sure /ws/chat exists in main.go
             socket = new WebSocket(`${protocol}://${window.location.host}/ws/chat?userID=${myUserID}`);
             
             socket.onopen = () => console.log("Chat Connected");
@@ -166,13 +170,12 @@
             socket.onmessage = (event) => {
                 const msg = JSON.parse(event.data);
                 if (msg.type === "dm") {
-                    // Only show if chat box is open for this person, or maybe generic
-                    // For MVP, we append if window matches or flash notification
                     if (currentChatPartnerID === msg.from) {
                         appendMessage(msg.text, 'them');
                     } else {
-                        // TODO: Notification bubble
-                        alert(`New message from user ${msg.from}`); 
+                        // Simple notification
+                        // In a real app, you'd show a badge or toast
+                        console.log(`New message from user ${msg.from}`); 
                     }
                 }
             };
