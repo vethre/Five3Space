@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"os"
 	"sync"
 	"time"
@@ -157,7 +158,7 @@ type Friend struct {
 	Trophies  int
 	Presence  string
 	NameColor string
-	AvatarURL string // Final URL to display
+	AvatarURL template.URL // Final URL to display
 }
 
 func (s *Store) ListFriends(userID string) ([]Friend, error) {
@@ -194,9 +195,9 @@ func (s *Store) ListFriends(userID string) ([]Friend, error) {
 		}
 		// Determine Avatar
 		if customAvatar != "" {
-			fr.AvatarURL = customAvatar
+			fr.AvatarURL = template.URL(customAvatar)
 		} else {
-			fr.AvatarURL = fmt.Sprintf("https://api.dicebear.com/7.x/avataaars/svg?seed=%s&backgroundColor=ffdfbf", fr.Nickname)
+			fr.AvatarURL = template.URL(fmt.Sprintf("https://api.dicebear.com/7.x/avataaars/svg?seed=%s&backgroundColor=ffdfbf", fr.Nickname))
 		}
 		friends = append(friends, fr)
 	}

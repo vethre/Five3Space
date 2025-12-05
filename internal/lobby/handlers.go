@@ -15,7 +15,7 @@ type User struct {
 	ID           string
 	Nickname     string
 	Tag          string
-	AvatarURL    string
+	AvatarURL    template.URL
 	Exp          int
 	MaxExp       int
 	Medals       int
@@ -234,7 +234,7 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 	var user User
 	if !userFound {
 		user = User{
-			Nickname: "Guest", Tag: "----", AvatarURL: "https://api.dicebear.com/7.x/avataaars/svg?seed=guest",
+			Nickname: "Guest", Tag: "----", AvatarURL: template.URL("https://api.dicebear.com/7.x/avataaars/svg?seed=guest"),
 			MaxExp: 1, Status: "offline", Language: lang, NameColor: "white", BannerColor: "default",
 		}
 	} else {
@@ -245,7 +245,7 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 
 		user = User{
 			ID: selected.ID, Nickname: selected.Nickname, Tag: fmt.Sprintf("%04d", selected.Tag),
-			AvatarURL: avatar,
+			AvatarURL: template.URL(avatar),
 			Exp:       selected.Exp, MaxExp: selected.MaxExp, Medals: len(selected.Medals), Trophies: selected.Trophies,
 			Level: selected.Level, Coins: selected.Coins, Status: selected.Status, Language: lang,
 			NameColor: selected.NameColor, BannerColor: selected.BannerColor, Inventory: inv,
