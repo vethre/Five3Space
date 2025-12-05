@@ -36,9 +36,8 @@
             overflow-x: hidden;
         }
 
-        /* Wider Container */
         .container {
-            max-width: 1200px; /* Wider layout */
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
             width: 100%;
@@ -90,11 +89,9 @@
         .pill-btn span { position: relative; z-index: 1; }
         .pill-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
         .pill-btn:hover::before { opacity: 1; }
-        .pill-btn--register { background: linear-gradient(135deg, #ff4e50, #f9d423); }
-        .pill-btn--login { background: linear-gradient(135deg, #36d1dc, #5b86e5); }
         .pill-btn--settings { background: linear-gradient(135deg, #8e2de2, #4a00e0); }
 
-        /* Profile Card - Wider and cleaner */
+        /* Profile Card */
         .profile-card {
             background: var(--glass-bg);
             backdrop-filter: blur(20px);
@@ -102,7 +99,7 @@
             border-radius: 30px;
             padding: 24px 32px;
             display: flex;
-            flex-direction: row; /* Keep row on desktop */
+            flex-direction: row;
             align-items: center;
             gap: 24px;
             margin-bottom: 40px;
@@ -170,7 +167,7 @@
             color: #ffd166;
         }
 
-        /* --- VISIBLE MEDALS --- */
+        /* Medals */
         .medal-display {
             display: flex;
             align-items: center;
@@ -184,31 +181,14 @@
         }
         .medal-display:hover { transform: scale(1.05); cursor: pointer; }
 
-        .medal-icon {
-            width: 32px; height: 32px; /* Bigger Icon */
-            fill: var(--accent);
-            filter: drop-shadow(0 0 5px rgba(255, 174, 0, 0.6));
-        }
-        .medal-count {
-            font-size: 1.2rem;
-            font-weight: 800;
-            color: var(--accent);
-        }
-        .medal-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 12px;
-        }
+        .medal-icon { width: 32px; height: 32px; fill: var(--accent); filter: drop-shadow(0 0 5px rgba(255, 174, 0, 0.6)); }
+        .medal-count { font-size: 1.2rem; font-weight: 800; color: var(--accent); }
+        
+        .medal-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
         .medal-chip {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
-            background: rgba(255, 174, 0, 0.08);
-            border: 1px solid rgba(255, 174, 0, 0.25);
-            border-radius: 12px;
-            min-width: 180px;
+            display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+            background: rgba(255, 174, 0, 0.08); border: 1px solid rgba(255, 174, 0, 0.25);
+            border-radius: 12px; min-width: 180px;
         }
         .medal-chip-icon { font-size: 16px; }
         .medal-chip-name { font-weight: 800; font-size: 0.9rem; }
@@ -223,7 +203,7 @@
             background: linear-gradient(90deg, #ff8c00, #ff4500);
             box-shadow: 0 0 15px var(--primary);
             border-radius: 5px;
-            width: 0; /* JS/Go sets this */
+            width: 0;
             transition: width 1s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
@@ -238,14 +218,14 @@
 
         .modes-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); /* Wider cards */
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 24px;
             margin-bottom: 50px;
         }
 
         .game-card {
             position: relative;
-            height: 260px; /* Taller */
+            height: 260px;
             border-radius: 24px;
             overflow: hidden;
             border: 1px solid rgba(255,255,255,0.05);
@@ -264,11 +244,7 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        .game-card-link {
-            text-decoration: none;
-            color: inherit;
-        }
-
+        .game-card-link { text-decoration: none; color: inherit; }
         .card-bg { position: absolute; inset: 0; opacity: 0.6; transition: opacity 0.4s; }
         .game-card:hover .card-bg { opacity: 0.8; }
         
@@ -301,28 +277,6 @@
         }
         .action-btn:hover { transform: scale(1.05); }
         .action-btn.disabled { background: transparent; color: #555; border: 1px solid #333; cursor: not-allowed; }
-
-        /* Footer */
-        .footer-nav {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
-            animation: slideUp 1s ease-out backwards;
-            animation-delay: 0.4s;
-        }
-        .nav-item {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            padding: 24px; border-radius: 24px;
-            display: flex; align-items: center; gap: 16px;
-            text-decoration: none; color: white;
-            transition: background 0.2s;
-        }
-        .nav-item:hover { background: rgba(255,255,255,0.1); }
-        .nav-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-        .icon-market { background: rgba(255, 69, 0, 0.2); color: var(--primary); }
-        .icon-hangar { background: rgba(255, 174, 0, 0.2); color: var(--accent); }
-        
-        .nav-info h4 { font-size: 1.2rem; font-weight: 800; }
-        .nav-info span { font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); }
 
         /* Sidebar */
         .main-grid {
@@ -363,7 +317,7 @@
         .side-pill.blue { background: linear-gradient(135deg, #36d1dc, #5b86e5); }
         .side-pill.green { background: linear-gradient(135deg, #43e97b, #38f9d7); }
 
-        /* --- CUSTOMIZATION STYLES (Added Here) --- */
+        /* --- CUSTOMIZATION STYLES --- */
         /* Name Colors */
         .name-white { color: white; }
         .name-gold {
@@ -471,40 +425,10 @@
         .status-menu.open { display: flex; }
         .status-menu button { width: 100%; text-align: left; }
 
-        .friend-status-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-
-        .status-online {
-            background: #3cff7c;
-            box-shadow: 0 0 8px rgba(60, 255, 124, 0.8);
-        }
-
-        .status-away {
-            background: #ffd166;
-            box-shadow: 0 0 8px rgba(255, 209, 102, 0.8);
-        }
-
-        .status-offline {
-            background: #666;
-        }
-
-        /* Mobile Adjustments */
         @media (max-width: 600px) {
-            .profile-card { flex-direction: column; text-align: center; padding: 20px; }
+            .profile-card { flex-direction: column; text-align: center; }
             .name-row { flex-direction: column; gap: 10px; }
             .modes-grid { grid-template-columns: 1fr; }
-            .footer-nav { grid-template-columns: 1fr; }
             .main-grid { grid-template-columns: 1fr; }
             .sidebar { order: -1; flex-direction: row; flex-wrap: wrap; }
         }
@@ -529,223 +453,93 @@
             </aside>
 
             <div class="main-column" style="display:flex; flex-direction:column; gap:24px;">
-        <!-- Profile -->
-        <!-- Added dynamic banner class here -->
-        <div class="profile-card banner-{{.User.BannerColor}}">
-            <div class="avatar-box">
-                <img src="{{.User.AvatarURL}}" class="avatar" alt="Avatar">
-                <div class="status-dot status-{{.User.Status}}"></div>
-                <div class="level-badge">{{.Text.Level}} {{.User.Level}}</div>
-                <div class="status-menu" id="status-menu">
-                    <button class="ghost-btn" data-status="online">Online</button>
-                    <button class="ghost-btn" data-status="away">Away</button>
-                    <button class="ghost-btn" data-status="offline">Offline</button>
-                </div>
-            </div>
-            <div class="profile-details">
-                <div class="name-row">
-                    <!-- Added dynamic name color class here -->
-                    <div class="nickname name-{{.User.NameColor}}">
-                        {{.User.Nickname}}<span class="tag">#{{.User.Tag}}</span>
-                    </div>
-                    
-                    <!-- NEW MEDAL VISUAL -->
-                    <div class="medal-display">
-                        <!-- Medal SVG -->
-                        <svg class="medal-icon" viewBox="0 0 24 24">
-                            <path d="M12 7.5a4.5 4.5 0 1 1 4.5 4.5A4.5 4.5 0 0 1 12 7.5zm0 0V2M10.5 2h3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M12 14l-2.5 7.5L12 19l2.5 2.5L12 14z" fill="currentColor"/>
-                            <circle cx="12" cy="8" r="3" fill="currentColor" fill-opacity="0.4"/>
-                        </svg>
-                        <span class="medal-count">{{.User.Trophies}}</span>
-                    </div>
-                    <div class="coin-chip">💰 {{.User.Coins}}</div>
-                </div>
-
-                <div class="xp-container">
-                    <div class="xp-labels">
-                        <span>{{.Text.XP}}</span>
-                        <span>{{.User.Exp}} / {{.User.MaxExp}}</span>
-                    </div>
-                    <div class="xp-bar-bg">
-                        <div class="xp-bar-fill" style="width: {{.User.XPPercentage}};"></div>
-                    </div>
-                </div>
-
-                {{if .MedalDetails}}
-                <div class="medal-grid">
-                    {{range .MedalDetails}}
-                    <div class="medal-chip">
-                        <div class="medal-chip-icon">🏅</div>
-                        <div class="medal-chip-text">
-                            <div class="medal-chip-name">{{.Name}}</div>
-                            <div class="medal-chip-desc">{{.Description}}</div>
+                
+                <!-- Profile -->
+                <div class="profile-card banner-{{.User.BannerColor}}">
+                    <div class="avatar-box">
+                        <!-- USING CUSTOM AVATAR HERE -->
+                        <img src="{{.User.AvatarURL}}" class="avatar" alt="Avatar">
+                        <div class="status-dot status-{{.User.Status}}"></div>
+                        <div class="level-badge">{{.Text.Level}} {{.User.Level}}</div>
+                        <div class="status-menu" id="status-menu">
+                            <button class="ghost-btn" data-status="online">Online</button>
+                            <button class="ghost-btn" data-status="away">Away</button>
+                            <button class="ghost-btn" data-status="offline">Offline</button>
                         </div>
                     </div>
-                    {{end}}
-                </div>
-                {{end}}
-            </div>
-        </div>
-
-        <!-- Game Modes -->
-        <div class="section-label">{{.Text.DeployZone}}</div>
-        
-        <div class="modes-grid">
-            {{range .Modes}}
-            <a href="{{if .URL}}{{.URL}}{{else}}#{{end}}" class="game-card-link">
-                <div class="game-card">
-                    <div class="card-bg" style="background: {{.SafeGradient}};"></div>
-                    
-                    <!-- Status Badge -->
-                    <div class="status-badge {{if .IsConstruct}}wip{{else if .IsLocked}}lock{{else}}ready{{end}}">
-                       {{.StatusText}}
-                    </div>
-
-                    <div class="card-content">
-                        <div class="card-title">{{.Title}}</div>
-                        <div class="card-sub">{{.Subtitle}}</div>
-                        
-                        <div class="action-btn {{if or .IsLocked .IsConstruct}}disabled{{end}}">
-                            {{.BtnText}}
-                        </div>
-                    </div>
-                </div>
-            </a>
-            {{end}}
-        </div>
-
-        <!-- Friends -->
-        <div class="section-label">Friends</div>
-        <div class="profile-card" style="flex-direction: column; align-items: flex-start; gap: 16px;">
-            <div style="display:flex; gap:12px; width:100%; flex-wrap:wrap;">
-                {{if .Friends}}
-                    {{range .Friends}}
-                        <div class="medal-chip">
-                            <div>
-                                <div class="medal-chip-name">{{.Nickname}}</div>
-                                <div class="medal-chip-desc">#{{printf "%04d" .Tag}} · L{{.Level}}</div>
+                    <div class="profile-details">
+                        <div class="name-row">
+                            <div class="nickname name-{{.User.NameColor}}">
+                                {{.User.Nickname}}<span class="tag">#{{.User.Tag}}</span>
                             </div>
-                            <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
-                                <div class="friend-status-pill">
-                                    {{/* Выбираем CSS-класс по Presence */}}
-                                    <span class="status-dot
-                                        {{if eq .Presence `online`}}status-online{{end}}
-                                        {{if eq .Presence `away`}}status-away{{end}}
-                                        {{if eq .Presence `offline`}}status-offline{{end}}
-                                    "></span>
-                                    <span>
-                                        {{if eq .Presence `online`}}Online{{end}}
-                                        {{if eq .Presence `away`}}Away{{end}}
-                                        {{if eq .Presence `offline`}}Offline{{end}}
-                                    </span>
+                            
+                            <div class="medal-display">
+                                <svg class="medal-icon" viewBox="0 0 24 24">
+                                    <path d="M12 7.5a4.5 4.5 0 1 1 4.5 4.5A4.5 4.5 0 0 1 12 7.5zm0 0V2M10.5 2h3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M12 14l-2.5 7.5L12 19l2.5 2.5L12 14z" fill="currentColor"/>
+                                    <circle cx="12" cy="8" r="3" fill="currentColor" fill-opacity="0.4"/>
+                                </svg>
+                                <span class="medal-count">{{.User.Trophies}}</span>
+                            </div>
+                            <div class="coin-chip">💰 {{.User.Coins}}</div>
+                        </div>
+
+                        <div class="xp-container">
+                            <div class="xp-labels">
+                                <span>{{.Text.XP}}</span>
+                                <span>{{.User.Exp}} / {{.User.MaxExp}}</span>
+                            </div>
+                            <div class="xp-bar-bg">
+                                <div class="xp-bar-fill" style="width: {{.User.XPPercentage}};"></div>
+                            </div>
+                        </div>
+
+                        {{if .MedalDetails}}
+                        <div class="medal-grid">
+                            {{range .MedalDetails}}
+                            <div class="medal-chip">
+                                <div class="medal-chip-icon">🏅</div>
+                                <div class="medal-chip-text">
+                                    <div class="medal-chip-name">{{.Name}}</div>
+                                    <div class="medal-chip-desc">{{.Description}}</div>
                                 </div>
-                                <button class="ghost-btn invite-btn"
-                                    data-invite="{{`/game?mode=chibiki&lang=`}}{{$.Lang}}"
-                                    {{if ne .Presence `online`}}disabled{{end}}>
-                                    Invite
-                                </button>
+                            </div>
+                            {{end}}
+                        </div>
+                        {{end}}
+                    </div>
+                </div>
+
+                <!-- Game Modes -->
+                <div class="section-label">{{.Text.DeployZone}}</div>
+                
+                <div class="modes-grid">
+                    {{range .Modes}}
+                    <a href="{{if .URL}}{{.URL}}{{else}}#{{end}}" class="game-card-link">
+                        <div class="game-card">
+                            <div class="card-bg" style="background: {{.SafeGradient}};"></div>
+                            
+                            <div class="status-badge {{if .IsConstruct}}wip{{else if .IsLocked}}lock{{else}}ready{{end}}">
+                               {{.StatusText}}
+                            </div>
+
+                            <div class="card-content">
+                                <div class="card-title">{{.Title}}</div>
+                                <div class="card-sub">{{.Subtitle}}</div>
+                                
+                                <div class="action-btn {{if or .IsLocked .IsConstruct}}disabled{{end}}">
+                                    {{.BtnText}}
+                                </div>
                             </div>
                         </div>
+                    </a>
                     {{end}}
-                {{else}}
-                    <div class="medal-chip">
-                        <div class="medal-chip-name">No friends yet</div>
-                        <div class="medal-chip-desc">Add friends below</div>
-                    </div>
-                {{end}}
-            </div>
-            <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <button class="action-btn" id="btn-add-friend">Add Friend</button>
-                <button class="ghost-btn" id="btn-remove-friend">Remove Friend</button>
-                <button class="ghost-btn" id="btn-copy-invite">Copy invite link</button>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="footer-nav">
-            <a href="#" class="nav-item">
-                <div class="nav-icon icon-market">
-                    <svg style="width:24px;height:24px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
                 </div>
-                <div class="nav-info">
-                    <h4>{{.Text.Market}}</h4>
-                    <span>{{.Text.MarketSub}}</span>
-                </div>
-            </a>
-            <a href="#" class="nav-item">
-                <div class="nav-icon icon-hangar">
-                    <svg style="width:24px;height:24px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                </div>
-                <div class="nav-info">
-                    <h4>{{.Text.Hangar}}</h4>
-                    <span>{{.Text.HangarSub}}</span>
-                </div>
-            </a>
-        </div>
             </div>
         </div>
     </div>
 
-    <!-- Registration Modal -->
-    <div class="modal-backdrop {{if .ShowRegister}}open{{end}}" id="register-modal">
-        <div class="modal">
-            <h3>Create your profile</h3>
-            <label for="reg-nickname">Nickname</label>
-            <input id="reg-nickname" placeholder="Enter nickname" />
-            <label for="reg-password">Password</label>
-            <input id="reg-password" type="password" placeholder="Enter password" />
-            <div class="remember-row">
-                <input type="checkbox" id="reg-remember" />
-                <label for="reg-remember">Remember me on this device</label>
-            </div>
-            <div class="modal-actions">
-                <button class="ghost-btn" id="reg-cancel">Later</button>
-                <button class="primary-btn" id="reg-submit">Register</button>
-            </div>
-            <div id="reg-error" style="color:#ff7676;font-size:0.85rem;margin-top:6px;"></div>
-        </div>
-    </div>
-
-    <!-- Login Modal -->
-    <div class="modal-backdrop" id="login-modal">
-        <div class="modal">
-            <h3>Login</h3>
-            <label for="login-nickname">Nickname</label>
-            <input id="login-nickname" placeholder="Enter nickname" />
-            <label for="login-tag">Tag</label>
-            <input id="login-tag" placeholder="0001" />
-            <label for="login-password">Password</label>
-            <input id="login-password" type="password" placeholder="Password" />
-            <div class="remember-row">
-                <input type="checkbox" id="login-remember" />
-                <label for="login-remember">Remember me on this device</label>
-            </div>
-            <div class="modal-actions">
-                <button class="ghost-btn" id="login-cancel">Cancel</button>
-                <button class="primary-btn" id="login-submit">Login</button>
-            </div>
-            <div id="login-error" style="color:#ff7676;font-size:0.85rem;margin-top:6px;"></div>
-        </div>
-    </div>
-
-    <!-- Friend Modal -->
-    <div class="modal-backdrop" id="friend-modal">
-        <div class="modal">
-            <h3 id="friend-modal-title">Add Friend</h3>
-            <label for="friend-nickname">Nickname</label>
-            <input id="friend-nickname" placeholder="Friend nickname" />
-            <label for="friend-tag">Tag</label>
-            <input id="friend-tag" placeholder="0001" />
-            <div class="modal-actions">
-                <button class="ghost-btn" id="friend-cancel">Cancel</button>
-                <button class="primary-btn" id="friend-submit">Submit</button>
-            </div>
-            <div id="friend-error" style="color:#ff7676;font-size:0.85rem;margin-top:6px;"></div>
-        </div>
-    </div>
-
-    <!-- Settings Modal -->
+    <!-- Modals (Settings, etc) -->
     <div class="modal-backdrop" id="settings-modal">
         <div class="modal">
             <h3>Settings</h3>
@@ -785,14 +579,53 @@
         </div>
     </div>
 
+    <div class="modal-backdrop {{if .ShowRegister}}open{{end}}" id="register-modal">
+        <div class="modal">
+            <h3>Create your profile</h3>
+            <label for="reg-nickname">Nickname</label>
+            <input id="reg-nickname" placeholder="Enter nickname" />
+            <label for="reg-password">Password</label>
+            <input id="reg-password" type="password" placeholder="Enter password" />
+            <div class="remember-row">
+                <input type="checkbox" id="reg-remember" />
+                <label for="reg-remember">Remember me on this device</label>
+            </div>
+            <div class="modal-actions">
+                <button class="ghost-btn" id="reg-cancel">Later</button>
+                <button class="primary-btn" id="reg-submit">Register</button>
+            </div>
+            <div id="reg-error" style="color:#ff7676;font-size:0.85rem;margin-top:6px;"></div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="login-modal">
+        <div class="modal">
+            <h3>Login</h3>
+            <label for="login-nickname">Nickname</label>
+            <input id="login-nickname" placeholder="Enter nickname" />
+            <label for="login-tag">Tag</label>
+            <input id="login-tag" placeholder="0001" />
+            <label for="login-password">Password</label>
+            <input id="login-password" type="password" placeholder="Password" />
+            <div class="remember-row">
+                <input type="checkbox" id="login-remember" />
+                <label for="login-remember">Remember me on this device</label>
+            </div>
+            <div class="modal-actions">
+                <button class="ghost-btn" id="login-cancel">Cancel</button>
+                <button class="primary-btn" id="login-submit">Login</button>
+            </div>
+            <div id="login-error" style="color:#ff7676;font-size:0.85rem;margin-top:6px;"></div>
+        </div>
+    </div>
+
     <script>
     (function() {
         const qs = (id) => document.getElementById(id);
         const regModal = qs('register-modal');
         const loginModal = qs('login-modal');
-        const friendModal = qs('friend-modal');
         const settingsModal = qs('settings-modal');
-        [regModal, loginModal, friendModal, settingsModal].forEach(el => { if (el) el.style.display = ''; });
+        [regModal, loginModal, settingsModal].forEach(el => { if (el) el.style.display = ''; });
         const show = (el) => { if (el) el.classList.add('open'); };
         const hide = (el) => { if (el) el.classList.remove('open'); };
 
@@ -816,37 +649,28 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ status: currentStatus })
                 });
-            } catch (e) {
-                // тихо игнорим, это просто пинг
-            }
+            } catch (e) { }
         }
 
-        // Запускаем heartbeat
         if (userId) {
-            setInterval(pingPresence, 30000); // каждые 30 сек
-            // И сразу один пинг при загрузке
+            setInterval(pingPresence, 30000);
             pingPresence();
         }
 
         async function saveLanguage(lang) {
             const url = new URL(window.location.href);
             url.searchParams.set('lang', lang);
-
             if (!userId) {
                 window.location = url.toString();
                 return;
             }
-
             try {
                 const res = await fetch('/settings/language', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ language: lang })
                 });
-                if (!res.ok) throw new Error('save failed');
-            } catch (err) {
-                console.warn('language save failed', err);
-            } finally {
+            } catch (err) { } finally {
                 window.location = url.toString();
             }
         }
@@ -954,69 +778,6 @@
             qs('login-cancel').onclick = () => hide(loginModal);
         }
 
-        // Friends
-        const friendState = { mode: 'add' };
-        const setFriendMode = (mode) => {
-            friendState.mode = mode;
-            qs('friend-modal-title').textContent = mode === 'add' ? 'Add Friend' : 'Remove Friend';
-        };
-        const submitFriend = async () => {
-            const nickname = qs('friend-nickname').value.trim();
-            const tag = qs('friend-tag').value.trim();
-            const err = qs('friend-error');
-            err.textContent = '';
-            if (!nickname || !tag) { err.textContent = 'Nickname and tag required'; return; }
-            const endpoint = friendState.mode === 'add' ? '/friends/add' : '/friends/remove';
-            try {
-                const res = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nickname, tag: parseInt(tag, 10) })
-                });
-                if (!res.ok) {
-                    err.textContent = 'Failed (' + res.status + ')';
-                    return;
-                }
-                window.location.reload();
-            } catch (e) {
-                err.textContent = 'Network error';
-            }
-        };
-        const btnAdd = document.getElementById('btn-add-friend');
-        const btnRemove = document.getElementById('btn-remove-friend');
-        if (btnAdd) btnAdd.onclick = () => { setFriendMode('add'); show(friendModal); };
-        if (btnRemove) btnRemove.onclick = () => { setFriendMode('remove'); show(friendModal); };
-        qs('friend-submit').onclick = submitFriend;
-        qs('friend-cancel').onclick = () => hide(friendModal);
-
-        // Friend Invites
-        const baseInvite = `/game?mode=chibiki&lang=${encodeURIComponent(currentLang)}`;
-        const inviteButtons = document.querySelectorAll('.invite-btn');
-        inviteButtons.forEach(btn => {
-            btn.onclick = async () => {
-                const link = btn.getAttribute('data-invite') || baseInvite;
-                try {
-                    await navigator.clipboard.writeText(new URL(link, window.location.origin).toString());
-                    btn.textContent = 'Copied';
-                    setTimeout(() => btn.textContent = 'Invite', 1200);
-                } catch (e) {
-                    alert('Copy failed');
-                }
-            };
-        });
-        const copyInviteFallback = document.getElementById('btn-copy-invite');
-        if (copyInviteFallback) {
-            copyInviteFallback.onclick = async () => {
-                try {
-                    await navigator.clipboard.writeText(new URL(baseInvite, window.location.origin).toString());
-                    copyInviteFallback.textContent = 'Copied';
-                    setTimeout(() => copyInviteFallback.textContent = 'Copy invite link', 1200);
-                } catch (e) {
-                    alert('Copy failed');
-                }
-            };
-        }
-
         // Settings
         const btnSettings = document.getElementById('btn-settings');
         if (btnSettings) btnSettings.onclick = () => show(settingsModal);
@@ -1034,7 +795,6 @@
             window.location = next.toString();
         };
 
-        // Переключение языка
         settingsModal.querySelectorAll('[data-lang]').forEach(btn => {
             btn.onclick = () => {
                 const lang = btn.getAttribute('data-lang');
@@ -1042,7 +802,6 @@
             };
         });
 
-        // Переключение статуса
         settingsModal.querySelectorAll('[data-status]').forEach(btn => {
             btn.onclick = async () => {
                 await setStatus(btn.getAttribute('data-status'));

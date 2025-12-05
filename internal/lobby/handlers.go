@@ -303,8 +303,8 @@ func NewCustomizeSaveHandler(store *data.Store) http.HandlerFunc {
 			return
 		}
 
-		// Max 500KB body to prevent huge images
-		r.Body = http.MaxBytesReader(w, r.Body, 500*1024)
+		// Increased to 2MB to allow reasonable avatar uploads
+		r.Body = http.MaxBytesReader(w, r.Body, 2*1024*1024)
 
 		var req struct {
 			NameColor    string `json:"name_color"`

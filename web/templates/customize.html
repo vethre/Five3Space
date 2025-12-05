@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customization</title>
     <style>
+        /* ... (Styles remain the same) ... */
         :root {
             --bg-dark: #0f0502;
             --glass-bg: rgba(255, 255, 255, 0.05);
@@ -90,6 +91,7 @@
         </div>
 
         <div class="controls">
+            <!-- Name Color Selector -->
             <div class="control-group">
                 <h3>Name Color</h3>
                 <div class="option {{if eq .User.NameColor "white"}}active{{end}}" onclick="selectName('white', this)">
@@ -103,6 +105,7 @@
                 </div>
             </div>
 
+            <!-- Banner Selector -->
             <div class="control-group">
                 <h3>Lobby Banner</h3>
                 <div class="option {{if eq .User.BannerColor "default"}}active{{end}}" onclick="selectBanner('default', this)">
@@ -149,8 +152,8 @@
             const file = e.target.files[0];
             if (!file) return;
 
-            if (file.size > 2 * 1024 * 1024) {
-                alert("File too large! Max 2MB.");
+            if (file.size > 5 * 1024 * 1024) {
+                alert("File too large! Max 5MB.");
                 return;
             }
 
@@ -207,8 +210,11 @@
                     alert("Saved!");
                     window.location.href = '/?lang={{.Lang}}&userID={{.User.ID}}';
                 }
-                else alert("Error saving. (File might be too large?)");
-            } catch(e) { alert("Network error"); }
+                else {
+                    const errText = await res.text();
+                    alert("Error saving: " + errText);
+                }
+            } catch(e) { alert("Network error: " + e.message); }
         }
     </script>
 </body>
