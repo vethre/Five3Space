@@ -299,11 +299,12 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 
 	// 8. Modes (Keep your existing mode logic)
 	btn1, stat1 := getModeTexts(lang, false, false)
-	btn2, stat2 := getModeTexts(lang, false, true)
 	btn3, stat3 := getModeTexts(lang, true, false)
 
 	// Use generic link for game
 	chibikiURL := fmt.Sprintf("/game?mode=chibiki&lang=%s", lang)
+
+	bobikURL := fmt.Sprintf("/bobik?lang=%s", lang)
 
 	modes := []GameMode{
 		{
@@ -320,10 +321,11 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 			ID:           "bobik",
 			Title:        "Bobik Shooter",
 			Subtitle:     "FPS-style",
-			IsConstruct:  true,
-			SafeGradient: template.CSS("linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%)"),
-			BtnText:      stat2,
-			StatusText:   btn2,
+			IsConstruct:  false,
+			SafeGradient: template.CSS("linear-gradient(135deg, #36d1dc 0%, #5b86e5 100%)"),
+			BtnText:      "DEPLOY",
+			StatusText:   "LIVE",
+			URL:          bobikURL,
 		},
 		{
 			ID:           "tba",

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"main/internal/auth"
+	"main/internal/bobikshooter"
 	"main/internal/chibiki"
 	"main/internal/data"
 	"main/internal/lobby"
@@ -96,6 +97,7 @@ func main() {
 	go gameInstance.StartLoop()
 
 	presenceService := presence.NewService(db)
+	bobikGame := bobikshooter.NewGame()
 
 	// 5. Configure Routes
 	authService := auth.NewAuth(db)
@@ -107,10 +109,12 @@ func main() {
 	http.HandleFunc("/friends/remove", authService.RemoveFriendHandler)
 	http.HandleFunc("/presence/ping", presenceService.PingHandler)
 	http.HandleFunc("/ws", chibiki.NewWebsocketHandler(gameInstance))
+	http.HandleFunc("/ws/bobik", bobikGame.HandleWS)
 	http.HandleFunc("/friends", lobby.NewFriendsHandler(store))
 	http.HandleFunc("/shop", lobby.NewShopHandler(store))
 	http.HandleFunc("/shop/buy", lobby.NewBuyHandler(store))
 	http.HandleFunc("/customize", lobby.NewCustomizeHandler(store))
+	http.HandleFunc("/bobik", lobby.NewBobikHandler(store))
 
 	fs := http.FileServer(http.Dir("./web/static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
