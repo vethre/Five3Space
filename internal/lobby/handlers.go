@@ -297,13 +297,20 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 
 func NewCustomizeSaveHandler(store *data.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		c, err := r.Cookie("user_id")
-		if err != nil {
+		// 1) Витягуємо userID з кукі або з query
+		userID := ""
+		if c, err := r.Cookie("user_id"); err == nil && c.Value != "" {
+			userID = c.Value
+		} else if q := r.URL.Query().Get("userID"); q != "" {
+			userID = q
+		}
+
+		if userID == "" {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
-		// Increased to 2MB to allow reasonable avatar uploads
+		// 2) Обмежуємо розмір JSON (аватарка + решта)
 		r.Body = http.MaxBytesReader(w, r.Body, 2*1024*1024)
 
 		var req struct {
@@ -316,11 +323,12 @@ func NewCustomizeSaveHandler(store *data.Store) http.HandlerFunc {
 			return
 		}
 
-		err = store.UpdateProfileLook(c.Value, req.NameColor, req.BannerColor, req.CustomAvatar)
-		if err != nil {
-			http.Error(w, "Error saving", 500)
+		// 3) Зберігаємо в БД
+		if err := store.UpdateProfileLook(userID, req.NameColor, req.BannerColor, req.CustomAvatar); err != nil {
+			http.Error(w, "Error saving", http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(200)
+
+		w.WriteHeader(http.StatusOK)
 	}
 }
