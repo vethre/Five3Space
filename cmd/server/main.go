@@ -27,6 +27,8 @@ func main() {
 	}
 	defer db.Close()
 
+	chat.DB = db
+
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(5)
 
@@ -100,6 +102,9 @@ func main() {
 	http.HandleFunc("/ws/bobik", bobikGame.HandleWS)
 
 	http.HandleFunc("/ws/chat", chat.HandleWS)
+	http.HandleFunc("/chat/history", chat.HistoryHandler)
+	http.HandleFunc("/chat/delivered", chat.DeliveredHandler)
+	http.HandleFunc("/chat/seen", chat.SeenHandler)
 
 	// Lobby Pages
 	http.HandleFunc("/friends", lobby.NewFriendsHandler(store))
@@ -190,6 +195,17 @@ func applySchema(db *sql.DB) error {
 			item_id TEXT NOT NULL,
 			acquired_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			PRIMARY KEY (user_id, item_id)
+		);
+		`,
+		`
+		CREATE TABLE IF NOT EXISTS messages (
+			id BIGSERIAL PRIMARY KEY,
+			sender_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			receiver_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			text TEXT NOT NULL,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			delivered BOOLEAN NOT NULL DEFAULT FALSE,
+			seen BOOLEAN NOT NULL DEFAULT FALSE
 		);
 		`,
 	}

@@ -144,6 +144,12 @@
         @keyframes rainbowAnim {
             to { background-position: 200% center; }
         }
+        .seen-indicator {
+            font-size: 0.7rem;
+            opacity: 0.5;
+            margin-top: 4px;
+            text-align: right;
+        }
     </style>
 </head>
 <body>
@@ -223,6 +229,7 @@
         <div class="chat-input-area">
             <input class="chat-input" id="chat-in" placeholder="Type a message..." onkeypress="handleChatKey(event)">
             <button class="pill-btn" onclick="sendMsg()">➤</button>
+            <button id="emoji-btn" class="pill-btn">😊</button>
         </div>
     </div>
 
@@ -240,11 +247,21 @@
             socket.onmessage = (event) => {
                 const msg = JSON.parse(event.data);
                 if (msg.type === "dm") {
+                    // mark as delivered
+                    fetch("/chat/delivered", {
+                        method: "POST",
+                        headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify({ from: msg.from })
+                    });
+
                     if (currentChatPartnerID === msg.from) {
                         appendMessage(msg.text, 'them');
-                    } else {
-                        // In a real app, show a toast here
-                        console.log(`New message from user ${msg.from}`); 
+                        // also mark as seen
+                        fetch("/chat/seen", {
+                            method: "POST",
+                            headers: {"Content-Type": "application/json"},
+                            body: JSON.stringify({ from: msg.from })
+                        });
                     }
                 }
             };
@@ -287,13 +304,18 @@
         const chatBody = document.getElementById('chat-body');
         const chatIn = document.getElementById('chat-in');
         
-        function openChat(userID, nick) {
+        async function openChat(userID, nick) {
             currentChatPartnerID = userID;
-            document.getElementById('chat-partner').innerText = nick;
-            chatBox.style.display = 'flex';
-            chatBody.innerHTML = ''; 
-            // Intro message
-            appendMessage(`Chatting with ${nick}`, 'them');
+            document.getElementById("chat-partner").innerText = nick;
+            chatBox.style.display = "flex";
+
+            chatBody.innerHTML = "";
+
+            const history = await fetch(`/chat/history?with=${userID}`).then(r => r.json());
+
+            history.forEach(m => {
+                appendMessage(m.text, m.sender_id === myUserID ? "me" : "them");
+            });
         }
         
         function toggleChat() {
@@ -321,11 +343,29 @@
             div.innerText = text;
             chatBody.appendChild(div);
             chatBody.scrollTop = chatBody.scrollHeight;
+            if (type === "me") {
+                const mark = document.createElement("div");
+                mark.className = "seen-indicator";
+                mark.innerText = "✓";
+                div.appendChild(mark);
+            }
         }
         
         function handleChatKey(e) {
             if(e.key === 'Enter') sendMsg();
         }
+
+        if (msg.type === "seen") {
+            markLastMessageAsSeen();
+        }
+
+        const picker = new EmojiButton();
+        document.querySelector("#emoji-btn").addEventListener("click", () => picker.togglePicker(chatIn));
+
+        picker.on("emoji", emoji => {
+            chatIn.value += emoji;
+        });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.min.js"></script>
 </body>
 </html>
