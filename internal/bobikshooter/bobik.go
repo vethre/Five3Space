@@ -139,14 +139,19 @@ func (g *Game) endRound() {
 		})
 	}
 
-	if winner != nil && winner.UserID != "" && winner.UserID != "guest" {
-		g.store.AdjustCoins(winner.UserID, 100)
-		g.store.AdjustTrophies(winner.UserID, 25)
-		g.store.AwardMedals(winner.UserID, "ten_wins")
+	winnerID := ""
+	if winner != nil {
+		winnerID = winner.ID
+		// Only award if actually played (kills > 0) or simply by being best survivor
+		if winner.UserID != "" && winner.UserID != "guest" {
+			g.store.AdjustCoins(winner.UserID, 100)
+			g.store.AdjustTrophies(winner.UserID, 25)
+			g.store.AwardMedals(winner.UserID, "ten_wins")
+		}
 	}
 
 	g.broadcastJSON(map[string]interface{}{
-		"type": "game_over", "scoreboard": scoreboard, "winnerId": winner.ID,
+		"type": "game_over", "scoreboard": scoreboard, "winnerId": winnerID,
 	})
 }
 

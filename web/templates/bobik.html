@@ -4,18 +4,14 @@
     <meta charset="UTF-8">
     <title>Bobik Shooter</title>
     <style>
-        :root {
-            --hud-bg: rgba(0,0,0,0.6);
-            --accent: #ffb300;
-            --danger: #ff4444;
-            --success: #44ff44;
-        }
+        :root { --hud-bg: rgba(0,0,0,0.6); --accent: #ffb300; --danger: #ff4444; --success: #44ff44; }
         body { margin:0; overflow:hidden; background:#0b0e11; color:#fff; font-family: "Segoe UI", sans-serif; user-select:none; }
         
-        #crosshair { position:absolute; top:50%; left:50%; width:16px; height:16px; transform:translate(-50%,-50%); pointer-events:none; z-index:5; transition: all 0.1s; }
+        #crosshair { position:absolute; top:50%; left:50%; width:16px; height:16px; transform:translate(-50%,-50%); pointer-events:none; z-index:5; transition: transform 0.1s; }
         #crosshair:before, #crosshair:after { content:""; position:absolute; background:#0f0; box-shadow: 0 0 4px #0f0; }
         #crosshair:before { width:2px; height:14px; left:7px; top:1px; }
         #crosshair:after { width:14px; height:2px; top:7px; left:1px; }
+        #crosshair.hit { transform: translate(-50%, -50%) scale(2); background: red; }
 
         #hud-top { position:absolute; top:20px; left:20px; display:flex; gap:16px; z-index:6; align-items:flex-start; pointer-events: none; }
         .card { background:var(--hud-bg); padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.1); box-shadow:0 8px 20px rgba(0,0,0,0.5); backdrop-filter: blur(5px); pointer-events: auto; }
@@ -33,7 +29,6 @@
 
         #weapon-bar { position:absolute; bottom:30px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:6; }
         .slot { padding:10px 16px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.6); min-width:80px; text-align:center; color:#888; transition: all 0.1s; }
-        .slot span { display: block; font-size: 0.7rem; color: #555; margin-bottom: 2px; }
         .slot.active { border-color:var(--accent); color:#fff; transform: translateY(-5px); box-shadow:0 0 15px rgba(255,179,0,0.3); }
 
         #ammo { position:absolute; bottom:30px; right:30px; text-align:right; z-index: 6; }
@@ -79,7 +74,7 @@
         </div>
         <div style="color: #aaa; font-weight: bold; font-size: 0.8rem; align-self: center;">[B] SHOP</div>
     </div>
-    <div id="timer">--:--</div>
+    <div id="timer">Waiting...</div>
     <div id="scoreboard" class="card"><h4>LEADERBOARD</h4><ul id="score-list"></ul></div>
     <div id="health-bar-container"><div id="health-text">HP 100</div><div id="health-fill"></div></div>
     <div id="weapon-bar">
@@ -98,7 +93,7 @@
     <div id="waiting-overlay" class="overlay" style="display: flex;">
         <div class="spinner"></div>
         <h2>WAITING FOR PLAYERS</h2>
-        <div style="font-size: 0.9rem; color: #aaa;">Click anywhere to get ready...</div>
+        <div style="font-size: 0.9rem; color: #aaa;">Waiting for at least 2 players...</div>
     </div>
     <div id="game-over-overlay" class="overlay">
         <h1 id="winner-text">VICTORY</h1>
@@ -113,7 +108,7 @@
             <button class="buy-btn" onclick="buy('ammo', 200)">$200</button>
         </div>
         <div class="shop-item">
-            <div><div style="font-weight:bold;">AWP Sniper</div><div style="font-size:0.8rem; color:#888;">One shot, one kill. High zoom.</div></div>
+            <div><div style="font-weight:bold;">AWP Sniper</div><div style="font-size:0.8rem; color:#888;">One shot, one kill.</div></div>
             <button class="buy-btn" onclick="buy('awp', 2500)">$2500</button>
         </div>
         <div style="margin-top:10px; font-size:0.8rem; text-align:center; color:#666;">Press [B] or [ESC] to close</div>
@@ -132,7 +127,10 @@
         const nickParam = url.searchParams.get('nick') || 'Player';
         const userId = url.searchParams.get('userID') || '';
         
-        // --- GAME STATE ---
+        const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(nickParam)}&backgroundColor=ffdfbf`;
+        qs('nickname').textContent = nickParam;
+        qs('avatar').src = avatarUrl;
+
         let myId = null;
         let myScore = 0;
         let roundActive = false;
@@ -147,7 +145,7 @@
 
         const gameState = {
             activeSlot: 2,
-            inventory: { 1: 'knife', 2: 'pistol', 3: 'ak47' }, // 4 gets added if bought
+            inventory: { 1: 'knife', 2: 'pistol', 3: 'ak47' }, 
             ammo: { clip: 20, reserve: 120 },
             canShoot: true,
             isReloading: false,
@@ -167,6 +165,7 @@
                 roundActive = msg.roundActive;
                 updatePlayers(msg.players || []);
                 updateTimer(msg.timeLeft, msg.playerCount);
+                // Hide waiting if round is active
                 if (roundActive) qs('waiting-overlay').style.display = 'none';
             }
             if (msg.type === 'game_over') showGameOver(msg);
@@ -191,8 +190,8 @@
 
         // --- THREE.JS ---
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x111111);
-        scene.fog = new THREE.Fog(0x111111, 20, 150);
+        scene.background = new THREE.Color(0x8fbde0); // Sky color
+        scene.fog = new THREE.Fog(0x8fbde0, 20, 300);
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -203,39 +202,60 @@
         camera.position.y = 12;
         scene.add(controls.getObject());
 
-        // Ambient + Sun
-        scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-        const sun = new THREE.DirectionalLight(0xffaa00, 0.8);
-        sun.position.set(50, 100, 50);
+        // Lighting
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+        sun.position.set(100, 200, 100);
+        sun.castShadow = true;
         scene.add(sun);
 
         // Floor
-        const floor = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 }));
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0xc4b28a, roughness: 0.9 });
+        const floor = new THREE.Mesh(new THREE.PlaneGeometry(500, 500), floorMat);
         floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true;
         scene.add(floor);
 
-        // Models
+        // Map Colliders (Manual Layout)
+        const colliders = [];
+        function addBox(x, z, w, d, h, color) {
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color: color }));
+            mesh.position.set(x, h / 2, z);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            scene.add(mesh);
+            colliders.push(new THREE.Box3().setFromObject(mesh));
+        }
+        // Classic Map Layout
+        addBox(0, -60, 120, 40, 20, 0x8B4513); // Back wall
+        addBox(-80, 40, 40, 220, 30, 0x666666); // Left wall
+        addBox(80, 40, 40, 220, 30, 0x666666); // Right wall
+        addBox(0, 100, 80, 40, 15, 0x8B4513); // Front block
+        addBox(-30, 0, 30, 30, 12, 0x556b2f); // Mid cover
+        addBox(30, 30, 30, 30, 12, 0x556b2f); // Mid cover 2
+
+        // Weapon Models (Simplified Geometries)
         const weaponGroup = new THREE.Group();
         camera.add(weaponGroup);
         const recoilGroup = new THREE.Group();
         weaponGroup.add(recoilGroup);
 
-        function makeGunModel(color, length=3) {
+        function makeGunModel(color, length) {
             const g = new THREE.Group();
-            const b = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, length), new THREE.MeshStandardMaterial({ color }));
-            b.position.z = -length/2;
-            g.add(b);
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, length), new THREE.MeshStandardMaterial({ color }));
+            body.position.z = -length/2;
+            g.add(body);
             g.position.set(1.5, -1.5, -1);
             return g;
         }
         const models = {
             knife: makeGunModel(0xaaaaaa, 1.5),
-            pistol: makeGunModel(0x555555, 2),
+            pistol: makeGunModel(0x333333, 2),
             ak47: makeGunModel(0x8B4513, 3.5),
-            awp: makeGunModel(0x224422, 5) // Longer, green
+            awp: makeGunModel(0x224422, 5)
         };
-        // AWP Scope visual
-        const scope = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.8), new THREE.MeshStandardMaterial({color:0x000000}));
+        // Add scope to AWP
+        const scope = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.8), new THREE.MeshStandardMaterial({color:0x000000}));
         scope.rotation.x = Math.PI/2; scope.position.set(0, 0.4, -1.5);
         models.awp.children[0].add(scope);
 
@@ -247,7 +267,7 @@
             recoilGroup.clear();
             recoilGroup.add(models[key]);
             
-            // Reset FOV if switching off sniper
+            // Reset FOV
             camera.fov = 75; camera.updateProjectionMatrix();
 
             const s = weaponStats[key];
@@ -287,15 +307,29 @@
             recoilGroup.position.z = 0.2; recoilGroup.rotation.x = 0.1;
             setTimeout(() => { recoilGroup.position.z = 0; recoilGroup.rotation.x = 0; }, 100);
 
-            // AWP Sound/Visual kick
-            if (s.type === 'sniper') camera.fov = 75; camera.updateProjectionMatrix(); 
+            // AWP Zoom visual
+            if (s.type === 'sniper') {
+                camera.fov = (camera.fov === 75) ? 75 : 20; // Keep zoom if active
+                camera.updateProjectionMatrix();
+            }
 
             const ray = new THREE.Raycaster();
             ray.setFromCamera(new THREE.Vector2(0,0), camera);
             const targets = Array.from(remotePlayers.values()).map(e => e.mesh);
-            const hits = ray.intersectObjects(targets);
+            const hits = ray.intersectObjects(targets, true); // true for recursive (mesh group)
+            
             if (hits.length > 0 && hits[0].distance < 300) {
-                send({ type: "hit", target: hits[0].object.userData.id, damage: s.damage });
+                // Find the root object with userData.id
+                let obj = hits[0].object;
+                while (obj.parent && !obj.userData.id) obj = obj.parent;
+                
+                if (obj.userData.id) {
+                    send({ type: "hit", target: obj.userData.id, damage: s.damage });
+                    // Hit Marker
+                    const ch = qs('crosshair');
+                    ch.classList.add('hit');
+                    setTimeout(() => ch.classList.remove('hit'), 100);
+                }
             }
             setTimeout(() => gameState.canShoot = true, s.delay);
         }
@@ -316,19 +350,12 @@
             }, 1500);
         }
 
-        // --- CONTROLS & INPUT ---
-        // Capture mouse immediately on click
+        // --- INPUT ---
+        // Lock pointer on any click if not in shop/overlays
         document.addEventListener('click', (e) => {
-            // Ignore if clicking inside shop
-            if (qs('shop-menu').style.display === 'block' && e.target.closest('#shop-menu')) return;
-            
-            // Lock pointer
-            controls.lock();
-            
-            // Fire if already locked
-            if (document.pointerLockElement === document.body) {
-                shoot();
-            }
+            if (qs('shop-menu').style.display === 'block') return;
+            if (!controls.isLocked) controls.lock();
+            else shoot();
         });
 
         // Toggle Shop
@@ -357,13 +384,9 @@
                 case 'KeyA': moveLeft = true; break;
                 case 'KeyD': moveRight = true; break;
                 case 'Space': if (velocity.y === 0) velocity.y = 80; break;
-                // AWP Zoom
-                case 'MouseButton2': // Actually needs mousedown event
-                    break;
             }
         });
         
-        // Handle Zoom for AWP on Right Click
         document.addEventListener('mousedown', (e) => {
             if (e.button === 2 && gameState.inventory[gameState.activeSlot] === 'awp') {
                 camera.fov = (camera.fov === 75) ? 20 : 75;
@@ -376,7 +399,7 @@
             if (e.code==='KeyA') moveLeft=false; if (e.code==='KeyD') moveRight=false;
         });
 
-        // Movement vars
+        // Movement
         const velocity = new THREE.Vector3();
         let moveFwd=false, moveBwd=false, moveLeft=false, moveRight=false;
         let prevTime = performance.now();
@@ -388,8 +411,7 @@
             prevTime = time;
 
             if (controls.isLocked) {
-                const key = gameState.inventory[gameState.activeSlot];
-                // Movement
+                // Physics
                 velocity.x -= velocity.x * 10.0 * delta;
                 velocity.z -= velocity.z * 10.0 * delta;
                 velocity.y -= 200.0 * delta; 
@@ -404,7 +426,16 @@
                 controls.moveForward(-velocity.z * delta);
                 controls.getObject().position.y += velocity.y * delta;
 
+                // Simple collision floor
                 if (controls.getObject().position.y < 6) { velocity.y = 0; controls.getObject().position.y = 6; }
+                
+                // Simple wall collision (push back)
+                const pos = controls.getObject().position;
+                colliders.forEach(box => {
+                    if (box.containsPoint(pos)) {
+                        controls.moveForward(velocity.z * delta * 2); // bounce
+                    }
+                });
 
                 if (myId) send({ type: 'update', pos: controls.getObject().position, rotY: controls.getObject().rotation.y });
             }
@@ -413,14 +444,12 @@
         }
         animate();
 
-        // Helper functions
         function updatePlayers(list) {
             const seen = new Set();
             list.forEach(p => {
                 seen.add(p.id);
                 if (p.id === myId) {
                     qs('nickname').textContent = p.name;
-                    qs('avatar').src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(p.name)}&backgroundColor=ffdfbf`;
                     qs('stats').textContent = `K/D ${p.kills}/${p.deaths}`;
                     qs('score-display').textContent = "$" + p.score;
                     myScore = p.score;
@@ -430,7 +459,15 @@
                 }
                 let entry = remotePlayers.get(p.id);
                 if (!entry) {
-                    const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(1.5, 4, 4, 8), new THREE.MeshStandardMaterial({ color: 0xff0000 }));
+                    const mesh = new THREE.Group();
+                    mesh.userData.id = p.id; // Crucial for raycast
+                    
+                    const body = new THREE.Mesh(new THREE.CapsuleGeometry(1.5, 4, 4, 8), new THREE.MeshStandardMaterial({ color: 0xff0000 }));
+                    mesh.add(body);
+                    const head = new THREE.Mesh(new THREE.SphereGeometry(1.5), new THREE.MeshStandardMaterial({ color: 0xffccaa }));
+                    head.position.y = 3;
+                    mesh.add(head);
+
                     const div = document.createElement('div');
                     div.style.position = 'absolute'; div.style.color = 'white'; div.style.fontWeight = 'bold'; div.style.textShadow = '0 0 4px black';
                     div.textContent = p.name;

@@ -303,8 +303,7 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 
 	// Use generic link for game
 	chibikiURL := fmt.Sprintf("/game?mode=chibiki&lang=%s", lang)
-
-	bobikURL := fmt.Sprintf("/bobik?lang=%s", lang)
+	bobikURL := fmt.Sprintf("/bobik?lang=%s&userID=%s&nick=%s", lang, user.ID, user.Nickname)
 
 	modes := []GameMode{
 		{
@@ -323,8 +322,8 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 			Subtitle:     "FPS-style",
 			IsConstruct:  false,
 			SafeGradient: template.CSS("linear-gradient(135deg, #36d1dc 0%, #5b86e5 100%)"),
-			BtnText:      "DEPLOY",
-			StatusText:   "LIVE",
+			BtnText:      btn1,
+			StatusText:   stat1,
 			URL:          bobikURL,
 		},
 		{
