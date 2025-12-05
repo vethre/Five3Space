@@ -96,13 +96,13 @@
             <!-- Banner Selector -->
             <div class="control-group">
                 <h3>Lobby Banner</h3>
-                <div class="option {{if eq .User.BannerColor "default"}}active{{end}}" onclick="selectBanner('default', this)">
+                <div class="option {{if eq .User.BannerColor `default`}}active{{end}}" onclick="selectBanner('default', this)">
                     <div class="color-dot" style="background:#333"></div> Default Dark
                 </div>
-                <div class="option {{if eq .User.BannerColor "banner_gold"}}active{{end}}" onclick="selectBanner('banner_gold', this)">
+                <div class="option {{if eq .User.BannerColor `gold`}}active{{end}}" onclick="selectBanner('gold', this)">
                     <div class="color-dot" style="background:gold"></div> Golden Glow
                 </div>
-                <div class="option {{if eq .User.BannerColor "banner_cyber"}}active{{end}}" onclick="selectBanner('banner_cyber', this)">
+                <div class="option {{if eq .User.BannerColor `cyber`}}active{{end}}" onclick="selectBanner('cyber', this)">
                     <div class="color-dot" style="background:cyan"></div> Cyber Punk
                 </div>
             </div>
@@ -119,12 +119,11 @@
 
         function selectName(val, el) {
             currentName = val;
-            // Visual update
             document.querySelectorAll('.control-group:first-child .option').forEach(e => e.classList.remove('active'));
             el.classList.add('active');
             
             const prev = document.getElementById('preview-name');
-            prev.className = 'preview-name ' + val;
+            prev.className = 'preview-name ' + val; // тут val = name-gold / name-rainbow
         }
 
         function selectBanner(val, el) {
@@ -133,7 +132,8 @@
             el.classList.add('active');
 
             const prev = document.getElementById('preview-box');
-            prev.className = 'preview-section banner-' + val; // e.g. banner-banner_gold
+            // буде banner-default / banner-gold / banner-cyber
+            prev.className = 'preview-section banner-' + val;
         }
 
         async function saveProfile() {

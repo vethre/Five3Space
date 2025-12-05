@@ -4,72 +4,142 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Friends</title>
-    <!-- Use GLOBAL CSS -->
+    <!-- Keep the Global CSS for shared fonts/resets -->
     <link rel="stylesheet" href="/static/css/chibiki.css">
     <style>
         /* Specific Page Overrides */
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .top-bar { display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: 20px; }
-        .brand { font-weight: 900; letter-spacing: 2px; color: var(--text-muted); font-size: 1.1rem; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 30px; }
+        
+        .top-bar { 
+            display:flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 30px; border-bottom: 1px solid var(--glass-border); padding-bottom: 20px; 
+        }
+        .brand { font-weight: 900; letter-spacing: 2px; color: var(--text-muted); font-size: 1.2rem; }
         .brand span { color: var(--primary); }
-        .header-actions { display:flex; gap:10px; }
-        .pill-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid var(--glass-border); color: white; text-decoration:none; font-weight:800; background: var(--glass-bg); transition: all 0.2s; cursor: pointer; }
+        
+        .header-actions { display:flex; gap:12px; }
+        .pill-btn { 
+            padding: 10px 20px; border-radius: 99px; border: 1px solid var(--glass-border); 
+            color: white; text-decoration:none; font-weight:800; background: var(--glass-bg); 
+            transition: all 0.2s; cursor: pointer; font-size: 0.95rem;
+        }
         .pill-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
         .pill-btn.add { background: linear-gradient(135deg, #ff4e50, #f9d423); color: black; border: none; }
         
-        .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:20px; }
-        .card { background: var(--glass-bg); border:1px solid var(--glass-border); border-radius: 20px; padding: 20px; position:relative; box-shadow:0 10px 30px rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 12px; backdrop-filter: blur(10px); }
+        /* --- BIGGER GRID --- */
+        .grid { 
+            display:grid; 
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); /* Wider cards */
+            gap: 24px; 
+        }
         
-        .card-header { display: flex; align-items: center; gap: 14px; }
-        .avatar { width:64px; height:64px; border-radius:50%; border:2px solid var(--accent); object-fit: cover; background: #222; }
+        .card { 
+            background: var(--glass-bg); 
+            border: 1px solid var(--glass-border); 
+            border-radius: 24px; 
+            padding: 28px; /* More padding */
+            position: relative; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3); 
+            display: flex; flex-direction: column; gap: 16px; 
+            backdrop-filter: blur(12px); 
+            transition: transform 0.2s;
+        }
+        .card:hover { transform: translateY(-5px); border-color: rgba(255,255,255,0.2); }
+        
+        .card-header { display: flex; align-items: center; gap: 18px; }
+        .avatar { 
+            width: 72px; height: 72px; /* Bigger Avatar */
+            border-radius: 50%; border: 3px solid var(--accent); 
+            object-fit: cover; background: #222; 
+        }
         .info { flex: 1; }
-        .nickname { font-weight:900; font-size:1.2rem; }
-        .tag { color: var(--text-muted); font-size: 0.9rem; font-weight: 700; }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        
+        /* Nickname Styling */
+        .nickname { font-weight:900; font-size:1.4rem; line-height: 1.2; }
+        
+        .tag { color: var(--text-muted); font-size: 0.95rem; font-weight: 700; }
+        .presence-text { 
+            font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; 
+            letter-spacing: 0.5px; font-weight: 700; margin-top: 4px;
+        }
+        
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 6px; }
         .status-online { background:#4ade80; box-shadow:0 0 8px #4ade80; }
         .status-away { background:#facc15; }
         .status-offline { background:#737373; }
-        .presence-text { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
         
-        .stats-row { display: flex; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 12px; }
+        .stats-row { 
+            display: flex; justify-content: space-between; 
+            background: rgba(0,0,0,0.25); padding: 12px 16px; border-radius: 16px; 
+        }
         .stat { text-align: center; }
-        .stat-val { font-weight: 900; color: white; font-size: 1rem; }
-        .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
+        .stat-val { font-weight: 900; color: white; font-size: 1.1rem; }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
 
-        .actions { display: flex; gap: 8px; margin-top: auto; }
-        .action-btn { flex: 1; padding: 10px; border-radius: 10px; border: none; cursor: pointer; font-weight: 800; font-size: 0.9rem; transition: transform 0.1s; }
+        .actions { display: flex; gap: 10px; margin-top: auto; }
+        .action-btn { 
+            flex: 1; padding: 12px; border-radius: 12px; border: none; 
+            cursor: pointer; font-weight: 800; font-size: 0.95rem; transition: transform 0.1s; 
+        }
         .action-btn:active { transform: scale(0.95); }
-        .btn-chat { background: linear-gradient(135deg, #36d1dc, #5b86e5); color: white; }
+        .btn-chat { background: linear-gradient(135deg, #36d1dc, #5b86e5); color: white; box-shadow: 0 4px 15px rgba(54, 209, 220, 0.3); }
         .btn-remove { background: rgba(255,255,255,0.05); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.3); }
 
-        /* Modal */
+        /* Modal - Bigger */
         .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 100; }
-        .modal { background: #1a1a1a; padding: 24px; border-radius: 16px; width: 320px; border: 1px solid var(--glass-border); }
-        .modal h3 { margin-top: 0; color: var(--primary); }
-        .modal input { width: 100%; padding: 12px; margin: 8px 0; background: #333; border: 1px solid #555; color: white; border-radius: 8px; box-sizing: border-box; }
-        .modal-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+        .modal { 
+            background: #161616; padding: 32px; border-radius: 24px; 
+            width: 420px; /* Bigger Modal */
+            border: 1px solid var(--glass-border); 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+        }
+        .modal h3 { margin-top: 0; color: white; font-size: 1.5rem; margin-bottom: 20px; }
+        .modal input { 
+            width: 100%; padding: 16px; margin: 8px 0; background: #222; 
+            border: 1px solid #444; color: white; border-radius: 12px; 
+            box-sizing: border-box; font-size: 1rem;
+        }
+        .modal input:focus { outline: none; border-color: var(--primary); }
+        .modal-btns { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
 
-        /* --- CHAT BOX STYLES --- */
+        /* --- BIGGER CHAT BOX --- */
         #chat-box {
-            position: fixed; bottom: 0; right: 20px; width: 320px; height: 400px;
-            background: #1a1a1a; border-radius: 16px 16px 0 0;
-            border: 1px solid var(--glass-border); box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+            position: fixed; bottom: 0; right: 40px; 
+            width: 420px; height: 600px; /* Much Bigger */
+            background: #121212; border-radius: 20px 20px 0 0;
+            border: 1px solid var(--glass-border); 
+            box-shadow: 0 -10px 50px rgba(0,0,0,0.6);
             display: none; flex-direction: column; z-index: 90;
         }
         .chat-header {
-            padding: 12px; background: #222; border-radius: 16px 16px 0 0; font-weight: bold;
-            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+            padding: 16px 20px; background: #1f1f1f; border-radius: 20px 20px 0 0; font-weight: 900; font-size: 1.1rem;
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid #333;
         }
-        .chat-body { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-        .chat-input-area { padding: 10px; border-top: 1px solid #333; display: flex; gap: 8px; }
-        .chat-input { flex: 1; background: #333; border: none; color: white; padding: 8px; border-radius: 8px; }
-        .msg { padding: 8px 12px; border-radius: 12px; max-width: 80%; font-size: 0.9rem; word-wrap: break-word; }
-        .msg.me { background: var(--primary); align-self: flex-end; color: black; font-weight: 600; }
-        .msg.them { background: #333; align-self: flex-start; }
+        .chat-body { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .chat-input-area { padding: 16px; border-top: 1px solid #333; display: flex; gap: 10px; background: #181818; }
+        .chat-input { flex: 1; background: #2a2a2a; border: none; color: white; padding: 12px 16px; border-radius: 12px; font-size: 1rem; }
+        .chat-input:focus { outline: none; background: #333; }
         
-        /* Customization Overrides for this page */
-        .name-gold { color: #ffd700; text-shadow: 0 0 5px #ffd700; }
-        .name-rainbow { background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .msg { padding: 10px 16px; border-radius: 16px; max-width: 80%; font-size: 1rem; line-height: 1.4; word-wrap: break-word; }
+        .msg.me { background: var(--primary); align-self: flex-end; color: black; font-weight: 600; border-bottom-right-radius: 4px; }
+        .msg.them { background: #333; align-self: flex-start; color: #eee; border-bottom-left-radius: 4px; }
+        
+        /* --- CUSTOMIZATION CSS (Fixed Animation) --- */
+        .name-gold { 
+            color: #ffd700; 
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.6); 
+        }
+        .name-rainbow {
+            background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8f00ff);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbowAnim 3s linear infinite;
+            font-weight: 900;
+        }
+        @keyframes rainbowAnim {
+            to { background-position: 200% center; }
+        }
     </style>
 </head>
 <body>
@@ -88,7 +158,7 @@
                 <div class="card-header">
                     <img class="avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed={{.Nickname}}&backgroundColor=ffdfbf">
                     <div class="info">
-                        <!-- Apply customization class -->
+                        <!-- Applied NameColor class -->
                         <div class="nickname {{.NameColor}}">{{.Nickname}}</div>
                         <div class="tag">#{{printf "%04d" .Tag}}</div>
                         <div class="presence-text">
@@ -111,15 +181,14 @@
                     </div>
                 </div>
                 <div class="actions">
-                    <!-- Passing UserID to openChat -->
                     <button class="action-btn btn-chat" onclick="openChat('{{.ID}}', '{{.Nickname}}')">Chat 💬</button>
                     <button class="action-btn btn-remove" onclick="removeFriend('{{.Nickname}}', {{.Tag}})">Remove</button>
                 </div>
             </div>
             {{else}}
-            <div style="text-align:center; grid-column: 1/-1; padding: 40px; color: var(--text-muted);">
-                <h2>No friends yet</h2>
-                <p>Add friends using their Nickname and Tag #.</p>
+            <div style="text-align:center; grid-column: 1/-1; padding: 60px; color: var(--text-muted);">
+                <h2 style="font-size: 2rem; margin-bottom: 10px;">No friends yet</h2>
+                <p style="font-size: 1.1rem;">Add friends using their Nickname and Tag #.</p>
             </div>
             {{end}}
         </div>
@@ -159,22 +228,18 @@
         let socket;
         let currentChatPartnerID = null;
 
-        // Initialize WebSocket for Chat
         function initChat() {
             if (!myUserID) return;
-            // Note: Make sure /ws/chat exists in main.go
             socket = new WebSocket(`${protocol}://${window.location.host}/ws/chat?userID=${myUserID}`);
             
             socket.onopen = () => console.log("Chat Connected");
-            
             socket.onmessage = (event) => {
                 const msg = JSON.parse(event.data);
                 if (msg.type === "dm") {
                     if (currentChatPartnerID === msg.from) {
                         appendMessage(msg.text, 'them');
                     } else {
-                        // Simple notification
-                        // In a real app, you'd show a badge or toast
+                        // In a real app, show a toast here
                         console.log(`New message from user ${msg.from}`); 
                     }
                 }
@@ -199,7 +264,7 @@
                     body: JSON.stringify({nickname: nick, tag: parseInt(tag)})
                 });
                 if(res.ok) window.location.reload();
-                else alert("Failed to add friend");
+                else alert("Failed to add friend (Not found or already added)");
             } catch(e) { alert("Error"); }
         }
 
@@ -213,7 +278,7 @@
             window.location.reload();
         }
 
-        // Chat UI Logic
+        // Chat UI
         const chatBox = document.getElementById('chat-box');
         const chatBody = document.getElementById('chat-body');
         const chatIn = document.getElementById('chat-in');
@@ -222,8 +287,9 @@
             currentChatPartnerID = userID;
             document.getElementById('chat-partner').innerText = nick;
             chatBox.style.display = 'flex';
-            chatBody.innerHTML = ''; // Clear previous chat
-            // In a real app, fetch history here
+            chatBody.innerHTML = ''; 
+            // Intro message
+            appendMessage(`Chatting with ${nick}`, 'them');
         }
         
         function toggleChat() {
@@ -235,7 +301,6 @@
             const txt = chatIn.value;
             if(!txt || !currentChatPartnerID) return;
             
-            // Send via WS
             socket.send(JSON.stringify({
                 type: "dm",
                 to: currentChatPartnerID,
