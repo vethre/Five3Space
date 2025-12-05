@@ -97,7 +97,7 @@ func main() {
 	go gameInstance.StartLoop()
 
 	presenceService := presence.NewService(db)
-	bobikGame := bobikshooter.NewGame()
+	bobikGame := bobikshooter.NewGame(store)
 
 	// 5. Configure Routes
 	authService := auth.NewAuth(db)
