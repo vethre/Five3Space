@@ -7,8 +7,9 @@
     <!-- Keep the Global CSS for shared fonts/resets -->
     <link rel="stylesheet" href="/static/css/chibiki.css">
     <style>
+        body { min-height: 100vh; }
         /* Specific Page Overrides */
-        .container { max-width: 1400px; margin: 0 auto; padding: 30px; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 40px 24px 80px; }
         
         .top-bar { 
             display:flex; justify-content: space-between; align-items: center; 
@@ -29,7 +30,8 @@
         /* --- BIGGER GRID --- */
         .grid { 
             display:grid; 
-            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); /* Wider cards */
+            flex-direction: column;
+            align-items: center;
             gap: 24px; 
         }
         
@@ -43,6 +45,8 @@
             display: flex; flex-direction: column; gap: 16px; 
             backdrop-filter: blur(12px); 
             transition: transform 0.2s;
+
+            width: min(100%, 980px);
         }
         .card:hover { transform: translateY(-5px); border-color: rgba(255,255,255,0.2); }
         
