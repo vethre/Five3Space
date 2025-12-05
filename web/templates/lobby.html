@@ -545,7 +545,9 @@
             <div class="profile-details">
                 <div class="name-row">
                     <!-- Added dynamic name color class here -->
-                    <div class="nickname {{.User.NameColor}}">{{.User.Nickname}}<span class="tag">#{{.User.Tag}}</span></div>
+                    <div class="nickname name-{{.User.NameColor}}">
+                        {{.User.Nickname}}<span class="tag">#{{.User.Tag}}</span>
+                    </div>
                     
                     <!-- NEW MEDAL VISUAL -->
                     <div class="medal-display">

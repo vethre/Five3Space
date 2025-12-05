@@ -73,7 +73,7 @@
         <!-- Live Preview -->
         <div class="preview-section banner-{{.User.BannerColor}}" id="preview-box">
             <img class="avatar" src="{{.User.AvatarURL}}">
-            <div class="preview-name {{.User.NameColor}}" id="preview-name">{{.User.Nickname}}</div>
+            <div class="preview-name name-{{.User.NameColor}}" id="preview-name">{{.User.Nickname}}</div>
             <div style="color:white; opacity:0.7; font-weight:bold; margin-top:5px;">PREVIEW</div>
         </div>
 
@@ -84,11 +84,10 @@
                 <div class="option {{if eq .User.NameColor "white"}}active{{end}}" onclick="selectName('white', this)">
                     <div class="color-dot" style="background:white"></div> Standard White
                 </div>
-                <!-- Logic to check inventory would be ideal here, simplified for UI demo -->
-                <div class="option {{if eq .User.NameColor "name_gold"}}active{{end}}" onclick="selectName('name_gold', this)">
+                <div class="option {{if eq .User.NameColor "gold"}}active{{end}}" onclick="selectName('gold', this)">
                     <div class="color-dot" style="background:gold"></div> Gold (Unlock in Shop)
                 </div>
-                <div class="option {{if eq .User.NameColor "name_rainbow"}}active{{end}}" onclick="selectName('name_rainbow', this)">
+                <div class="option {{if eq .User.NameColor "rainbow"}}active{{end}}" onclick="selectName('rainbow', this)">
                     <div class="color-dot" style="background:linear-gradient(90deg, red, blue)"></div> Rainbow (Unlock in Shop)
                 </div>
             </div>
@@ -123,7 +122,7 @@
             el.classList.add('active');
             
             const prev = document.getElementById('preview-name');
-            prev.className = 'preview-name ' + val; // тут val = name-gold / name-rainbow
+            prev.className = 'preview-name name-' + val;
         }
 
         function selectBanner(val, el) {

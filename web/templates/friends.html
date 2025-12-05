@@ -159,7 +159,7 @@
                     <img class="avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed={{.Nickname}}&backgroundColor=ffdfbf">
                     <div class="info">
                         <!-- Applied NameColor class -->
-                        <div class="nickname {{.NameColor}}">{{.Nickname}}</div>
+                        <div class="nickname name-{{.NameColor}}">{{.Nickname}}</div>
                         <div class="tag">#{{printf "%04d" .Tag}}</div>
                         <div class="presence-text">
                             <span class="status-dot status-{{.Presence}}"></span> {{.Presence}}
