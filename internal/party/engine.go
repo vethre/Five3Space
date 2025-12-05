@@ -100,8 +100,9 @@ func (g *Game) run() {
 			if _, ok := g.players[p.ID]; ok {
 				delete(g.players, p.ID)
 				close(p.Send)
+				// If game is running and players drop below min, reset
 				if len(g.players) < MinPlayers && g.state != "LOBBY" {
-					g.resetGame() // Abort if too few players
+					g.resetGame()
 				} else {
 					g.broadcastState()
 				}
@@ -139,14 +140,11 @@ func (g *Game) tick() {
 func (g *Game) nextPhase() {
 	switch g.state {
 	case "INPUT":
-		// Input time over, move to voting
 		g.state = "VOTING"
 		g.startVotingPhase()
 	case "VOTING":
-		// Current vote finished, next pair?
 		g.resolveVote()
 	case "RESULT":
-		// Result shown, next round or game over
 		g.round++
 		if g.round > TotalRounds {
 			g.endGame()
@@ -168,7 +166,6 @@ func (g *Game) startRound() {
 }
 
 func (g *Game) startVotingPhase() {
-	// Filter players who actually answered
 	g.answers = make([]*Player, 0)
 	for _, p := range g.players {
 		if p.Answer != "" {
@@ -176,7 +173,6 @@ func (g *Game) startVotingPhase() {
 		}
 	}
 
-	// Shuffle
 	rand.Shuffle(len(g.answers), func(i, j int) {
 		g.answers[i], g.answers[j] = g.answers[j], g.answers[i]
 	})
@@ -186,7 +182,6 @@ func (g *Game) startVotingPhase() {
 }
 
 func (g *Game) nextMatch() {
-	// If we have enough players left for a pair
 	if g.matchIndex+1 < len(g.answers) {
 		g.state = "VOTING"
 		g.matchA = g.answers[g.matchIndex]
@@ -196,23 +191,19 @@ func (g *Game) nextMatch() {
 		g.timer = VoteDuration
 		g.matchIndex += 2
 
-		// Reset vote flag for all
 		for _, p := range g.players {
 			p.Voted = false
 		}
 	} else {
-		// No more pairs, show round results
 		g.state = "RESULT"
-		g.timer = 10 // Show leaderboard for 10s
+		g.timer = 10
 	}
 }
 
 func (g *Game) resolveVote() {
-	// Award points
 	pointsA := g.votesA * 100
 	pointsB := g.votesB * 100
 
-	// Winner bonus
 	if g.votesA > g.votesB {
 		pointsA += 250
 	} else if g.votesB > g.votesA {
@@ -222,8 +213,6 @@ func (g *Game) resolveVote() {
 	g.matchA.Score += pointsA
 	g.matchB.Score += pointsB
 
-	// Send "Match Result" update specifically?
-	// For now, just move to next match immediately
 	g.nextMatch()
 }
 
@@ -231,7 +220,6 @@ func (g *Game) endGame() {
 	g.state = "GAME_OVER"
 	g.timer = 0
 
-	// 1. Sort players
 	ranking := make([]*Player, 0, len(g.players))
 	for _, p := range g.players {
 		ranking = append(ranking, p)
@@ -240,7 +228,6 @@ func (g *Game) endGame() {
 		return ranking[i].Score > ranking[j].Score
 	})
 
-	// 2. Distribute Rewards
 	playerCount := len(ranking)
 
 	for rank, p := range ranking {
@@ -248,41 +235,40 @@ func (g *Game) endGame() {
 			continue
 		}
 
+		// Default: "For others -Trophies and +Some Coins +XP"
 		trophies := -5
-		coins := 10
-		exp := 20
+		coins := 20
+		exp := 50
 
-		// Logic: "if players 2-3 then only TOP-1 will receive reward"
 		if playerCount <= 3 {
+			// "if players 2-3 then only TOP-1 will receive reward"
 			if rank == 0 { // Top 1
 				trophies = 30
-				coins = 100
-				exp = 100
-				g.store.AwardMedals(p.UserID, "first_win") // Example
+				coins = 200
+				exp = 300
+				g.store.AwardMedals(p.UserID, "party_king")
 			}
 		} else {
-			// Players >= 4
+			// "For TOP-1, TOP-2 and TOP-3 players there will be +Trophies, +Coins and +XP"
 			if rank == 0 { // Top 1
-				trophies = 40
-				coins = 150
-				exp = 150
-				g.store.AwardMedals(p.UserID, "first_win")
+				trophies = 50
+				coins = 300
+				exp = 500
+				g.store.AwardMedals(p.UserID, "party_king")
 			} else if rank == 1 { // Top 2
-				trophies = 20
-				coins = 80
-				exp = 80
+				trophies = 25
+				coins = 150
+				exp = 250
 			} else if rank == 2 { // Top 3
 				trophies = 10
-				coins = 40
-				exp = 40
+				coins = 75
+				exp = 150
 			}
 		}
 
 		g.store.AdjustTrophies(p.UserID, trophies)
 		g.store.AdjustCoins(p.UserID, coins)
-		// Need to add AdjustExp to store if not exists, or run raw query
-		// Assuming raw query for now as main.go did
-		// Ideally, create store.AdjustExp. We'll skip exp for brevity or use existing pattern.
+		g.store.AdjustExp(p.UserID, exp)
 	}
 }
 
@@ -297,8 +283,6 @@ func (g *Game) resetGame() {
 	g.broadcastState()
 }
 
-// --- Protocol ---
-
 func (g *Game) broadcastState() {
 	type PlayerView struct {
 		ID          string `json:"id"`
@@ -311,8 +295,6 @@ func (g *Game) broadcastState() {
 	for _, p := range g.players {
 		pList = append(pList, PlayerView{p.ID, p.Nickname, p.Score, p.Answer != ""})
 	}
-
-	// Sort by score for leaderboard
 	sort.Slice(pList, func(i, j int) bool { return pList[i].Score > pList[j].Score })
 
 	state := map[string]interface{}{
@@ -357,7 +339,6 @@ func (g *Game) HandleMsg(p *Player, msg []byte) {
 
 	if input.Type == "answer" && g.state == "INPUT" {
 		p.Answer = input.Text
-		// If everyone answered, fast forward
 		allAnswered := true
 		for _, pl := range g.players {
 			if pl.Answer == "" {
@@ -366,13 +347,12 @@ func (g *Game) HandleMsg(p *Player, msg []byte) {
 			}
 		}
 		if allAnswered {
-			g.timer = 3 // Short buffer
+			g.timer = 3
 		}
 		g.broadcastState()
 	}
 
 	if input.Type == "vote" && g.state == "VOTING" && !p.Voted {
-		// Can't vote if it's your own answer (optional rule, keeping it simple: yes you can)
 		if input.Vote == "A" {
 			g.votesA++
 		}
@@ -383,7 +363,6 @@ func (g *Game) HandleMsg(p *Player, msg []byte) {
 	}
 }
 
-// Websocket Boilerplate
 var upgrader = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
 
 func HandleWS(g *Game, w http.ResponseWriter, r *http.Request, store *data.Store) {
@@ -392,7 +371,6 @@ func HandleWS(g *Game, w http.ResponseWriter, r *http.Request, store *data.Store
 		return
 	}
 
-	// Auth
 	userID := r.URL.Query().Get("userID")
 	nick := "Guest"
 	if userID != "" {
@@ -409,14 +387,14 @@ func HandleWS(g *Game, w http.ResponseWriter, r *http.Request, store *data.Store
 
 	g.register <- p
 
-	go func() { // Write Pump
+	go func() {
 		for msg := range p.Send {
 			conn.WriteMessage(websocket.TextMessage, msg)
 		}
 		conn.Close()
 	}()
 
-	go func() { // Read Pump
+	go func() {
 		defer func() { g.unregister <- p; conn.Close() }()
 		for {
 			_, msg, err := conn.ReadMessage()

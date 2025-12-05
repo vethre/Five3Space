@@ -200,6 +200,11 @@ func (s *Store) AdjustCoins(userID string, amount int) error {
 	_, err := s.db.Exec(`UPDATE users SET coins = coins + $1 WHERE id = $2`, amount, userID)
 	return err
 }
+func (s *Store) AdjustExp(userID string, delta int) error {
+	// Simple logic: just add exp. Level up logic would go here or in a trigger.
+	_, err := s.db.Exec(`UPDATE users SET exp = exp + $1 WHERE id = $2`, delta, userID)
+	return err
+}
 
 func (s *Store) HasItem(userID, itemID string) bool {
 	var exists bool
