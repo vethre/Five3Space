@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Пять3Ёбка</title>
+    <title>Five3Fun</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js"></script>
@@ -29,7 +29,7 @@
 
     <!-- HEADER -->
     <header class="mb-8 text-center">
-        <h1 class="text-6xl text-black drop-shadow-lg transform -rotate-2" style="-webkit-text-stroke: 2px white;">Пять3Ёбка</h1>
+        <h1 class="text-6xl text-black drop-shadow-lg transform -rotate-2" style="-webkit-text-stroke: 2px white;">ПЯТЬ3Ёбка</h1>
         <a href="/" class="text-sm font-bold bg-white inline-block px-4 py-1 rounded-full border-2 border-black mt-2 hover:bg-gray-100">Back to Hub</a>
     </header>
 
@@ -90,11 +90,27 @@
     </div>
 
     <script>
-        const userID = new URLSearchParams(window.location.search).get('userID') || '';
+        // --- FIX: Get User ID Correctly ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const getCookie = (name) => {
+            const m = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([$?*|{}()[\]\\/+^])/g, '\\$1') + '=([^;]*)'));
+            return m ? decodeURIComponent(m[1]) : '';
+        };
+        // Prioritize URL param, then cookie
+        const userID = urlParams.get('userID') || getCookie('user_id') || '';
+        
+        if (!userID) {
+            console.warn("No User ID found. Playing as Guest.");
+        }
+
         const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
         const socket = new WebSocket(`${protocol}://${window.location.host}/ws/party?userID=${userID}`);
 
         let gameState = {};
+
+        socket.onopen = () => {
+            console.log("Connected to Party Game with UserID:", userID);
+        };
 
         socket.onmessage = (event) => {
             const msg = JSON.parse(event.data);
@@ -114,12 +130,16 @@
             
             document.getElementById('player-count').innerText = data.players.length;
             const startBtn = document.getElementById('start-btn');
+            
+            // --- LOGIC FIX: Enable Start button if enough players ---
             if (data.players.length >= 2) {
                 startBtn.disabled = false;
                 startBtn.innerText = "START GAME";
+                startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             } else {
                 startBtn.disabled = true;
                 startBtn.innerText = "Need 2 Players";
+                startBtn.classList.add('opacity-50', 'cursor-not-allowed');
             }
 
             // Switch Screens
@@ -131,9 +151,20 @@
                 document.getElementById('screen-input').classList.add('active');
                 document.getElementById('prompt-text').innerText = data.prompt;
                 animateTimer('input-timer', data.timer, 30);
+                // Reset input if new round
+                if (gameState.round !== data.round) {
+                    document.getElementById('answer-input').value = '';
+                    document.getElementById('submit-answer').innerText = "SEND";
+                    document.getElementById('submit-answer').disabled = false;
+                }
             } else if (data.status === 'VOTING') {
                 document.getElementById('screen-voting').classList.add('active');
                 document.getElementById('vote-prompt').innerText = data.prompt;
+                
+                // Reset buttons visual state
+                document.getElementById('btn-A').style.opacity = '1';
+                document.getElementById('btn-B').style.opacity = '1';
+
                 if (data.match) {
                     document.getElementById('text-A').innerText = data.match.a_text;
                     document.getElementById('text-B').innerText = data.match.b_text;
@@ -145,8 +176,11 @@
                 if (data.status === 'GAME_OVER') {
                     document.getElementById('game-over-msg').style.display = 'block';
                     confetti();
+                    setTimeout(() => { window.location.href = '/'; }, 5000);
                 }
             }
+            
+            gameState = data; // Update local state cache
         }
 
         function renderLeaderboard(players) {
@@ -170,9 +204,8 @@
             const text = document.getElementById('answer-input').value;
             if (!text) return;
             socket.send(JSON.stringify({type: 'answer', text: text}));
-            document.getElementById('answer-input').value = '';
-            // visual feedback
             document.getElementById('submit-answer').innerText = "SENT!";
+            document.getElementById('submit-answer').disabled = true;
         }
 
         function sendVote(option) {
