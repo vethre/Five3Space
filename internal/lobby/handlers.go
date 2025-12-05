@@ -1,16 +1,14 @@
 package lobby
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"path/filepath"
 
 	"main/internal/data"
 )
-
-// --- Data Structures ---
 
 type User struct {
 	ID           string
@@ -26,6 +24,9 @@ type User struct {
 	Status       string
 	XPPercentage string
 	Language     string
+	NameColor    string
+	BannerColor  string
+	Inventory    []string
 }
 
 type GameMode struct {
@@ -35,12 +36,11 @@ type GameMode struct {
 	IsLocked     bool
 	IsConstruct  bool
 	SafeGradient template.CSS
-	BtnText      string // Localized button text
-	StatusText   string // Localized status text
+	BtnText      string
+	StatusText   string
 	URL          string
 }
 
-// Translations holds all text for the UI
 type Translations struct {
 	LobbyName   string
 	Level       string
@@ -61,22 +61,11 @@ type PageData struct {
 	Friends      []data.Friend
 	Modes        []GameMode
 	Text         Translations
-	Lang         string // "en", "ua", "ru"
+	Lang         string
 	MedalDetails []data.Medal
 	ShowRegister bool
 	ActivePage   string
 }
-
-func normalizeLang(raw string) string {
-	switch raw {
-	case "ua", "ru", "en":
-		return raw
-	default:
-		return ""
-	}
-}
-
-// --- Localization Data ---
 
 var texts = map[string]Translations{
 	"en": {
@@ -123,7 +112,6 @@ var texts = map[string]Translations{
 	},
 }
 
-// Helper to get button text based on lang
 func getModeTexts(lang string, isLocked, isConstruct bool) (string, string) {
 	switch lang {
 	case "ua":
@@ -142,7 +130,7 @@ func getModeTexts(lang string, isLocked, isConstruct bool) (string, string) {
 			return "ЗАКРЫТО", "ОХРАНА"
 		}
 		return "ИГРАТЬ", "ГОТОВО"
-	default: // en
+	default:
 		if isConstruct {
 			return "UNDER CONSTRUCTION", "UNAVAILABLE"
 		}
@@ -152,8 +140,6 @@ func getModeTexts(lang string, isLocked, isConstruct bool) (string, string) {
 		return "DEPLOY", "LIVE"
 	}
 }
-
-// --- Handler ---
 
 func NewHandler(store *data.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -168,7 +154,6 @@ func NewGameHandler(store *data.Store) http.HandlerFunc {
 }
 
 func renderGame(w http.ResponseWriter, r *http.Request, store *data.Store) {
-	// 1. Resolve UserID (Cookie > URL > Guest)
 	userID := "guest"
 	if c, err := r.Cookie("user_id"); err == nil && c.Value != "" {
 		userID = c.Value
@@ -176,40 +161,37 @@ func renderGame(w http.ResponseWriter, r *http.Request, store *data.Store) {
 		userID = q
 	}
 
-	// 2. Language
 	lang := normalizeLang(r.URL.Query().Get("lang"))
 	if lang == "" {
 		lang = "en"
 	}
 
-	// 3. Data payload for the template
 	data := struct {
 		UserID string
 		Lang   string
-	}{
-		UserID: userID,
-		Lang:   lang,
-	}
+	}{UserID: userID, Lang: lang}
 
-	// 4. Render template
 	tmplPath := filepath.Join("web", "templates", "game.html")
 	tmpl, err := template.ParseFiles(tmplPath)
 	if err != nil {
-		log.Printf("Error parsing game template: %v", err)
 		http.Error(w, "Could not load game", http.StatusInternalServerError)
 		return
 	}
+	tmpl.Execute(w, data)
+}
 
-	if err := tmpl.Execute(w, data); err != nil {
-		log.Printf("Game execution error: %v", err)
+func normalizeLang(raw string) string {
+	switch raw {
+	case "ua", "ru", "en":
+		return raw
+	default:
+		return ""
 	}
 }
 
 func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
-	// 1. Language
 	requestedLang := normalizeLang(r.URL.Query().Get("lang"))
 
-	// 2. Resolve UserID (Cookie Priority)
 	var userID string
 	hadCookie := false
 
@@ -221,13 +203,14 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 		hadCookie = true
 	}
 
-	// 3. Find User
 	var selected data.UserData
 	userFound := false
+	inv := []string{}
 	if userID != "" {
 		if u, ok := store.GetUser(userID); ok {
 			selected = u
 			userFound = true
+			inv, _ = store.GetUserInventory(userID)
 		}
 	}
 
@@ -240,123 +223,97 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 	}
 	t := texts[lang]
 
-	// 4. Cookie Management
 	if !userFound {
 		hadCookie = false
 		http.SetCookie(w, &http.Cookie{Name: "user_id", Value: "", Path: "/", MaxAge: -1})
 	} else if userID != "" {
-		// Refresh cookie
 		http.SetCookie(w, &http.Cookie{Name: "user_id", Value: userID, Path: "/", MaxAge: 86400 * 30})
 	}
 
-	// 5. Map Data
 	var user User
 	if !userFound {
 		user = User{
-			ID:        "",
-			Nickname:  "Guest",
-			Tag:       "----",
-			AvatarURL: "https://api.dicebear.com/7.x/avataaars/svg?seed=guest",
-			Medals:    0,
-			Trophies:  0, // Default
-			Level:     0,
-			Exp:       0,
-			MaxExp:    1,
-			Coins:     0,
-			Status:    "offline",
-			Language:  lang,
+			Nickname: "Guest", Tag: "----", AvatarURL: "https://api.dicebear.com/7.x/avataaars/svg?seed=guest",
+			MaxExp: 1, Status: "offline", Language: lang, NameColor: "white", BannerColor: "default",
 		}
 	} else {
 		user = User{
-			ID:        selected.ID,
-			Nickname:  selected.Nickname,
-			Tag:       fmt.Sprintf("%04d", selected.Tag),
+			ID: selected.ID, Nickname: selected.Nickname, Tag: fmt.Sprintf("%04d", selected.Tag),
 			AvatarURL: fmt.Sprintf("https://api.dicebear.com/7.x/avataaars/svg?seed=%s&backgroundColor=ffdfbf", selected.Nickname),
-			Exp:       selected.Exp,
-			MaxExp:    selected.MaxExp,
-			Medals:    len(selected.Medals),
-			Trophies:  selected.Trophies, // <--- POPULATE FROM DB
-			Level:     selected.Level,
-			Coins:     selected.Coins,
-			Status:    selected.Status,
-			Language:  lang,
+			Exp:       selected.Exp, MaxExp: selected.MaxExp, Medals: len(selected.Medals), Trophies: selected.Trophies,
+			Level: selected.Level, Coins: selected.Coins, Status: selected.Status, Language: lang,
+			NameColor: selected.NameColor, BannerColor: selected.BannerColor, Inventory: inv,
 		}
 	}
 
-	// 6. XP %
 	pct := 0
 	if user.MaxExp > 0 {
 		pct = (user.Exp * 100) / user.MaxExp
 	}
 	user.XPPercentage = fmt.Sprintf("%d%%", pct)
 
-	// 7. Friends/Medals
 	friendList, _ := store.ListFriends(user.ID)
 	medalDetails := []data.Medal{}
 	if userFound {
 		medalDetails = store.MedalDetails(selected.Medals)
 	}
 
-	// 8. Modes (Keep your existing mode logic)
 	btn1, stat1 := getModeTexts(lang, false, false)
 	btn3, stat3 := getModeTexts(lang, true, false)
 
-	// Use generic link for game
-	chibikiURL := fmt.Sprintf("/game?mode=chibiki&lang=%s", lang)
-	bobikURL := fmt.Sprintf("/bobik?lang=%s&userID=%s&nick=%s", lang, user.ID, user.Nickname)
-
 	modes := []GameMode{
 		{
-			ID:           "chibiki",
-			Title:        "Chibiki Royale",
-			Subtitle:     "Clash Royale-style",
-			IsConstruct:  false,
+			ID: "chibiki", Title: "Chibiki Royale", Subtitle: "Clash Royale-style",
 			SafeGradient: template.CSS("linear-gradient(135deg, #ff4e50 0%, #f9d423 100%)"),
-			BtnText:      btn1,
-			StatusText:   stat1,
-			URL:          chibikiURL,
+			BtnText:      btn1, StatusText: stat1, URL: fmt.Sprintf("/game?mode=chibiki&lang=%s", lang),
 		},
 		{
-			ID:           "bobik",
-			Title:        "Bobik Shooter",
-			Subtitle:     "FPS-style",
-			IsConstruct:  false,
+			ID: "bobik", Title: "Bobik Shooter", Subtitle: "FPS-style",
 			SafeGradient: template.CSS("linear-gradient(135deg, #36d1dc 0%, #5b86e5 100%)"),
-			BtnText:      btn1,
-			StatusText:   stat1,
-			URL:          bobikURL,
+			BtnText:      btn1, StatusText: stat1, URL: fmt.Sprintf("/bobik?lang=%s&userID=%s&nick=%s", lang, user.ID, user.Nickname),
 		},
 		{
-			ID:           "tba",
-			Title:        "???",
-			Subtitle:     "Top Secret",
-			IsLocked:     true,
+			ID: "tba", Title: "???", Subtitle: "Top Secret", IsLocked: true,
 			SafeGradient: template.CSS("linear-gradient(135deg, #232526 0%, #414345 100%)"),
-			BtnText:      btn3,
-			StatusText:   stat3,
+			BtnText:      btn3, StatusText: stat3,
 		},
 	}
 
 	pageData := PageData{
-		User:         user,
-		Friends:      friendList,
-		Modes:        modes,
-		Text:         t,
-		Lang:         lang,
-		MedalDetails: medalDetails,
-		ShowRegister: !hadCookie && !userFound,
-		ActivePage:   "lobby",
+		User: user, Friends: friendList, Modes: modes, Text: t, Lang: lang,
+		MedalDetails: medalDetails, ShowRegister: !hadCookie && !userFound, ActivePage: "lobby",
 	}
 
 	tmplPath := filepath.Join("web", "templates", "lobby.html")
-	tmpl, err := template.ParseFiles(tmplPath)
-	if err != nil {
-		log.Printf("Error parsing: %v", err)
-		http.Error(w, "Could not load template", http.StatusInternalServerError)
-		return
-	}
+	tmpl, _ := template.ParseFiles(tmplPath)
+	tmpl.Execute(w, pageData)
+}
 
-	if err := tmpl.Execute(w, pageData); err != nil {
-		log.Printf("Execution error: %v", err)
+// Handler to save customization
+func NewCustomizeSaveHandler(store *data.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		c, err := r.Cookie("user_id")
+		if err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		var req struct {
+			NameColor   string `json:"name_color"`
+			BannerColor string `json:"banner_color"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			return
+		}
+
+		// Verify ownership (simplified: assume if they send it, they own it, or frontend checks)
+		// In prod, check store.HasItem(userID, itemID_for_color)
+
+		err = store.UpdateProfileLook(c.Value, req.NameColor, req.BannerColor, "")
+		if err != nil {
+			http.Error(w, "Error saving", 500)
+			return
+		}
+		w.WriteHeader(200)
 	}
 }

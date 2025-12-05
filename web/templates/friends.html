@@ -16,58 +16,210 @@
             --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
         body {
-            margin:0;
-            font-family: var(--font-main);
-            background: var(--bg-dark);
-            color: var(--text-main);
-            min-height: 100vh;
+            margin:0; font-family: var(--font-main); background: var(--bg-dark); color: var(--text-main); min-height: 100vh;
+            background-image: radial-gradient(circle at 10% 10%, rgba(255, 69, 0, 0.15) 0%, transparent 60%), radial-gradient(circle at 90% 90%, rgba(139, 0, 0, 0.2) 0%, transparent 60%);
         }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .top-bar { display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .brand { font-weight: 900; letter-spacing: 2px; color: var(--text-muted); }
+        .top-bar { display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: 20px; }
+        .brand { font-weight: 900; letter-spacing: 2px; color: var(--text-muted); font-size: 1.1rem; }
+        .brand span { color: var(--primary); }
         .header-actions { display:flex; gap:10px; }
-        .pill-btn { padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.08); color: white; text-decoration:none; font-weight:800; background: linear-gradient(135deg, #8e2de2, #4a00e0); }
-        .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:16px; }
-        .card { background: var(--glass-bg); border:1px solid var(--glass-border); border-radius:16px; padding:16px; position:relative; box-shadow:0 10px 30px rgba(0,0,0,0.25); }
-        .avatar { width:72px; height:72px; border-radius:50%; border:3px solid var(--primary); object-fit: cover; }
-        .nickname { font-weight:900; font-size:1.1rem; margin-top:8px; }
-        .tag { color: var(--text-muted); }
-        .status-dot { position:absolute; top:14px; right:14px; width:12px; height:12px; border-radius:50%; border:2px solid #0f0502; }
-        .status-online { background:#4ade80; box-shadow:0 0 10px rgba(74,222,128,0.9); }
-        .status-away { background:#facc15; box-shadow:0 0 10px rgba(250,204,21,0.9); }
-        .status-offline { background:#737373; box-shadow:0 0 10px rgba(115,115,115,0.6); }
-        .meta { font-size:0.9rem; color: var(--text-muted); }
+        .pill-btn { padding: 8px 16px; border-radius: 99px; border: 1px solid var(--glass-border); color: white; text-decoration:none; font-weight:800; background: var(--glass-bg); transition: all 0.2s; cursor: pointer; }
+        .pill-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+        .pill-btn.add { background: linear-gradient(135deg, #ff4e50, #f9d423); color: black; border: none; }
+        
+        .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:20px; }
+        .card { background: var(--glass-bg); border:1px solid var(--glass-border); border-radius: 20px; padding: 20px; position:relative; box-shadow:0 10px 30px rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 12px; backdrop-filter: blur(10px); }
+        
+        .card-header { display: flex; align-items: center; gap: 14px; }
+        .avatar { width:64px; height:64px; border-radius:50%; border:2px solid var(--accent); object-fit: cover; background: #222; }
+        .info { flex: 1; }
+        .nickname { font-weight:900; font-size:1.2rem; }
+        .tag { color: var(--text-muted); font-size: 0.9rem; font-weight: 700; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .status-online { background:#4ade80; box-shadow:0 0 8px #4ade80; }
+        .status-away { background:#facc15; }
+        .status-offline { background:#737373; }
+        .presence-text { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+        
+        .stats-row { display: flex; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 12px; }
+        .stat { text-align: center; }
+        .stat-val { font-weight: 900; color: white; font-size: 1rem; }
+        .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
+
+        .actions { display: flex; gap: 8px; margin-top: auto; }
+        .action-btn { flex: 1; padding: 10px; border-radius: 10px; border: none; cursor: pointer; font-weight: 800; font-size: 0.9rem; transition: transform 0.1s; }
+        .action-btn:active { transform: scale(0.95); }
+        .btn-chat { background: linear-gradient(135deg, #36d1dc, #5b86e5); color: white; }
+        .btn-remove { background: rgba(255,255,255,0.05); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.3); }
+
+        /* Modal */
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 100; }
+        .modal { background: #1a1a1a; padding: 24px; border-radius: 16px; width: 320px; border: 1px solid var(--glass-border); }
+        .modal h3 { margin-top: 0; color: var(--primary); }
+        .modal input { width: 100%; padding: 12px; margin: 8px 0; background: #333; border: 1px solid #555; color: white; border-radius: 8px; box-sizing: border-box; }
+        .modal-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+
+        /* Chat Box */
+        #chat-box {
+            position: fixed; bottom: 0; right: 20px; width: 320px; height: 400px;
+            background: #1a1a1a; border-radius: 16px 16px 0 0;
+            border: 1px solid var(--glass-border); box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+            display: none; flex-direction: column; z-index: 90;
+        }
+        .chat-header {
+            padding: 12px; background: #222; border-radius: 16px 16px 0 0; font-weight: bold;
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+        }
+        .chat-body { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .chat-input-area { padding: 10px; border-top: 1px solid #333; display: flex; gap: 8px; }
+        .chat-input { flex: 1; background: #333; border: none; color: white; padding: 8px; border-radius: 8px; }
+        .msg { padding: 8px 12px; border-radius: 12px; max-width: 80%; font-size: 0.9rem; }
+        .msg.me { background: var(--primary); align-self: flex-end; color: black; font-weight: 600; }
+        .msg.them { background: #333; align-self: flex-start; }
+        
+        /* Nickname Colors */
+        .name-rainbow { background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .name-gold { color: #ffd700; text-shadow: 0 0 5px #ffd700; }
+        .name-white { color: white; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="top-bar">
-            <div class="brand">{{.Text.LobbyName}} / {{.Text.FriendsNav}}</div>
+            <div class="brand">{{.Text.LobbyName}} <span>/ Friends</span></div>
             <div class="header-actions">
-                <a class="pill-btn" href="/?lang={{.Lang}}&userID={{.User.ID}}">Lobby</a>
-                <a class="pill-btn" href="/shop?lang={{.Lang}}&userID={{.User.ID}}">Shop</a>
-                <a class="pill-btn" href="/customize?lang={{.Lang}}&userID={{.User.ID}}">Customize</a>
+                <button class="pill-btn add" onclick="openAddModal()">+ Add Friend</button>
+                <a class="pill-btn" href="/?lang={{.Lang}}&userID={{.User.ID}}">Back to Lobby</a>
             </div>
         </div>
 
         <div class="grid">
-            {{if .Friends}}
-                {{range .Friends}}
-                <div class="card">
-                    <div class="status-dot status-{{.Presence}}"></div>
-                    <img class="avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed={{.Nickname}}&backgroundColor=ffdfbf" alt="avatar">
-                    <div class="nickname">{{.Nickname}}</div>
-                    <div class="tag">#{{printf "%04d" .Tag}} · Level {{.Level}}</div>
-                    <div class="meta">Status: {{.Presence}}</div>
+            {{range .Friends}}
+            <div class="card">
+                <div class="card-header">
+                    <img class="avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed={{.Nickname}}&backgroundColor=ffdfbf">
+                    <div class="info">
+                        <div class="nickname {{.NameColor}}">{{.Nickname}}</div>
+                        <div class="tag">#{{printf "%04d" .Tag}}</div>
+                        <div class="presence-text">
+                            <span class="status-dot status-{{.Presence}}"></span> {{.Presence}}
+                        </div>
+                    </div>
                 </div>
-                {{end}}
+                <div class="stats-row">
+                    <div class="stat">
+                        <div class="stat-val">{{.Level}}</div>
+                        <div class="stat-label">Level</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-val">{{.Trophies}}</div>
+                        <div class="stat-label">Trophies</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-val">{{.Exp}}</div>
+                        <div class="stat-label">XP</div>
+                    </div>
+                </div>
+                <div class="actions">
+                    <button class="action-btn btn-chat" onclick="openChat('{{.Nickname}}')">Chat 💬</button>
+                    <button class="action-btn btn-remove" onclick="removeFriend('{{.Nickname}}', {{.Tag}})">Remove</button>
+                </div>
+            </div>
             {{else}}
-                <div class="card">
-                    <div class="nickname">No friends yet</div>
-                    <div class="meta">Add friends from the lobby page.</div>
-                </div>
+            <div style="text-align:center; grid-column: 1/-1; padding: 40px; color: var(--text-muted);">
+                <h2>No friends yet</h2>
+                <p>Add friends using their Nickname and Tag #.</p>
+            </div>
             {{end}}
         </div>
     </div>
+
+    <!-- Add Friend Modal -->
+    <div class="modal-backdrop" id="add-modal">
+        <div class="modal">
+            <h3>Add Friend</h3>
+            <input id="add-nick" placeholder="Nickname" />
+            <input id="add-tag" placeholder="Tag (e.g. 1234)" type="number" />
+            <div class="modal-btns">
+                <button class="pill-btn" onclick="closeAddModal()">Cancel</button>
+                <button class="pill-btn add" onclick="submitAdd()">Send Request</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Box -->
+    <div id="chat-box">
+        <div class="chat-header" onclick="toggleChat()">
+            <span id="chat-partner">Chat</span>
+            <span>✖</span>
+        </div>
+        <div class="chat-body" id="chat-body">
+            <div class="msg them">Hey! Want to play?</div>
+            <div class="msg me">Sure, 1 min.</div>
+        </div>
+        <div class="chat-input-area">
+            <input class="chat-input" id="chat-in" placeholder="Type a message..." onkeypress="handleChatKey(event)">
+            <button class="pill-btn" onclick="sendMsg()">➤</button>
+        </div>
+    </div>
+
+    <script>
+        const addModal = document.getElementById('add-modal');
+        function openAddModal() { addModal.style.display = 'flex'; }
+        function closeAddModal() { addModal.style.display = 'none'; }
+
+        async function submitAdd() {
+            const nick = document.getElementById('add-nick').value;
+            const tag = document.getElementById('add-tag').value;
+            if(!nick || !tag) return alert("Fill all fields");
+
+            try {
+                const res = await fetch('/friends/add', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({nickname: nick, tag: parseInt(tag)})
+                });
+                if(res.ok) window.location.reload();
+                else alert("Failed to add friend");
+            } catch(e) { alert("Error"); }
+        }
+
+        async function removeFriend(nick, tag) {
+            if(!confirm("Remove " + nick + "?")) return;
+            await fetch('/friends/remove', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({nickname: nick, tag: parseInt(tag)})
+            });
+            window.location.reload();
+        }
+
+        // Chat UI
+        const chatBox = document.getElementById('chat-box');
+        const chatBody = document.getElementById('chat-body');
+        const chatIn = document.getElementById('chat-in');
+        
+        function openChat(nick) {
+            document.getElementById('chat-partner').innerText = nick;
+            chatBox.style.display = 'flex';
+        }
+        function toggleChat() {
+            chatBox.style.display = 'none';
+        }
+        function sendMsg() {
+            const txt = chatIn.value;
+            if(!txt) return;
+            const div = document.createElement('div');
+            div.className = 'msg me';
+            div.innerText = txt;
+            chatBody.appendChild(div);
+            chatIn.value = '';
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+        function handleChatKey(e) {
+            if(e.key === 'Enter') sendMsg();
+        }
+    </script>
 </body>
 </html>

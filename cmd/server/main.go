@@ -44,9 +44,7 @@ func main() {
 		log.Printf("GAME OVER! Winner Team: %d", winnerTeam)
 
 		for p := range players {
-			// Skip guests
 			if p.UserID == "" || p.UserID == "guest" {
-				log.Printf("Skipping rewards for guest/empty user (Team %d)", p.Team)
 				continue
 			}
 
@@ -63,10 +61,8 @@ func main() {
 				expChange = 5
 			}
 
-			log.Printf("Awarding User %s (Team %d): %+d Trophies, %+d Coins", p.UserID, p.Team, trophyChange, coinChange)
-
 			// Update DB
-			res, err := db.Exec(`
+			_, err := db.Exec(`
 				UPDATE users
 				SET trophies = GREATEST(0, trophies + $1),
 					coins = coins + $2,
@@ -77,29 +73,19 @@ func main() {
 
 			if err != nil {
 				log.Printf("ERROR updating DB for %s: %v", p.UserID, err)
-			} else {
-				rows, _ := res.RowsAffected()
-				log.Printf("DB Update Success. Rows affected: %d", rows)
 			}
 		}
 	}
 
-	// 2. Load Unit Data FIRST (Critical fix!)
-	// This ensures 'king_tower' has stats like 4000 HP before we spawn it
 	if err := gameInstance.LoadUnits("internal/data/units.json"); err != nil {
-		log.Printf("Warning: Could not load units.json: %v. Towers might have 0 HP.", err)
+		log.Printf("Warning: Could not load units.json: %v", err)
 	}
-
-	// 3. Spawn Towers NOW
 	gameInstance.InitTowers()
-
-	// 4. Start the Physics Loop
 	go gameInstance.StartLoop()
 
 	presenceService := presence.NewService(db)
 	bobikGame := bobikshooter.NewGame(store)
 
-	// 5. Configure Routes
 	authService := auth.NewAuth(db)
 	http.HandleFunc("/register", authService.RegisterHandler)
 	http.HandleFunc("/login", authService.LoginHandler)
@@ -108,34 +94,34 @@ func main() {
 	http.HandleFunc("/friends/add", authService.AddFriendHandler)
 	http.HandleFunc("/friends/remove", authService.RemoveFriendHandler)
 	http.HandleFunc("/presence/ping", presenceService.PingHandler)
+
 	http.HandleFunc("/ws", chibiki.NewWebsocketHandler(gameInstance))
 	http.HandleFunc("/ws/bobik", bobikGame.HandleWS)
+
+	// Lobby Pages
 	http.HandleFunc("/friends", lobby.NewFriendsHandler(store))
 	http.HandleFunc("/shop", lobby.NewShopHandler(store))
 	http.HandleFunc("/shop/buy", lobby.NewBuyHandler(store))
 	http.HandleFunc("/customize", lobby.NewCustomizeHandler(store))
+	http.HandleFunc("/customize/save", lobby.NewCustomizeSaveHandler(store)) // NEW
 	http.HandleFunc("/bobik", lobby.NewBobikHandler(store))
+
+	http.HandleFunc("/game", lobby.NewGameHandler(store))
+	http.HandleFunc("/", lobby.NewHandler(store))
 
 	fs := http.FileServer(http.Dir("./web/static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
-
-	http.HandleFunc("/game", lobby.NewGameHandler(store))
-
-	http.HandleFunc("/", lobby.NewHandler(store))
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
-
 	log.Println("Server starting on port " + port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
-
 }
 
-// applySchema creates/updates the minimal tables needed for auth, medals, and friendships.
 func applySchema(db *sql.DB) error {
 	statements := []string{
 		`
@@ -147,18 +133,25 @@ func applySchema(db *sql.DB) error {
 			exp INTEGER NOT NULL DEFAULT 0,
 			max_exp INTEGER NOT NULL DEFAULT 1000,
 			coins INTEGER NOT NULL DEFAULT 0,
+			trophies INTEGER NOT NULL DEFAULT 0,
 			password_hash TEXT NOT NULL DEFAULT '',
+			status TEXT NOT NULL DEFAULT 'offline',
+			last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			language TEXT NOT NULL DEFAULT 'en',
+			
+			-- New Customization Columns
+			name_color TEXT NOT NULL DEFAULT 'white',
+			banner_color TEXT NOT NULL DEFAULT 'default',
+			
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			UNIQUE (nickname, tag)
 		);
 		`,
-		`ALTER TABLE users ADD COLUMN IF NOT EXISTS coins INTEGER NOT NULL DEFAULT 0;`,
-		`ALTER TABLE users ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'offline';`,
-		`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW();`,
-		`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT NOT NULL DEFAULT '';`,
-		`ALTER TABLE users ADD COLUMN IF NOT EXISTS language TEXT NOT NULL DEFAULT 'en';`,
-		`ALTER TABLE users ADD COLUMN IF NOT EXISTS trophies INTEGER NOT NULL DEFAULT 0;`,
+		// Migrations for existing DBs
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS name_color TEXT NOT NULL DEFAULT 'white';`,
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS banner_color TEXT NOT NULL DEFAULT 'default';`,
+
 		`
 		CREATE TABLE IF NOT EXISTS medals (
 			id TEXT PRIMARY KEY,
@@ -187,10 +180,7 @@ func applySchema(db *sql.DB) error {
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		);
 		`,
-		`CREATE INDEX IF NOT EXISTS idx_users_nickname ON users (nickname);`,
 		`CREATE UNIQUE INDEX IF NOT EXISTS idx_friendships_pair ON friendships (LEAST(requester_id, addressee_id), GREATEST(requester_id, addressee_id));`,
-		`CREATE INDEX IF NOT EXISTS idx_user_medals_user ON user_medals (user_id);`,
-
 		`
 		CREATE TABLE IF NOT EXISTS inventory (
 			user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -199,7 +189,6 @@ func applySchema(db *sql.DB) error {
 			PRIMARY KEY (user_id, item_id)
 		);
 		`,
-		`CREATE INDEX IF NOT EXISTS idx_inventory_user ON inventory (user_id);`,
 	}
 
 	for _, stmt := range statements {

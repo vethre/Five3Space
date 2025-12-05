@@ -2,7 +2,7 @@
 <html lang="{{.Lang}}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.Text.Shop}}</title>
     <style>
         :root {
@@ -15,303 +15,99 @@
             --text-muted: rgba(255, 255, 255, 0.5);
             --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
+        body { margin:0; font-family:var(--font-main); background:var(--bg-dark); color:var(--text-main); }
+        .container { max-width:1200px; margin:0 auto; padding:20px; }
+        .top-bar { display:flex; justify-content:space-between; margin-bottom:30px; border-bottom:1px solid var(--glass-border); padding-bottom:20px; }
+        .brand { font-weight:900; font-size:1.2rem; color:var(--text-muted); }
+        .coin-bal { background:rgba(255,215,0,0.1); border:1px solid gold; color:gold; padding:8px 16px; border-radius:99px; font-weight:bold; }
+        .close { color:white; text-decoration:none; font-size:1.5rem; }
 
-        /* --- SHARED LOBBY STYLES --- */
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        .section-title { font-size:1.5rem; font-weight:900; margin:30px 0 15px; color:white; border-bottom:1px solid #333; padding-bottom:5px; }
+        .cards { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:20px; }
+        .card { background:var(--glass-bg); border:1px solid var(--glass-border); border-radius:16px; padding:20px; display:flex; flex-direction:column; }
         
-        body {
-            background-color: var(--bg-dark);
-            background-image: 
-                radial-gradient(circle at 10% 10%, rgba(255, 69, 0, 0.25) 0%, transparent 60%),
-                radial-gradient(circle at 90% 90%, rgba(139, 0, 0, 0.3) 0%, transparent 60%);
-            background-attachment: fixed;
-            color: var(--text-main);
-            font-family: var(--font-main);
-            min-height: 100vh;
-            display: flex; flex-direction: column;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            width: 100%;
-            display: flex; flex-direction: column;
-            animation: fadeIn 0.8s ease-out;
-        }
-
-        /* Header / Top Bar */
-        .top-bar {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 30px; padding-bottom: 20px;
-            border-bottom: 1px solid var(--glass-border);
-        }
-        .brand { font-weight: 900; letter-spacing: 2px; font-size: 1.1rem; color: var(--text-muted); }
-        .brand span { color: var(--primary); }
-
-        .coin-balance {
-            background: rgba(255, 174, 0, 0.1);
-            border: 1px solid rgba(255, 174, 0, 0.3);
-            padding: 8px 16px; border-radius: 99px;
-            font-weight: 800; color: #ffd166;
-            display: flex; align-items: center; gap: 8px;
-        }
-
-        .close-btn {
-            background: rgba(255,255,255,0.1); color: white;
-            border: none; width: 40px; height: 40px; border-radius: 50%;
-            font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            text-decoration: none; transition: background 0.2s;
-        }
-        .close-btn:hover { background: rgba(255,255,255,0.2); }
-
-        /* Shop Grid */
-        .section-title {
-            font-size: 1.5rem; font-weight: 900; font-style: italic;
-            margin: 30px 0 15px; color: white; display: flex; align-items: center; gap: 10px;
-        }
-        .section-title::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.1); }
-
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 20px;
-        }
-
-        .card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 20px;
-            display: flex; flex-direction: column;
-            position: relative; overflow: hidden;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.2); }
-        
-        .card-icon {
-            height: 120px; width: 100%;
-            background: rgba(0,0,0,0.2); border-radius: 16px;
-            margin-bottom: 16px; display: flex; align-items: center; justify-content: center;
-            font-size: 40px;
-        }
-        .card-content { flex: 1; display: flex; flex-direction: column; }
-        .card-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 4px; }
-        .card-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px; line-height: 1.4; }
-
-        .price-tag {
-            margin-top: auto;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        
-        .price-val { font-size: 1.2rem; font-weight: 900; color: white; }
-        .price-currency { font-size: 0.9rem; color: var(--text-muted); margin-left: 2px; }
-
-        .buy-btn {
-            background: white; color: black; border: none;
-            padding: 10px 20px; border-radius: 12px;
-            font-weight: 900; cursor: pointer;
-            transition: transform 0.1s;
-        }
-        .buy-btn:active { transform: scale(0.95); }
-        .buy-btn.real { background: linear-gradient(135deg, #43e97b, #38f9d7); color: #0f2027; }
-        .buy-btn.coins { background: linear-gradient(135deg, #ffae00, #ff4e50); color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        .currency-select {
-            background: rgba(0,0,0,0.3);
-            color: var(--text-muted);
-            border: 1px solid var(--glass-border);
-            padding: 6px 12px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            margin-right: 12px;
-            cursor: pointer;
-        }
-        .currency-select:hover { color: white; border-color: rgba(255,255,255,0.3); }
+        .icon-box { height:100px; display:flex; align-items:center; justify-content:center; font-size:3rem; background:rgba(0,0,0,0.3); border-radius:12px; margin-bottom:15px; }
+        .card-title { font-weight:bold; font-size:1.1rem; }
+        .card-desc { font-size:0.9rem; color:var(--text-muted); flex:1; margin-bottom:15px; }
+        .price { font-weight:900; font-size:1.2rem; color:white; }
+        .buy-btn { background:white; border:none; padding:10px; border-radius:8px; font-weight:900; cursor:pointer; margin-top:10px; width:100%; transition:0.2s; }
+        .buy-btn:hover { transform:scale(1.02); }
+        .buy-btn.coins { background:linear-gradient(135deg, #ffae00, #ff4e50); color:white; }
+        .buy-btn.real { background:linear-gradient(135deg, #43e97b, #38f9d7); color:#000; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="top-bar">
-            <div class="brand">{{.Text.LobbyName}} <span>/ {{.Text.Shop}}</span></div>
-            
-            <div style="display:flex; align-items:center;">
-                <select id="currency-picker" class="currency-select">
-                    <option value="USD">USD ($)</option>
-                    <option value="EUR">EUR (€)</option>
-                    <option value="UAH">UAH (₴)</option>
-                    <option value="CZK">CZK (Kč)</option>
-                    <option value="RUB">RUB (₽)</option>
-                </select>
-
-                <div class="coin-balance" style="margin-right:15px;">
-                    <span>💰</span> <span id="user-coins">{{.User.Coins}}</span>
-                </div>
-                
-                <a class="close-btn" href="/?lang={{.Lang}}&userID={{.User.ID}}">✕</a>
+            <div class="brand">{{.Text.LobbyName}} / Shop</div>
+            <div style="display:flex; gap:15px; align-items:center;">
+                <div class="coin-bal">💰 {{.User.Coins}}</div>
+                <a href="/?lang={{.Lang}}&userID={{.User.ID}}" class="close">✕</a>
             </div>
         </div>
 
-        <div class="section-title">Special Offers</div>
+        <div class="section-title">Exclusive Styles</div>
         <div class="cards">
             <div class="card">
-                <div class="card-icon">🎁</div>
-                <div class="card-content">
-                    <div class="card-title">Support Pack</div>
-                    <div class="card-desc">Get a small thank-you bundle + 1000 Coins.</div>
-                    <div class="price-tag">
-                        <div class="price-val" data-base-price="4.99">4.99 <span class="price-currency">$</span></div>
-                        <button class="buy-btn real" onclick="buyItem('pack_support')">Buy</button>
-                    </div>
-                </div>
+                <div class="icon-box" style="background:linear-gradient(90deg, red, blue); color:white;">🌈</div>
+                <div class="card-title">Rainbow Name</div>
+                <div class="card-desc">Make your nickname shimmer with all colors.</div>
+                <button class="buy-btn coins" onclick="buy('name_rainbow')">8000 Coins</button>
             </div>
             <div class="card">
-                <div class="card-icon">👑</div>
-                <div class="card-content">
-                    <div class="card-title">Founder Pack</div>
-                    <div class="card-desc">Exclusive Founder Badge + 5000 Coins.</div>
-                    <div class="price-tag">
-                        <div class="price-val" data-base-price="14.99">14.99 <span class="price-currency">$</span></div>
-                        <button class="buy-btn real" onclick="buyItem('pack_founder')">Buy</button>
-                    </div>
-                </div>
+                <div class="icon-box" style="color:gold; text-shadow:0 0 10px gold;">👑</div>
+                <div class="card-title">Gold Name</div>
+                <div class="card-desc">A prestigious golden glow for your name.</div>
+                <button class="buy-btn coins" onclick="buy('name_gold')">4000 Coins</button>
+            </div>
+            <div class="card">
+                <div class="icon-box" style="background:linear-gradient(135deg, #00f260, #0575e6);">🏙️</div>
+                <div class="card-title">Cyber Banner</div>
+                <div class="card-desc">Futuristic banner for your lobby background.</div>
+                <button class="buy-btn coins" onclick="buy('banner_cyber')">3500 Coins</button>
+            </div>
+            <div class="card">
+                <div class="icon-box" style="background:linear-gradient(135deg, gold, orange);">🏆</div>
+                <div class="card-title">Gold Banner</div>
+                <div class="card-desc">Show off your wealth with this banner.</div>
+                <button class="buy-btn coins" onclick="buy('banner_gold')">5000 Coins</button>
             </div>
         </div>
 
-        <div class="section-title">Coin Shop</div>
+        <div class="section-title">Resources</div>
         <div class="cards">
             <div class="card">
-                <div class="card-icon" style="color: #ffd166;">💰</div>
-                <div class="card-content">
-                    <div class="card-title">Handful of Coins</div>
-                    <div class="card-desc">1,000 Coins to start your journey.</div>
-                    <div class="price-tag">
-                        <div class="price-val" data-base-price="0.99">0.99 <span class="price-currency">$</span></div>
-                        <button class="buy-btn real" onclick="buyItem('coins_1000')">Buy</button>
-                    </div>
-                </div>
+                <div class="icon-box">💰</div>
+                <div class="card-title">Sack of Coins</div>
+                <div class="card-desc">+1000 Coins</div>
+                <button class="buy-btn real" onclick="buy('coins_1000')">$0.99</button>
             </div>
             <div class="card">
-                <div class="card-icon" style="color: #ffd166; text-shadow: 0 0 10px gold;">💰💰</div>
-                <div class="card-content">
-                    <div class="card-title">Sack of Coins</div>
-                    <div class="card-desc">5,000 Coins. Best value for beginners!</div>
-                    <div class="price-tag">
-                        <div class="price-val" data-base-price="3.99">3.99 <span class="price-currency">$</span></div>
-                        <button class="buy-btn real" onclick="buyItem('coins_5000')">Buy</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="section-title">Cosmetics</div>
-        <div class="cards">
-            <div class="card">
-                <div class="card-icon">🖼️</div>
-                <div class="card-content">
-                    <div class="card-title">Neon Frame</div>
-                    <div class="card-desc">Epic glow frame for your avatar.</div>
-                    <div class="price-tag">
-                        <div class="price-val">2500 <span class="price-currency">Coins</span></div>
-                        <button class="buy-btn coins" onclick="buyItem('frame_neon')">Purchase</button>
-                    </div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-icon">🏴</div>
-                <div class="card-content">
-                    <div class="card-title">Gold Banner</div>
-                    <div class="card-desc">Unique lobby background banner.</div>
-                    <div class="price-tag">
-                        <div class="price-val">5000 <span class="price-currency">Coins</span></div>
-                        <button class="buy-btn coins" onclick="buyItem('banner_gold')">Purchase</button>
-                    </div>
-                </div>
+                <div class="icon-box">💰💰</div>
+                <div class="card-title">Chest of Coins</div>
+                <div class="card-desc">+5000 Coins</div>
+                <button class="buy-btn real" onclick="buy('coins_5000')">$3.99</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Exchange Rates (Approximate)
-        const RATES = {
-            'USD': { rate: 1.0, sym: '$' },
-            'EUR': { rate: 0.95, sym: '€' },
-            'UAH': { rate: 41.5, sym: '₴' },
-            'CZK': { rate: 23.5, sym: 'Kč' },
-            'RUB': { rate: 92.0, sym: '₽' }
-        };
-
-        const picker = document.getElementById('currency-picker');
-        
-        // 1. Load preference or default to Language
-        const pageLang = document.documentElement.lang; // "en", "ru", "ua"
-        let savedCurr = localStorage.getItem('shop_currency');
-        
-        if (!savedCurr) {
-            // Smart Default based on Lang
-            if (pageLang === 'ua') savedCurr = 'UAH';
-            else if (pageLang === 'ru') savedCurr = 'RUB';
-            else if (pageLang === 'cz') savedCurr = 'CZK';
-            else savedCurr = 'USD';
-        }
-        picker.value = savedCurr;
-
-        // 2. Function to Update Prices
-        function updatePrices() {
-            const code = picker.value;
-            const data = RATES[code];
-            localStorage.setItem('shop_currency', code);
-
-            document.querySelectorAll('.price-val[data-base-price]').forEach(el => {
-                const base = parseFloat(el.getAttribute('data-base-price'));
-                const converted = (base * data.rate).toFixed(2);
-                
-                // Find the currency span inside
-                const span = el.querySelector('.price-currency');
-                // Update text
-                el.childNodes[0].nodeValue = converted + " "; // Update the number part
-                if (span) span.innerText = data.sym;
-            });
-        }
-
-        picker.onchange = updatePrices;
-        updatePrices(); // Run on load
-
-        // 3. Buy Logic
-        async function buyItem(itemId) {
-            const btn = event.target;
-            const originalText = btn.innerText;
-            btn.innerText = "Processing...";
-            btn.disabled = true;
-
+        async function buy(item) {
+            if(!confirm("Purchase " + item + "?")) return;
             try {
                 const res = await fetch('/shop/buy', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        item_id: itemId,
-                        currency: picker.value
-                    })
+                    body: JSON.stringify({ item_id: item, currency: 'USD' })
                 });
-                
                 const data = await res.json();
-                
-                if (data.success) {
+                if(data.success) {
                     alert(data.message);
-                    // Update Coin UI
-                    document.getElementById('user-coins').innerText = data.coins;
+                    window.location.reload();
                 } else {
-                    alert("Error: " + (data.error || "Purchase failed"));
+                    alert("Error: " + data.message || "Failed");
                 }
-            } catch (e) {
-                alert("Network error");
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
+            } catch(e) { alert("Network error"); }
         }
     </script>
 </body>
