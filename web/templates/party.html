@@ -22,7 +22,7 @@
         .card-shadow { box-shadow: 8px 8px 0px rgba(0,0,0,0.15); border: 3px solid #000; transition: 0.2s; }
         .card-shadow:active { transform: translate(4px, 4px); box-shadow: 4px 4px 0px rgba(0,0,0,0.15); }
         .timer-bar { height: 12px; background: #eee; border: 2px solid #000; border-radius: 99px; overflow: hidden; }
-        .timer-fill { height: 100%; background: var(--c-primary); width: 100%; transition: width 1s linear; }
+        .timer-fill { height: 100%; background: var(--c-primary); width: 100%; transition: width 0.2s linear; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
@@ -90,13 +90,11 @@
     </div>
 
     <script>
-        // --- FIX: Get User ID Correctly ---
         const urlParams = new URLSearchParams(window.location.search);
         const getCookie = (name) => {
             const m = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([$?*|{}()[\]\\/+^])/g, '\\$1') + '=([^;]*)'));
             return m ? decodeURIComponent(m[1]) : '';
         };
-        // Prioritize URL param, then cookie
         const userID = urlParams.get('userID') || getCookie('user_id') || '';
         
         if (!userID) {
@@ -106,7 +104,7 @@
         const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
         const socket = new WebSocket(`${protocol}://${window.location.host}/ws/party?userID=${userID}`);
 
-        let gameState = {};
+        let localState = {};
 
         socket.onopen = () => {
             console.log("Connected to Party Game with UserID:", userID);
@@ -120,6 +118,8 @@
         };
 
         function updateState(data) {
+            localState = data;
+
             // Update Lobby List
             const list = document.getElementById('lobby-list');
             list.innerHTML = data.players.map(p => 
@@ -131,7 +131,6 @@
             document.getElementById('player-count').innerText = data.players.length;
             const startBtn = document.getElementById('start-btn');
             
-            // --- LOGIC FIX: Enable Start button if enough players ---
             if (data.players.length >= 2) {
                 startBtn.disabled = false;
                 startBtn.innerText = "START GAME";
@@ -150,26 +149,30 @@
             } else if (data.status === 'INPUT') {
                 document.getElementById('screen-input').classList.add('active');
                 document.getElementById('prompt-text').innerText = data.prompt;
-                animateTimer('input-timer', data.timer, 30);
-                // Reset input if new round
-                if (gameState.round !== data.round) {
+                updateTimer('input-timer', data.timer, 30);
+                
+                // Reset input check
+                const btn = document.getElementById('submit-answer');
+                // If we moved to a new round, reset input
+                if (btn.disabled && data.timer > 25) { 
                     document.getElementById('answer-input').value = '';
-                    document.getElementById('submit-answer').innerText = "SEND";
-                    document.getElementById('submit-answer').disabled = false;
+                    btn.innerText = "SEND";
+                    btn.disabled = false;
                 }
+
             } else if (data.status === 'VOTING') {
                 document.getElementById('screen-voting').classList.add('active');
                 document.getElementById('vote-prompt').innerText = data.prompt;
                 
-                // Reset buttons visual state
-                document.getElementById('btn-A').style.opacity = '1';
-                document.getElementById('btn-B').style.opacity = '1';
+                // Reset buttons visual state if needed
+                const btnA = document.getElementById('btn-A');
+                const btnB = document.getElementById('btn-B');
 
                 if (data.match) {
                     document.getElementById('text-A').innerText = data.match.a_text;
                     document.getElementById('text-B').innerText = data.match.b_text;
                 }
-                animateTimer('vote-timer', data.timer, 15);
+                updateTimer('vote-timer', data.timer, 15);
             } else if (data.status === 'RESULT' || data.status === 'GAME_OVER') {
                 document.getElementById('screen-result').classList.add('active');
                 renderLeaderboard(data.players);
@@ -179,8 +182,6 @@
                     setTimeout(() => { window.location.href = '/'; }, 5000);
                 }
             }
-            
-            gameState = data; // Update local state cache
         }
 
         function renderLeaderboard(players) {
@@ -215,7 +216,7 @@
             document.getElementById('btn-B').style.opacity = option === 'B' ? '1' : '0.5';
         }
 
-        function animateTimer(id, current, max) {
+        function updateTimer(id, current, max) {
             const el = document.getElementById(id);
             const pct = (current / max) * 100;
             el.style.width = pct + '%';

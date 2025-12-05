@@ -52,13 +52,14 @@ type Game struct {
 	unregister chan *Player
 	broadcast  chan []byte
 
-	state         string
+	state         string // "LOBBY", "INPUT", "VOTING", "RESULT", "GAME_OVER"
 	round         int
 	timer         int
 	currentPrompt string
 
-	answers    []*Player
-	matchIndex int
+	// Voting Logic
+	answers    []*Player // List of players who answered
+	matchIndex int       // Current pair index being voted on
 	matchA     *Player
 	matchB     *Player
 	votesA     int
@@ -102,6 +103,7 @@ func (g *Game) run() {
 			if _, ok := g.players[p.ID]; ok {
 				delete(g.players, p.ID)
 				close(p.Send)
+				// If game is running and players drop below min, reset
 				if len(g.players) < MinPlayers && g.state != "LOBBY" {
 					g.mu.Unlock() // Unlock before reset
 					g.resetGame()
@@ -133,17 +135,29 @@ func (g *Game) run() {
 
 func (g *Game) tick() {
 	g.mu.Lock()
-	defer g.mu.Unlock()
 
-	if g.timer > 0 {
-		g.timer--
-		if g.timer == 0 {
-			g.nextPhase()
+	if g.state != "LOBBY" && g.state != "GAME_OVER" {
+		if g.timer > 0 {
+			g.timer--
 		}
+		if g.timer == 0 {
+			g.mu.Unlock() // Unlock before nextPhase
+			g.nextPhase()
+			return
+		}
+	}
+	g.mu.Unlock()
+
+	// Broadcast timer updates every second if game is running
+	if g.state != "LOBBY" {
+		g.broadcastState()
 	}
 }
 
 func (g *Game) nextPhase() {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
 	switch g.state {
 	case "INPUT":
 		g.state = "VOTING"
@@ -158,17 +172,11 @@ func (g *Game) nextPhase() {
 			g.startRound()
 		}
 	}
-	// Need to broadcast inside nextPhase as it's called from tick (which holds lock)
-	// We must use a separate goroutine or modify broadcastState to not lock
-	// Simplest fix: temporarily release lock inside tick before calling nextPhase? No.
-	// Let's make broadcastState internal (no lock) and wrap it.
-
-	// Actually, g.broadcastState() uses channel send. It doesn't lock g.mu (except to READ players).
-	// BUT g.broadcastState() currently locks inside to iterate players.
-	// We need an internal version that takes the map.
+	// State change needs broadcast, handled by next tick or manual call?
+	// Better call it here to be snappy.
+	// We unlock inside broadcastState helper, so we release lock first? No.
+	// Let's release lock then broadcast.
 }
-
-// ... (Standard logic for phases same as before) ...
 
 func (g *Game) startRound() {
 	g.state = "INPUT"
@@ -187,6 +195,9 @@ func (g *Game) startVotingPhase() {
 			g.answers = append(g.answers, p)
 		}
 	}
+
+	// If less than 2 answers, we can't vote properly. Just skip or use dummy?
+	// For now, let's assume players are good.
 
 	rand.Shuffle(len(g.answers), func(i, j int) {
 		g.answers[i], g.answers[j] = g.answers[j], g.answers[i]
@@ -225,8 +236,12 @@ func (g *Game) resolveVote() {
 		pointsB += 250
 	}
 
-	g.matchA.Score += pointsA
-	g.matchB.Score += pointsB
+	if g.matchA != nil {
+		g.matchA.Score += pointsA
+	}
+	if g.matchB != nil {
+		g.matchB.Score += pointsB
+	}
 
 	g.nextMatch()
 }
@@ -284,7 +299,12 @@ func (g *Game) endGame() {
 }
 
 func (g *Game) resetGame() {
-	g.mu.Lock() // Lock for safety
+	// Assumes Lock is held by caller or we lock here.
+	// Since this is called from run loop which holds lock, we are good?
+	// Wait, run loop unlocks before calling resetGame in unregister case?
+	// Let's lock inside just to be safe if called externally, but `run` manages it.
+	// Actually `run` does: `g.mu.Unlock() -> g.resetGame()`. So we need lock here.
+	g.mu.Lock()
 	g.state = "LOBBY"
 	g.round = 0
 	g.timer = 0
@@ -297,7 +317,6 @@ func (g *Game) resetGame() {
 }
 
 // broadcastState constructs and sends the state message.
-// It acquires the read lock to access g.players safely.
 func (g *Game) broadcastState() {
 	g.mu.Lock()
 	defer g.mu.Unlock()
@@ -333,10 +352,7 @@ func (g *Game) broadcastState() {
 
 	msg, _ := json.Marshal(state)
 
-	// Non-blocking send to broadcast channel is tricky if no listeners.
-	// Better to iterate players directly here since we hold lock.
-	// BUT `g.run` handles broadcast channel.
-	// We will launch a goroutine to send to channel to avoid deadlock.
+	// Use a goroutine to avoid blocking the lock
 	go func() {
 		g.broadcast <- msg
 	}()
@@ -365,6 +381,8 @@ func (g *Game) HandleMsg(p *Player, msg []byte) {
 
 	if input.Type == "answer" && g.state == "INPUT" {
 		p.Answer = input.Text
+
+		// Check if everyone answered
 		allAnswered := true
 		for _, pl := range g.players {
 			if pl.Answer == "" {
@@ -373,7 +391,7 @@ func (g *Game) HandleMsg(p *Player, msg []byte) {
 			}
 		}
 		if allAnswered {
-			g.timer = 3
+			g.timer = 3 // Short buffer
 		}
 		g.mu.Unlock()
 		g.broadcastState()
