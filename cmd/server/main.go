@@ -169,6 +169,7 @@ func applySchema(db *sql.DB) error {
 		// Migrations for existing DBs
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS name_color TEXT NOT NULL DEFAULT 'white';`,
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS banner_color TEXT NOT NULL DEFAULT 'default';`,
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS custom_avatar TEXT NOT NULL DEFAULT '';`,
 
 		`
 		CREATE TABLE IF NOT EXISTS medals (

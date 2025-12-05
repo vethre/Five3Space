@@ -10,6 +10,7 @@ import (
 	"main/internal/data"
 )
 
+// NOTE: User struct now matches logic in pages.go, keep them synced or unified.
 type User struct {
 	ID           string
 	Nickname     string
@@ -237,9 +238,14 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 			MaxExp: 1, Status: "offline", Language: lang, NameColor: "white", BannerColor: "default",
 		}
 	} else {
+		avatar := selected.CustomAvatar
+		if avatar == "" {
+			avatar = fmt.Sprintf("https://api.dicebear.com/7.x/avataaars/svg?seed=%s&backgroundColor=ffdfbf", selected.Nickname)
+		}
+
 		user = User{
 			ID: selected.ID, Nickname: selected.Nickname, Tag: fmt.Sprintf("%04d", selected.Tag),
-			AvatarURL: fmt.Sprintf("https://api.dicebear.com/7.x/avataaars/svg?seed=%s&backgroundColor=ffdfbf", selected.Nickname),
+			AvatarURL: avatar,
 			Exp:       selected.Exp, MaxExp: selected.MaxExp, Medals: len(selected.Medals), Trophies: selected.Trophies,
 			Level: selected.Level, Coins: selected.Coins, Status: selected.Status, Language: lang,
 			NameColor: selected.NameColor, BannerColor: selected.BannerColor, Inventory: inv,
@@ -259,7 +265,6 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 	}
 
 	btn1, stat1 := getModeTexts(lang, false, false)
-	//btn3, stat3 := getModeTexts(lang, true, false)
 
 	modes := []GameMode{
 		{
@@ -290,7 +295,6 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 	tmpl.Execute(w, pageData)
 }
 
-// Handler to save customization
 func NewCustomizeSaveHandler(store *data.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c, err := r.Cookie("user_id")
@@ -299,18 +303,20 @@ func NewCustomizeSaveHandler(store *data.Store) http.HandlerFunc {
 			return
 		}
 
+		// Max 500KB body to prevent huge images
+		r.Body = http.MaxBytesReader(w, r.Body, 500*1024)
+
 		var req struct {
-			NameColor   string `json:"name_color"`
-			BannerColor string `json:"banner_color"`
+			NameColor    string `json:"name_color"`
+			BannerColor  string `json:"banner_color"`
+			CustomAvatar string `json:"custom_avatar"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Body too large or invalid", http.StatusBadRequest)
 			return
 		}
 
-		// Verify ownership (simplified: assume if they send it, they own it, or frontend checks)
-		// In prod, check store.HasItem(userID, itemID_for_color)
-
-		err = store.UpdateProfileLook(c.Value, req.NameColor, req.BannerColor, "")
+		err = store.UpdateProfileLook(c.Value, req.NameColor, req.BannerColor, req.CustomAvatar)
 		if err != nil {
 			http.Error(w, "Error saving", 500)
 			return

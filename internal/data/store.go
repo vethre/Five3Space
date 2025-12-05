@@ -12,7 +12,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// Medal represents metadata for an achievement.
 type Medal struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
@@ -20,24 +19,23 @@ type Medal struct {
 	Icon        string `json:"icon"`
 }
 
-// UserData is the public-facing user payload.
 type UserData struct {
-	ID          string   `json:"id"`
-	Nickname    string   `json:"nickname"`
-	Tag         int      `json:"tag"`
-	Level       int      `json:"level"`
-	Exp         int      `json:"exp"`
-	MaxExp      int      `json:"max_exp"`
-	Coins       int      `json:"coins"`
-	Trophies    int      `json:"trophies"`
-	Status      string   `json:"status"`
-	Medals      []string `json:"medals"`
-	Language    string   `json:"language"`
-	NameColor   string   `json:"name_color"`
-	BannerColor string   `json:"banner_color"`
+	ID           string   `json:"id"`
+	Nickname     string   `json:"nickname"`
+	Tag          int      `json:"tag"`
+	Level        int      `json:"level"`
+	Exp          int      `json:"exp"`
+	MaxExp       int      `json:"max_exp"`
+	Coins        int      `json:"coins"`
+	Trophies     int      `json:"trophies"`
+	Status       string   `json:"status"`
+	Medals       []string `json:"medals"`
+	Language     string   `json:"language"`
+	NameColor    string   `json:"name_color"`
+	BannerColor  string   `json:"banner_color"`
+	CustomAvatar string   `json:"custom_avatar"` // Base64 data or empty
 }
 
-// Store persists user progress and medal metadata in Postgres.
 type Store struct {
 	mu     sync.Mutex
 	db     *sql.DB
@@ -67,7 +65,6 @@ func (s *Store) loadMedals(path string) error {
 	for _, m := range list {
 		s.medals[m.ID] = m
 	}
-	// Best-effort sync
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	for _, m := range list {
@@ -81,18 +78,18 @@ func (s *Store) loadMedals(path string) error {
 	return nil
 }
 
-// GetUser returns a single user by ID.
 func (s *Store) GetUser(id string) (UserData, bool) {
 	row := s.db.QueryRow(`
         SELECT id, nickname, tag, level, exp, max_exp, coins, trophies, 
 		       COALESCE(status, 'offline'), COALESCE(language, 'en'),
-			   COALESCE(name_color, 'white'), COALESCE(banner_color, 'default')
+			   COALESCE(name_color, 'white'), COALESCE(banner_color, 'default'),
+			   COALESCE(custom_avatar, '')
         FROM users
         WHERE id = $1
     `, id)
 
 	var u UserData
-	if err := row.Scan(&u.ID, &u.Nickname, &u.Tag, &u.Level, &u.Exp, &u.MaxExp, &u.Coins, &u.Trophies, &u.Status, &u.Language, &u.NameColor, &u.BannerColor); err != nil {
+	if err := row.Scan(&u.ID, &u.Nickname, &u.Tag, &u.Level, &u.Exp, &u.MaxExp, &u.Coins, &u.Trophies, &u.Status, &u.Language, &u.NameColor, &u.BannerColor, &u.CustomAvatar); err != nil {
 		return UserData{}, false
 	}
 
@@ -116,12 +113,10 @@ func (s *Store) getUserMedalIDs(userID string) []string {
 	return ids
 }
 
-// AwardMedals inserts new medals for a user.
 func (s *Store) AwardMedals(userID string, medalIDs ...string) (UserData, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	// Simplified logic for brevity in this response
 	for _, id := range medalIDs {
 		if _, ok := s.medals[id]; !ok {
 			continue
@@ -147,7 +142,11 @@ func (s *Store) AdjustTrophies(userID string, delta int) error {
 	return err
 }
 
-// Friend updated with Trophies, Exp, etc.
+func (s *Store) AdjustExp(userID string, delta int) error {
+	_, err := s.db.Exec(`UPDATE users SET exp = exp + $1 WHERE id = $2`, delta, userID)
+	return err
+}
+
 type Friend struct {
 	ID        string
 	Nickname  string
@@ -158,6 +157,7 @@ type Friend struct {
 	Trophies  int
 	Presence  string
 	NameColor string
+	AvatarURL string // Final URL to display
 }
 
 func (s *Store) ListFriends(userID string) ([]Friend, error) {
@@ -165,6 +165,7 @@ func (s *Store) ListFriends(userID string) ([]Friend, error) {
 		SELECT
 			u.id, u.nickname, u.tag, u.level, u.exp, u.max_exp, u.trophies,
 			COALESCE(u.name_color, 'white'),
+			COALESCE(u.custom_avatar, ''),
 			CASE
 				WHEN u.status = 'offline' THEN 'offline'
 				WHEN NOW() - u.last_seen <= INTERVAL '60 seconds' THEN u.status
@@ -187,8 +188,15 @@ func (s *Store) ListFriends(userID string) ([]Friend, error) {
 	var friends []Friend
 	for rows.Next() {
 		var fr Friend
-		if err := rows.Scan(&fr.ID, &fr.Nickname, &fr.Tag, &fr.Level, &fr.Exp, &fr.MaxExp, &fr.Trophies, &fr.NameColor, &fr.Presence); err != nil {
+		var customAvatar string
+		if err := rows.Scan(&fr.ID, &fr.Nickname, &fr.Tag, &fr.Level, &fr.Exp, &fr.MaxExp, &fr.Trophies, &fr.NameColor, &customAvatar, &fr.Presence); err != nil {
 			continue
+		}
+		// Determine Avatar
+		if customAvatar != "" {
+			fr.AvatarURL = customAvatar
+		} else {
+			fr.AvatarURL = fmt.Sprintf("https://api.dicebear.com/7.x/avataaars/svg?seed=%s&backgroundColor=ffdfbf", fr.Nickname)
 		}
 		friends = append(friends, fr)
 	}
@@ -200,11 +208,6 @@ func (s *Store) AdjustCoins(userID string, amount int) error {
 	_, err := s.db.Exec(`UPDATE users SET coins = coins + $1 WHERE id = $2`, amount, userID)
 	return err
 }
-func (s *Store) AdjustExp(userID string, delta int) error {
-	// Simple logic: just add exp. Level up logic would go here or in a trigger.
-	_, err := s.db.Exec(`UPDATE users SET exp = exp + $1 WHERE id = $2`, delta, userID)
-	return err
-}
 
 func (s *Store) HasItem(userID, itemID string) bool {
 	var exists bool
@@ -212,7 +215,6 @@ func (s *Store) HasItem(userID, itemID string) bool {
 	return exists
 }
 
-// GetUserInventory returns all item IDs owned by user
 func (s *Store) GetUserInventory(userID string) ([]string, error) {
 	rows, err := s.db.Query(`SELECT item_id FROM inventory WHERE user_id = $1`, userID)
 	if err != nil {
@@ -253,12 +255,7 @@ func (s *Store) DeductCoinsAndAddItem(userID, itemID string, cost int) error {
 	return tx.Commit()
 }
 
-func (s *Store) UpdateProfileLook(userID, nameColor, bannerColor, avatarSeed string) error {
-	// Simple update. Avatar isn't stored in DB in this version (derived from seed/nick),
-	// but normally you'd update a 'avatar_url' column.
-	// We only update name_color and banner_color here for persistence.
-
-	// Validation (Basic)
+func (s *Store) UpdateProfileLook(userID, nameColor, bannerColor, avatarBase64 string) error {
 	if nameColor != "" {
 		_, err := s.db.Exec(`UPDATE users SET name_color = $1 WHERE id = $2`, nameColor, userID)
 		if err != nil {
@@ -271,7 +268,12 @@ func (s *Store) UpdateProfileLook(userID, nameColor, bannerColor, avatarSeed str
 			return err
 		}
 	}
-	// Note: Avatar seed logic is usually client-side derived from nickname,
-	// unless we add an avatar_seed column. For now, we rely on nickname change or hardcoded logic.
+	if avatarBase64 != "" {
+		// Save custom avatar
+		_, err := s.db.Exec(`UPDATE users SET custom_avatar = $1 WHERE id = $2`, avatarBase64, userID)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

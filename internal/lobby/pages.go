@@ -31,7 +31,6 @@ func getCurrency(lang string) string {
 	}
 }
 
-// commonPage builds the shared data model for all pages.
 func commonPage(w http.ResponseWriter, r *http.Request, store *data.Store) PageData {
 	requestedLang := normalizeLang(r.URL.Query().Get("lang"))
 
@@ -88,11 +87,16 @@ func commonPage(w http.ResponseWriter, r *http.Request, store *data.Store) PageD
 			Language:  lang,
 		}
 	} else {
+		avatar := selected.CustomAvatar
+		if avatar == "" {
+			avatar = fmt.Sprintf("https://api.dicebear.com/7.x/avataaars/svg?seed=%s&backgroundColor=ffdfbf", selected.Nickname)
+		}
+
 		user = User{
 			ID:        selected.ID,
 			Nickname:  selected.Nickname,
 			Tag:       fmt.Sprintf("%04d", selected.Tag),
-			AvatarURL: fmt.Sprintf("https://api.dicebear.com/7.x/avataaars/svg?seed=%s&backgroundColor=ffdfbf", selected.Nickname),
+			AvatarURL: avatar,
 			Exp:       selected.Exp,
 			MaxExp:    selected.MaxExp,
 			Medals:    len(selected.Medals),
@@ -141,13 +145,8 @@ func NewFriendsHandler(store *data.Store) http.HandlerFunc {
 
 func NewShopHandler(store *data.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// 1. Get Base Data (User, Lang, etc.)
 		base := commonPage(w, r, store)
-
-		// 2. Determine Currency based on Lang
 		currency := getCurrency(base.Lang)
-
-		// 3. Map to Shop Page Data
 		data := ShopPageData{
 			User:     base.User,
 			Text:     base.Text,
