@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пять3Ёбка</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js"></script>
+    <style>
+        :root { --c-bg: #FDF6E3; --c-primary: #FF6B6B; --c-secondary: #4ECDC4; }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--c-bg);
+            background-image: radial-gradient(#FF6B6B 1px, transparent 1px), radial-gradient(#4ECDC4 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+        }
+        h1, h2, h3 { font-family: 'Fredoka One', cursive; }
+        .screen { display: none; }
+        .screen.active { display: flex; }
+        .card-shadow { box-shadow: 8px 8px 0px rgba(0,0,0,0.15); border: 3px solid #000; transition: 0.2s; }
+        .card-shadow:active { transform: translate(4px, 4px); box-shadow: 4px 4px 0px rgba(0,0,0,0.15); }
+        .timer-bar { height: 12px; background: #eee; border: 2px solid #000; border-radius: 99px; overflow: hidden; }
+        .timer-fill { height: 100%; background: var(--c-primary); width: 100%; transition: width 1s linear; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- HEADER -->
+    <header class="mb-8 text-center">
+        <h1 class="text-6xl text-black drop-shadow-lg transform -rotate-2" style="-webkit-text-stroke: 2px white;">Пять3Ёбка</h1>
+        <a href="/" class="text-sm font-bold bg-white inline-block px-4 py-1 rounded-full border-2 border-black mt-2 hover:bg-gray-100">Back to Hub</a>
+    </header>
+
+    <div id="game-container" class="w-full max-w-lg">
+        
+        <!-- 1. LOBBY -->
+        <div id="screen-lobby" class="screen active flex-col gap-4 bg-white p-8 rounded-3xl border-4 border-black card-shadow">
+            <h2 class="text-3xl text-center mb-4">Lobby</h2>
+            <div class="bg-gray-100 p-4 rounded-xl border-2 border-dashed border-gray-400">
+                <p class="text-sm font-bold text-gray-500 mb-2">PLAYERS (<span id="player-count">0</span>)</p>
+                <ul id="lobby-list" class="space-y-2"></ul>
+                <div id="waiting-msg" class="mt-4 text-center text-gray-400 italic text-sm animate-pulse">Waiting for players...</div>
+            </div>
+            <button id="start-btn" onclick="sendStart()" class="w-full bg-[#FF6B6B] text-white text-2xl font-bold py-4 rounded-xl card-shadow hover:bg-[#ff5252] disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                START GAME
+            </button>
+        </div>
+
+        <!-- 2. INPUT -->
+        <div id="screen-input" class="screen flex-col gap-4">
+            <div class="timer-bar"><div id="input-timer" class="timer-fill"></div></div>
+            <div class="bg-[#4ECDC4] p-6 rounded-t-3xl border-4 border-black border-b-0 mt-4 mx-2">
+                <h3 class="text-white text-xl font-bold uppercase tracking-widest text-center">PROMPT</h3>
+            </div>
+            <div class="bg-white p-8 rounded-3xl border-4 border-black card-shadow -mt-2 z-10">
+                <h2 id="prompt-text" class="text-2xl text-center leading-tight mb-6">...</h2>
+                <textarea id="answer-input" rows="3" class="w-full p-4 text-xl border-2 border-black rounded-xl bg-yellow-50 mb-4" placeholder="Write something funny..."></textarea>
+                <button onclick="sendAnswer()" id="submit-answer" class="w-full bg-black text-white text-xl font-bold py-3 rounded-xl card-shadow">SEND</button>
+            </div>
+        </div>
+
+        <!-- 3. VOTING -->
+        <div id="screen-voting" class="screen flex-col gap-4 w-full">
+            <div class="text-center mb-2"><h2 class="text-2xl font-bold bg-white border-2 border-black px-4 py-1 inline-block rounded-lg">VOTE!</h2></div>
+            <p id="vote-prompt" class="text-center text-xl font-bold mb-4 px-4">Prompt...</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                <button onclick="sendVote('A')" id="btn-A" class="bg-white p-6 rounded-2xl border-4 border-black shadow-lg text-left group hover:bg-blue-50 transition min-h-[120px] flex items-center justify-center relative">
+                    <span class="absolute top-2 left-3 text-xs font-bold text-gray-300">OPTION A</span>
+                    <p id="text-A" class="text-xl font-black text-center">...</p>
+                </button>
+                <div class="flex items-center justify-center md:hidden"><span class="font-black text-2xl bg-yellow-300 rounded-full w-10 h-10 flex items-center justify-center border-2 border-black">VS</span></div>
+                <button onclick="sendVote('B')" id="btn-B" class="bg-white p-6 rounded-2xl border-4 border-black shadow-lg text-left group hover:bg-red-50 transition min-h-[120px] flex items-center justify-center relative">
+                    <span class="absolute top-2 left-3 text-xs font-bold text-gray-300">OPTION B</span>
+                    <p id="text-B" class="text-xl font-black text-center">...</p>
+                </button>
+            </div>
+            <div class="timer-bar mt-4"><div id="vote-timer" class="timer-fill bg-purple-500"></div></div>
+        </div>
+
+        <!-- 4. RESULT / LEADERBOARD -->
+        <div id="screen-result" class="screen flex-col gap-4">
+            <h2 class="text-center text-4xl mb-4 text-white drop-shadow-md" style="-webkit-text-stroke: 2px black;">SCORES</h2>
+            <div class="bg-white p-6 rounded-3xl border-4 border-black shadow-xl" id="leaderboard-list"></div>
+            <div id="game-over-msg" class="text-center font-bold hidden">GAME OVER - Returning to Lobby...</div>
+        </div>
+
+    </div>
+
+    <script>
+        const userID = new URLSearchParams(window.location.search).get('userID') || '';
+        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        const socket = new WebSocket(`${protocol}://${window.location.host}/ws/party?userID=${userID}`);
+
+        let gameState = {};
+
+        socket.onmessage = (event) => {
+            const msg = JSON.parse(event.data);
+            if (msg.type === 'state') {
+                updateState(msg);
+            }
+        };
+
+        function updateState(data) {
+            // Update Lobby List
+            const list = document.getElementById('lobby-list');
+            list.innerHTML = data.players.map(p => 
+                `<li class="flex justify-between font-bold ${p.answered ? 'text-green-600' : ''}">
+                    <span>${p.name}</span> <span>${p.score}</span>
+                </li>`
+            ).join('');
+            
+            document.getElementById('player-count').innerText = data.players.length;
+            const startBtn = document.getElementById('start-btn');
+            if (data.players.length >= 2) {
+                startBtn.disabled = false;
+                startBtn.innerText = "START GAME";
+            } else {
+                startBtn.disabled = true;
+                startBtn.innerText = "Need 2 Players";
+            }
+
+            // Switch Screens
+            document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+            
+            if (data.status === 'LOBBY') {
+                document.getElementById('screen-lobby').classList.add('active');
+            } else if (data.status === 'INPUT') {
+                document.getElementById('screen-input').classList.add('active');
+                document.getElementById('prompt-text').innerText = data.prompt;
+                animateTimer('input-timer', data.timer, 30);
+            } else if (data.status === 'VOTING') {
+                document.getElementById('screen-voting').classList.add('active');
+                document.getElementById('vote-prompt').innerText = data.prompt;
+                if (data.match) {
+                    document.getElementById('text-A').innerText = data.match.a_text;
+                    document.getElementById('text-B').innerText = data.match.b_text;
+                }
+                animateTimer('vote-timer', data.timer, 15);
+            } else if (data.status === 'RESULT' || data.status === 'GAME_OVER') {
+                document.getElementById('screen-result').classList.add('active');
+                renderLeaderboard(data.players);
+                if (data.status === 'GAME_OVER') {
+                    document.getElementById('game-over-msg').style.display = 'block';
+                    confetti();
+                }
+            }
+        }
+
+        function renderLeaderboard(players) {
+            const div = document.getElementById('leaderboard-list');
+            div.innerHTML = players.map((p, i) => `
+                <div class="flex justify-between items-center py-3 border-b-2 border-gray-100 last:border-0">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xl w-8 text-center font-black">${i+1}.</span>
+                        <span class="text-lg font-bold">${p.name}</span>
+                    </div>
+                    <span class="text-xl font-bold bg-black text-white px-3 py-1 rounded-lg transform -rotate-2">${p.score}</span>
+                </div>
+            `).join('');
+        }
+
+        function sendStart() {
+            socket.send(JSON.stringify({type: 'start'}));
+        }
+
+        function sendAnswer() {
+            const text = document.getElementById('answer-input').value;
+            if (!text) return;
+            socket.send(JSON.stringify({type: 'answer', text: text}));
+            document.getElementById('answer-input').value = '';
+            // visual feedback
+            document.getElementById('submit-answer').innerText = "SENT!";
+        }
+
+        function sendVote(option) {
+            socket.send(JSON.stringify({type: 'vote', vote: option}));
+            // visual feedback
+            document.getElementById('btn-A').style.opacity = option === 'A' ? '1' : '0.5';
+            document.getElementById('btn-B').style.opacity = option === 'B' ? '1' : '0.5';
+        }
+
+        function animateTimer(id, current, max) {
+            const el = document.getElementById(id);
+            const pct = (current / max) * 100;
+            el.style.width = pct + '%';
+        }
+    </script>
+</body>
+</html>

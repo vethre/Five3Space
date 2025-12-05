@@ -259,7 +259,7 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 	}
 
 	btn1, stat1 := getModeTexts(lang, false, false)
-	btn3, stat3 := getModeTexts(lang, true, false)
+	//btn3, stat3 := getModeTexts(lang, true, false)
 
 	modes := []GameMode{
 		{
@@ -273,9 +273,10 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 			BtnText:      btn1, StatusText: stat1, URL: fmt.Sprintf("/bobik?lang=%s&userID=%s&nick=%s", lang, user.ID, user.Nickname),
 		},
 		{
-			ID: "tba", Title: "???", Subtitle: "Top Secret", IsLocked: true,
-			SafeGradient: template.CSS("linear-gradient(135deg, #232526 0%, #414345 100%)"),
-			BtnText:      btn3, StatusText: stat3,
+			ID: "party", Title: "Five3Fun", Subtitle: "Party Game (2-8 Players)", // NEW GAME
+			SafeGradient: template.CSS("linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%)"),
+			BtnText:      "JOIN", StatusText: "OPEN", URL: fmt.Sprintf("/party?lang=%s&userID=%s", lang, user.ID),
+			IsConstruct: false, IsLocked: false,
 		},
 	}
 

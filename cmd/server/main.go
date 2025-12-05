@@ -10,6 +10,7 @@ import (
 	"main/internal/chibiki"
 	"main/internal/data"
 	"main/internal/lobby"
+	"main/internal/party"
 	"main/internal/presence"
 	"net/http"
 	"os"
@@ -89,6 +90,8 @@ func main() {
 	presenceService := presence.NewService(db)
 	bobikGame := bobikshooter.NewGame(store)
 
+	partyGame := party.NewGame(store)
+
 	authService := auth.NewAuth(db)
 	http.HandleFunc("/register", authService.RegisterHandler)
 	http.HandleFunc("/login", authService.LoginHandler)
@@ -116,6 +119,13 @@ func main() {
 
 	http.HandleFunc("/game", lobby.NewGameHandler(store))
 	http.HandleFunc("/", lobby.NewHandler(store))
+
+	http.HandleFunc("/party", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "web/templates/party.html")
+	})
+	http.HandleFunc("/ws/party", func(w http.ResponseWriter, r *http.Request) {
+		party.HandleWS(partyGame, w, r, store)
+	})
 
 	fs := http.FileServer(http.Dir("./web/static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
