@@ -10,13 +10,60 @@
 
 body {
     margin: 0;
-    overflow: hidden;
+    overflow-x: hidden; /* Prevent horizontal scroll */
     background-color: var(--bg-dark);
     font-family: 'Segoe UI', sans-serif;
+    color: var(--text-main);
     background-image:
         radial-gradient(circle at 10% 10%, rgba(255, 69, 0, 0.15) 0%, transparent 50%),
         radial-gradient(circle at 80% 90%, rgba(139, 0, 0, 0.2) 0%, transparent 50%);
+    background-attachment: fixed;
 }
+
+/* --- CUSTOMIZATION STYLES (Global) --- */
+
+/* Name Colors */
+.name-white { color: white; }
+
+.name-gold {
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.4);
+    font-weight: 900;
+}
+
+.name-rainbow {
+    background: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8f00ff);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: rainbowAnim 3s linear infinite;
+    font-weight: 900;
+}
+
+@keyframes rainbowAnim {
+    to { background-position: 200% center; }
+}
+
+/* Banners */
+/* Default is glass, defined in .profile-card usually */
+.banner-default {
+    background: var(--glass-bg) !important;
+    border: 1px solid var(--glass-border);
+}
+
+.banner-gold {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(184, 134, 11, 0.15)) !important;
+    border: 1px solid rgba(255, 215, 0, 0.4) !important;
+    box-shadow: 0 10px 40px rgba(255, 215, 0, 0.1) !important;
+}
+
+.banner-cyber {
+    background: linear-gradient(135deg, rgba(0, 242, 96, 0.15), rgba(5, 117, 230, 0.15)) !important;
+    border: 1px solid rgba(0, 242, 96, 0.4) !important;
+    box-shadow: 0 10px 40px rgba(0, 242, 96, 0.1) !important;
+}
+
+/* --- GAME & LOBBY LAYOUT --- */
 
 #game-container {
     position: relative;
@@ -46,7 +93,7 @@ body {
 }
 
 canvas {
-    background-color: #4CAF50; /* A more pleasant green */
+    background-color: #4CAF50;
     box-shadow: 0 10px 40px rgba(0,0,0,0.6);
     border: 2px solid var(--glass-border);
     border-radius: 12px;
@@ -54,293 +101,36 @@ canvas {
     max-height: calc(100vh - 100px);
 }
 
-/* HUD Improvements */
-#top-hud {
-    position: static;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    pointer-events: auto;
-    z-index: 10;
-}
+/* HUD */
+#top-hud { width: 100%; display: flex; align-items: center; gap: 10px; pointer-events: auto; z-index: 10; }
+.hud-pill { background: var(--glass-bg); color: var(--text-main); padding: 8px 14px; border-radius: 12px; border: 1px solid var(--glass-border); font-weight: 700; text-decoration: none; backdrop-filter: blur(10px); }
+.hud-pill.live { background: rgba(255, 69, 0, 0.2); border-color: rgba(255, 69, 0, 0.5); color: var(--primary); }
+#timer { background: var(--glass-bg); color: var(--text-main); padding: 8px 20px; border-radius: 12px; font-weight: 700; font-size: 22px; border: 1px solid var(--glass-border); min-width: 70px; text-align: center; }
 
-#top-hud .hud-pill,
-#top-hud #timer {
-    pointer-events: auto;
-}
+#ui-layer { display: flex; flex-direction: column; gap: 12px; pointer-events: auto; }
+.rail-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 12px; box-shadow: 0 12px 28px rgba(0,0,0,0.35); backdrop-filter: blur(10px); }
+.rail-title { font-weight: 800; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; font-size: 0.85rem; }
 
-.hud-pill {
-    background: var(--glass-bg);
-    color: var(--text-main);
-    padding: 8px 14px;
-    border-radius: 12px;
-    border: 1px solid var(--glass-border);
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    backdrop-filter: blur(10px);
-    text-decoration: none;
-    transition: transform 0.2s ease, border-color 0.2s ease;
-}
+/* Deck & Hand */
+#deck-area { display: flex; align-items: flex-start; gap: 12px; }
+#next-card-container { display: flex; flex-direction: column; align-items: center; min-height: 80px; }
+#hand { display: flex; gap: 10px; flex-wrap: wrap; }
 
-.hud-pill:hover {
-    transform: translateY(-2px);
-    border-color: var(--accent);
-}
-
-.hud-pill.live {
-    background: rgba(255, 69, 0, 0.2);
-    border-color: rgba(255, 69, 0, 0.5);
-    color: var(--primary);
-    box-shadow: 0 0 12px rgba(255, 69, 0, 0.4);
-}
-
-#timer {
-    background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    color: var(--text-main);
-    padding: 8px 20px;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 22px;
-    border: 1px solid var(--glass-border);
-    min-width: 70px;
-    text-align: center;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-}
-
-#ui-layer {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    pointer-events: auto;
-}
-
-.rail-card {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: 14px;
-    padding: 12px;
-    box-shadow: 0 12px 28px rgba(0,0,0,0.35);
-    backdrop-filter: blur(10px);
-}
-.rail-title {
-    font-weight: 800;
-    letter-spacing: 0.6px;
-    color: var(--text-muted);
-    margin-bottom: 8px;
-    text-transform: uppercase;
-    font-size: 0.85rem;
-}
-
-/* Game Over Overlay - More impactful */
-#game-over-screen {
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.9);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 100;
-    opacity: 0;
-    animation: fadeIn 0.5s forwards;
-}
-
-@keyframes fadeIn {
-    to { opacity: 1; }
-}
-
-#game-over-title {
-    font-size: 5rem;
-    font-weight: 900;
-    font-style: italic;
-    color: var(--primary);
-    text-shadow: 0 0 20px var(--primary);
-    margin: 0;
-    animation: slideUp 0.7s ease-out;
-}
-
-.game-over-actions {
-    display: flex;
-    gap: 12px;
-    margin-top: 20px;
-}
-
-.medal-delta {
-    margin-top: 8px;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-    color: #4f4;
-}
-
-.primary-btn,
-.ghost-btn {
-    padding: 12px 20px;
-    border-radius: 12px;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    border: 1px solid var(--glass-border);
-    background: var(--glass-bg);
-    color: white;
-    text-decoration: none;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.primary-btn {
-    background: linear-gradient(135deg, #ff4500, #ff8c00);
-    box-shadow: 0 8px 20px rgba(255, 69, 0, 0.4);
-    border-color: rgba(255, 174, 0, 0.6);
-}
-
-.ghost-btn:hover,
-.primary-btn:hover {
-    transform: translateY(-2px);
-    border-color: var(--accent);
-}
-
-.waiting-card {
-    background: rgba(0,0,0,0.75);
-    border: 1px solid var(--glass-border);
-    padding: 20px;
-    border-radius: 14px;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.45);
-    text-align: center;
-    color: var(--text-main);
-    max-width: 420px;
-}
-.invite-row {
-    display: flex;
-    gap: 8px;
-    margin-top: 12px;
-}
-.invite-row input {
-    flex: 1;
-    padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid var(--glass-border);
-    background: rgba(255,255,255,0.05);
-    color: white;
-}
-.spinner {
-    width: 32px; height: 32px;
-    border: 3px solid rgba(255,255,255,0.2);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    margin: 0 auto 10px;
-    animation: spin 1s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* Waiting overlay */
-#waiting-screen {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 50;
-    pointer-events: none;
-}
-#waiting-screen .waiting-card { pointer-events: auto; }
-
-/* Deck Area */
-#deck-area {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 12px;
-    width: 100%;
-    justify-content: flex-start;
-}
-
-#next-card-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 80px;
-}
-
-#hand {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-/* Card Improvements */
 .card {
-    width: 70px;
-    height: 95px;
-    background: linear-gradient(145deg, #2c2c2c, #1a1a1a);
-    border: 2px solid var(--glass-border);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    position: relative;
-    transition: all 0.2s ease;
-    box-shadow: 0 6px 10px rgba(0,0,0,0.4);
-    color: white; /* Add for text on cards */
-    font-size: 10px; /* Example for text */
+    width: 70px; height: 95px; background: linear-gradient(145deg, #2c2c2c, #1a1a1a);
+    border: 2px solid var(--glass-border); border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; position: relative; transition: all 0.2s ease;
+    box-shadow: 0 6px 10px rgba(0,0,0,0.4); color: white;
 }
+.card:hover { transform: translateY(-10px) scale(1.05); border-color: var(--accent); }
+.card.selected { border-color: var(--accent); transform: translateY(-20px) scale(1.1); box-shadow: 0 0 25px var(--accent); z-index: 10; }
+.card.mini { width: 50px; height: 65px; opacity: 0.7; background: #333; }
 
-.card:hover {
-    transform: translateY(-10px) scale(1.05);
-    border-color: var(--accent);
-}
+#elixir-container { width: 100%; height: 30px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; position: relative; overflow: hidden; }
+#elixir-bar { height: 100%; background: linear-gradient(90deg, #ff4500, #ff8c00); width: 50%; transition: width 0.1s linear; border-radius: 15px; }
+#elixir-text { position: absolute; top: 0; width: 100%; text-align: center; line-height: 30px; color: white; font-weight: 700; text-shadow: 1px 1px 2px #000; }
 
-.card:active {
-    transform: translateY(2px) scale(0.98);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-}
-
-.card.selected {
-    border-color: var(--accent);
-    transform: translateY(-20px) scale(1.1);
-    box-shadow: 0 0 25px var(--accent);
-    z-index: 10;
-}
-
-.card.mini {
-    width: 50px;
-    height: 65px;
-    border-width: 2px;
-    opacity: 0.7;
-    background: #333;
-}
-
-/* Elixir Bar - Themed */
-#elixir-container {
-    width: 100%;
-    height: 30px;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: 15px;
-    position: relative;
-    overflow: hidden;
-    backdrop-filter: blur(5px);
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
-}
-
-#elixir-bar {
-    height: 100%;
-    background: linear-gradient(90deg, #ff4500, #ff8c00);
-    box-shadow: 0 0 15px var(--primary);
-    width: 50%;
-    transition: width 0.1s linear;
-    border-radius: 15px;
-}
-
-#elixir-text {
-    position: absolute;
-    top: 0;
-    width: 100%;
-    text-align: center;
-    line-height: 30px;
-    color: white;
-    font-size: 16px;
-    font-weight: 700;
-    text-shadow: 1px 1px 2px #000;
-}
+/* Modal & Utility */
+.primary-btn { background: linear-gradient(135deg, #ff4500, #ff8c00); padding: 12px 20px; border-radius: 12px; font-weight: 800; border: 1px solid rgba(255, 174, 0, 0.6); color: white; cursor: pointer; }
+.ghost-btn { background: var(--glass-bg); padding: 12px 20px; border-radius: 12px; font-weight: 800; border: 1px solid var(--glass-border); color: white; cursor: pointer; text-decoration: none; }

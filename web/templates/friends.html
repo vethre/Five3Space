@@ -4,37 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Friends</title>
+    <!-- Link to the GLOBAL CSS which now has Name colors -->
+    <link rel="stylesheet" href="/static/css/chibiki.css">
     <style>
-        :root {
-            --bg-dark: #0f0502;
-            --primary: #ff4500;
-            --accent: #ffae00;
-            --glass-bg: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --text-main: #ffffff;
-            --text-muted: rgba(255, 255, 255, 0.5);
-            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-        body {
-            margin:0; font-family: var(--font-main); background: var(--bg-dark); color: var(--text-main); min-height: 100vh;
-            background-image: radial-gradient(circle at 10% 10%, rgba(255, 69, 0, 0.15) 0%, transparent 60%), radial-gradient(circle at 90% 90%, rgba(139, 0, 0, 0.2) 0%, transparent 60%);
-        }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .top-bar { display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: 20px; }
-        .brand { font-weight: 900; letter-spacing: 2px; color: var(--text-muted); font-size: 1.1rem; }
-        .brand span { color: var(--primary); }
-        .header-actions { display:flex; gap:10px; }
-        .pill-btn { padding: 8px 16px; border-radius: 99px; border: 1px solid var(--glass-border); color: white; text-decoration:none; font-weight:800; background: var(--glass-bg); transition: all 0.2s; cursor: pointer; }
-        .pill-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
-        .pill-btn.add { background: linear-gradient(135deg, #ff4e50, #f9d423); color: black; border: none; }
+        /* Specific page overrides only */
+        .container { margin-top: 0; }
         
-        .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:20px; }
-        .card { background: var(--glass-bg); border:1px solid var(--glass-border); border-radius: 20px; padding: 20px; position:relative; box-shadow:0 10px 30px rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 12px; backdrop-filter: blur(10px); }
+        .card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex; flex-direction: column; gap: 12px;
+            backdrop-filter: blur(10px);
+        }
         
         .card-header { display: flex; align-items: center; gap: 14px; }
         .avatar { width:64px; height:64px; border-radius:50%; border:2px solid var(--accent); object-fit: cover; background: #222; }
         .info { flex: 1; }
-        .nickname { font-weight:900; font-size:1.2rem; }
+        
+        .nickname { font-size:1.2rem; } /* Colors handled by global CSS classes */
+        
         .tag { color: var(--text-muted); font-size: 0.9rem; font-weight: 700; }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
         .status-online { background:#4ade80; box-shadow:0 0 8px #4ade80; }
@@ -74,14 +64,9 @@
         .chat-body { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
         .chat-input-area { padding: 10px; border-top: 1px solid #333; display: flex; gap: 8px; }
         .chat-input { flex: 1; background: #333; border: none; color: white; padding: 8px; border-radius: 8px; }
-        .msg { padding: 8px 12px; border-radius: 12px; max-width: 80%; font-size: 0.9rem; }
+        .msg { padding: 8px 12px; border-radius: 12px; max-width: 80%; font-size: 0.9rem; word-wrap: break-word; }
         .msg.me { background: var(--primary); align-self: flex-end; color: black; font-weight: 600; }
         .msg.them { background: #333; align-self: flex-start; }
-        
-        /* Nickname Colors */
-        .name-rainbow { background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .name-gold { color: #ffd700; text-shadow: 0 0 5px #ffd700; }
-        .name-white { color: white; }
     </style>
 </head>
 <body>
@@ -100,6 +85,7 @@
                 <div class="card-header">
                     <img class="avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed={{.Nickname}}&backgroundColor=ffdfbf">
                     <div class="info">
+                        <!-- Apply NameColor class here -->
                         <div class="nickname {{.NameColor}}">{{.Nickname}}</div>
                         <div class="tag">#{{printf "%04d" .Tag}}</div>
                         <div class="presence-text">
@@ -122,7 +108,8 @@
                     </div>
                 </div>
                 <div class="actions">
-                    <button class="action-btn btn-chat" onclick="openChat('{{.Nickname}}')">Chat 💬</button>
+                    <!-- Passing UserID to openChat -->
+                    <button class="action-btn btn-chat" onclick="openChat('{{.ID}}', '{{.Nickname}}')">Chat 💬</button>
                     <button class="action-btn btn-remove" onclick="removeFriend('{{.Nickname}}', {{.Tag}})">Remove</button>
                 </div>
             </div>
@@ -155,8 +142,7 @@
             <span>✖</span>
         </div>
         <div class="chat-body" id="chat-body">
-            <div class="msg them">Hey! Want to play?</div>
-            <div class="msg me">Sure, 1 min.</div>
+            <!-- Messages go here -->
         </div>
         <div class="chat-input-area">
             <input class="chat-input" id="chat-in" placeholder="Type a message..." onkeypress="handleChatKey(event)">
@@ -165,6 +151,35 @@
     </div>
 
     <script>
+        const myUserID = "{{.User.ID}}";
+        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        let socket;
+        let currentChatPartnerID = null;
+
+        // Initialize WebSocket for Chat
+        function initChat() {
+            if (!myUserID) return;
+            socket = new WebSocket(`${protocol}://${window.location.host}/ws/chat?userID=${myUserID}`);
+            
+            socket.onopen = () => console.log("Chat Connected");
+            
+            socket.onmessage = (event) => {
+                const msg = JSON.parse(event.data);
+                if (msg.type === "dm") {
+                    // Only show if chat box is open for this person, or maybe generic
+                    // For MVP, we append if window matches or flash notification
+                    if (currentChatPartnerID === msg.from) {
+                        appendMessage(msg.text, 'them');
+                    } else {
+                        // TODO: Notification bubble
+                        alert(`New message from user ${msg.from}`); 
+                    }
+                }
+            };
+        }
+        
+        window.onload = initChat;
+
         const addModal = document.getElementById('add-modal');
         function openAddModal() { addModal.style.display = 'flex'; }
         function closeAddModal() { addModal.style.display = 'none'; }
@@ -195,28 +210,47 @@
             window.location.reload();
         }
 
-        // Chat UI
+        // Chat UI Logic
         const chatBox = document.getElementById('chat-box');
         const chatBody = document.getElementById('chat-body');
         const chatIn = document.getElementById('chat-in');
         
-        function openChat(nick) {
+        function openChat(userID, nick) {
+            currentChatPartnerID = userID;
             document.getElementById('chat-partner').innerText = nick;
             chatBox.style.display = 'flex';
+            chatBody.innerHTML = ''; // Clear previous chat
+            // In a real app, fetch history here
         }
+        
         function toggleChat() {
             chatBox.style.display = 'none';
+            currentChatPartnerID = null;
         }
+        
         function sendMsg() {
             const txt = chatIn.value;
-            if(!txt) return;
-            const div = document.createElement('div');
-            div.className = 'msg me';
-            div.innerText = txt;
-            chatBody.appendChild(div);
+            if(!txt || !currentChatPartnerID) return;
+            
+            // Send via WS
+            socket.send(JSON.stringify({
+                type: "dm",
+                to: currentChatPartnerID,
+                text: txt
+            }));
+
+            appendMessage(txt, 'me');
             chatIn.value = '';
+        }
+        
+        function appendMessage(text, type) {
+            const div = document.createElement('div');
+            div.className = `msg ${type}`;
+            div.innerText = text;
+            chatBody.appendChild(div);
             chatBody.scrollTop = chatBody.scrollHeight;
         }
+        
         function handleChatKey(e) {
             if(e.key === 'Enter') sendMsg();
         }

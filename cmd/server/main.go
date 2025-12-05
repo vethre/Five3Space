@@ -6,6 +6,7 @@ import (
 	"log"
 	"main/internal/auth"
 	"main/internal/bobikshooter"
+	"main/internal/chat"
 	"main/internal/chibiki"
 	"main/internal/data"
 	"main/internal/lobby"
@@ -97,6 +98,8 @@ func main() {
 
 	http.HandleFunc("/ws", chibiki.NewWebsocketHandler(gameInstance))
 	http.HandleFunc("/ws/bobik", bobikGame.HandleWS)
+
+	http.HandleFunc("/ws/chat", chat.HandleWS)
 
 	// Lobby Pages
 	http.HandleFunc("/friends", lobby.NewFriendsHandler(store))
