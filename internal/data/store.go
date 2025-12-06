@@ -278,3 +278,84 @@ func (s *Store) UpdateProfileLook(userID, nameColor, bannerColor, avatarBase64 s
 	}
 	return nil
 }
+
+func (s *Store) ProcessGameResult(userID string, trophyDelta, coinDelta, expDelta int) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// 1. Get current stats
+	u, ok := s.GetUser(userID)
+	if !ok {
+		return fmt.Errorf("user not found")
+	}
+
+	// 2. Apply basic changes
+	u.Coins += coinDelta
+	u.Trophies += trophyDelta
+	if u.Trophies < 0 {
+		u.Trophies = 0 // Prevent negative trophies
+	}
+	u.Exp += expDelta
+
+	// 3. Level Up Logic
+	// Loop in case they gained enough XP to level up multiple times
+	leveledUp := false
+	for u.Exp >= u.MaxExp {
+		u.Exp -= u.MaxExp
+		u.Level++
+		// Increase MaxExp by 20% each level (rounded)
+		u.MaxExp = int(float64(u.MaxExp) * 1.2)
+		leveledUp = true
+	}
+
+	// 4. Save back to DB
+	_, err := s.db.Exec(`
+		UPDATE users 
+		SET coins = $1, trophies = $2, exp = $3, level = $4, max_exp = $5, updated_at = NOW()
+		WHERE id = $6
+	`, u.Coins, u.Trophies, u.Exp, u.Level, u.MaxExp, u.ID)
+
+	if err == nil && leveledUp {
+		// Optional: You could log this or send a notification
+		fmt.Printf("User %s leveled up to %d!\n", u.Nickname, u.Level)
+	}
+
+	return err
+}
+
+// GetLeaderboard fetches top 15 players by trophies
+func (s *Store) GetLeaderboard() ([]UserData, error) {
+	rows, err := s.db.Query(`
+		SELECT id, nickname, tag, level, trophies, custom_avatar, name_color
+		FROM users 
+		ORDER BY trophies DESC 
+		LIMIT 15
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var players []UserData
+	for rows.Next() {
+		var u UserData
+		var avatar, color sql.NullString // Handle potential NULLs if schema varies
+
+		if err := rows.Scan(&u.ID, &u.Nickname, &u.Tag, &u.Level, &u.Trophies, &avatar, &color); err != nil {
+			continue
+		}
+
+		u.CustomAvatar = avatar.String
+		u.NameColor = color.String
+		if u.NameColor == "" {
+			u.NameColor = "white"
+		}
+
+		// Fallback avatar logic
+		if u.CustomAvatar == "" {
+			u.CustomAvatar = fmt.Sprintf("https://api.dicebear.com/7.x/avataaars/svg?seed=%s&backgroundColor=ffdfbf", u.Nickname)
+		}
+		players = append(players, u)
+	}
+	return players, nil
+}

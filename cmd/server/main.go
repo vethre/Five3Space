@@ -57,26 +57,18 @@ func main() {
 			if p.Team == winnerTeam {
 				trophyChange = 30
 				coinChange = 50
-				expChange = 25
+				expChange = 150 // Increased XP so we can test leveling easier
 				store.AwardMedals(p.UserID, "first_win")
 			} else {
 				trophyChange = -15
 				coinChange = 10
-				expChange = 5
+				expChange = 25
 			}
 
-			// Update DB
-			_, err := db.Exec(`
-				UPDATE users
-				SET trophies = GREATEST(0, trophies + $1),
-					coins = coins + $2,
-					exp = exp + $3,
-					updated_at = NOW()
-				WHERE id = $4
-			`, trophyChange, coinChange, expChange, p.UserID)
-
+			// USE THE NEW FUNCTION
+			err := store.ProcessGameResult(p.UserID, trophyChange, coinChange, expChange)
 			if err != nil {
-				log.Printf("ERROR updating DB for %s: %v", p.UserID, err)
+				log.Printf("Error saving stats for %s: %v", p.UserID, err)
 			}
 		}
 	}
@@ -114,8 +106,9 @@ func main() {
 	http.HandleFunc("/shop", lobby.NewShopHandler(store))
 	http.HandleFunc("/shop/buy", lobby.NewBuyHandler(store))
 	http.HandleFunc("/customize", lobby.NewCustomizeHandler(store))
-	http.HandleFunc("/customize/save", lobby.NewCustomizeSaveHandler(store)) // NEW
+	http.HandleFunc("/customize/save", lobby.NewCustomizeSaveHandler(store))
 	http.HandleFunc("/bobik", lobby.NewBobikHandler(store))
+	http.HandleFunc("/leaderboard", lobby.NewLeaderboardHandler(store))
 
 	http.HandleFunc("/game", lobby.NewGameHandler(store))
 	http.HandleFunc("/", lobby.NewHandler(store))

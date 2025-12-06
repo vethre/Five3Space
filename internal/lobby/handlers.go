@@ -332,3 +332,45 @@ func NewCustomizeSaveHandler(store *data.Store) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 	}
 }
+func add(a, b int) int { return a + b }
+
+func NewLeaderboardHandler(store *data.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Use commonPage to get the User info for the top bar (avatar, coins, etc.)
+		pageData := commonPage(w, r, store)
+		pageData.ActivePage = "leaderboard" // You can use this for highlighting nav buttons
+
+		// Fetch the top players
+		leaders, err := store.GetLeaderboard()
+		if err != nil {
+			leaders = []data.UserData{}
+		}
+
+		// We need to pass both the Current User (for the header) and the Leaders (for the list)
+		// We can reuse PageData structure or extend it.
+		// Since PageData is specific, let's create a small wrapper or just pass it via a dynamic map/struct
+		// But the cleanest way is to just add a Field to PageData if you can edit it,
+		// OR just pass a struct here:
+
+		data := struct {
+			User    User
+			Text    Translations
+			Lang    string
+			Leaders []data.UserData
+		}{
+			User:    pageData.User,
+			Text:    pageData.Text,
+			Lang:    pageData.Lang,
+			Leaders: leaders,
+		}
+
+		tmplPath := filepath.Join("web", "templates", "leaderboard.html")
+		tmpl := template.New("leaderboard.html").Funcs(template.FuncMap{"add": add})
+		tmpl, err = tmpl.ParseFiles(tmplPath)
+		if err != nil {
+			http.Error(w, "Could not load template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		tmpl.Execute(w, data)
+	}
+}
