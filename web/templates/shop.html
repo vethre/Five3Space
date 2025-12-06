@@ -39,54 +39,54 @@
 <body>
     <div class="container">
         <div class="top-bar">
-            <div class="brand">{{.Text.LobbyName}} / Shop</div>
+            <div class="brand">{{.Text.LobbyName}} / {{.Text.Shop}}</div>
             <div style="display:flex; gap:15px; align-items:center;">
                 <div class="coin-bal">💰 {{.User.Coins}}</div>
                 <a href="/?lang={{.Lang}}&userID={{.User.ID}}" class="close">✕</a>
             </div>
         </div>
 
-        <div class="section-title">Exclusive Styles</div>
+        <div class="section-title">{{.Text.ExclusiveStyles}}</div>
         <div class="cards">
             <div class="card">
                 <div class="icon-box" style="background:linear-gradient(90deg, red, blue); color:white;">🌈</div>
-                <div class="card-title">Rainbow Name</div>
-                <div class="card-desc">Make your nickname shimmer with all colors.</div>
+                <div class="card-title">{{.Text.ItemRainbowName}}</div>
+                <div class="card-desc">{{.Text.ItemRainbowDesc}}</div>
                 <button class="buy-btn coins" onclick="buy('name_rainbow')">8000 Coins</button>
             </div>
             <div class="card">
                 <div class="icon-box" style="color:gold; text-shadow:0 0 10px gold;">👑</div>
-                <div class="card-title">Gold Name</div>
-                <div class="card-desc">A prestigious golden glow for your name.</div>
+                <div class="card-title">{{.Text.ItemGoldName}}</div>
+                <div class="card-desc">{{.Text.ItemGoldDesc}}</div>
                 <button class="buy-btn coins" onclick="buy('name_gold')">4000 Coins</button>
             </div>
             <div class="card">
                 <div class="icon-box" style="background:linear-gradient(135deg, #00f260, #0575e6);">🏙️</div>
-                <div class="card-title">Cyber Banner</div>
-                <div class="card-desc">Futuristic banner for your lobby background.</div>
+                <div class="card-title">{{.Text.ItemCyberBanner}}</div>
+                <div class="card-desc">{{.Text.ItemCyberDesc}}</div>
                 <button class="buy-btn coins" onclick="buy('banner_cyber')">3500 Coins</button>
             </div>
             <div class="card">
                 <div class="icon-box" style="background:linear-gradient(135deg, gold, orange);">🏆</div>
-                <div class="card-title">Gold Banner</div>
-                <div class="card-desc">Show off your wealth with this banner.</div>
+                <div class="card-title">{{.Text.ItemGoldBanner}}</div>
+                <div class="card-desc">{{.Text.ItemGoldBannerD}}</div>
                 <button class="buy-btn coins" onclick="buy('banner_gold')">5000 Coins</button>
             </div>
         </div>
 
-        <div class="section-title">Resources</div>
+        <div class="section-title">{{.Text.Resources}}</div>
         <div class="cards">
             <div class="card">
                 <div class="icon-box">💰</div>
-                <div class="card-title">Sack of Coins</div>
+                <div class="card-title">{{.Text.ItemSack}}</div>
                 <div class="card-desc">+1000 Coins</div>
-                <button class="buy-btn real" onclick="buy('coins_1000')">$0.99</button>
+                <button class="buy-btn real" onclick="buy('coins_1000')">{{.Currency}}0.99</button>
             </div>
             <div class="card">
                 <div class="icon-box">💰💰</div>
-                <div class="card-title">Chest of Coins</div>
+                <div class="card-title">{{.Text.ItemChest}}</div>
                 <div class="card-desc">+5000 Coins</div>
-                <button class="buy-btn real" onclick="buy('coins_5000')">$3.99</button>
+                <button class="buy-btn real" onclick="buy('coins_5000')">{{.Currency}}3.99</button>
             </div>
         </div>
     </div>

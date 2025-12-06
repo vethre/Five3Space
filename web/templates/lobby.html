@@ -436,39 +436,36 @@
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
         <div class="top-bar">
             <div class="brand">{{.Text.LobbyName}}</div>
             <div class="header-actions">
-                <button class="pill-btn pill-btn--settings" id="btn-settings"><span>Settings</span></button>
+                <button class="pill-btn pill-btn--settings" id="btn-settings"><span>{{.Text.Settings}}</span></button>
             </div>
         </div>
 
         <div class="main-grid">
             <aside class="sidebar">
-                <h4>Menu</h4>
+                <h4>{{.Text.Menu}}</h4>
                 <a class="side-link" href="/shop?lang={{.Lang}}&userID={{.User.ID}}"><span class="side-pill">S</span> <span>{{.Text.Shop}}</span></a>
                 <a class="side-link" href="/friends?lang={{.Lang}}&userID={{.User.ID}}"><span class="side-pill green">F</span> <span>{{.Text.FriendsNav}}</span></a>
                 <a class="side-link" href="/customize?lang={{.Lang}}&userID={{.User.ID}}"><span class="side-pill blue">C</span> <span>{{.Text.Customize}}</span></a>
                 <a class="side-link" href="/leaderboard?lang={{.Lang}}&userID={{.User.ID}}">
                     <span class="side-pill" style="background: linear-gradient(135deg, #ffd700, #ff8c00);">L</span> 
-                    <span>Leaderboard</span>
+                    <span>{{.Text.Leaderboard}}</span>
                 </a>
             </aside>
 
             <div class="main-column" style="display:flex; flex-direction:column; gap:24px;">
                 
-                <!-- Profile -->
                 <div class="profile-card banner-{{.User.BannerColor}}">
                     <div class="avatar-box">
-                        <!-- USING CUSTOM AVATAR HERE -->
                         <img src="{{.User.AvatarURL}}" class="avatar" alt="Avatar">
                         <div class="status-dot status-{{.User.Status}}"></div>
                         <div class="level-badge">{{.Text.Level}} {{.User.Level}}</div>
                         <div class="status-menu" id="status-menu">
-                            <button class="ghost-btn" data-status="online">Online</button>
-                            <button class="ghost-btn" data-status="away">Away</button>
-                            <button class="ghost-btn" data-status="offline">Offline</button>
+                            <button class="ghost-btn" data-status="online">{{.Text.Online}}</button>
+                            <button class="ghost-btn" data-status="away">{{.Text.Away}}</button>
+                            <button class="ghost-btn" data-status="offline">{{.Text.Offline}}</button>
                         </div>
                     </div>
                     <div class="profile-details">
@@ -514,7 +511,6 @@
                     </div>
                 </div>
 
-                <!-- Game Modes -->
                 <div class="section-label">{{.Text.DeployZone}}</div>
                 
                 <div class="modes-grid">
@@ -543,60 +539,59 @@
         </div>
     </div>
 
-    <!-- Modals (Settings, etc) -->
     <div class="modal-backdrop" id="settings-modal">
         <div class="modal">
-            <h3>Settings</h3>
+            <h3>{{.Text.Settings}}</h3>
             <div class="settings-grid">
                 <div class="settings-card">
-                    <h4>Language</h4>
+                    <h4>{{.Text.LangTitle}}</h4>
                     <div class="settings-chips">
                         <button class="ghost-btn" data-lang="en">English</button>
                         <button class="ghost-btn" data-lang="ua">Українська</button>
                         <button class="ghost-btn" data-lang="ru">Русский</button>
                     </div>
-                    <div class="settings-note">We save this to your account so every page and the game uses it.</div>
+                    <div class="settings-note">{{.Text.LangNote}}</div>
                 </div>
                 <div class="settings-card">
-                    <h4>Status</h4>
+                    <h4>{{.Text.StatusTitle}}</h4>
                     <div class="settings-chips">
-                        <button class="ghost-btn" data-status="online">Online</button>
-                        <button class="ghost-btn" data-status="away">Away</button>
-                        <button class="ghost-btn" data-status="offline">Offline</button>
+                        <button class="ghost-btn" data-status="online">{{.Text.Online}}</button>
+                        <button class="ghost-btn" data-status="away">{{.Text.Away}}</button>
+                        <button class="ghost-btn" data-status="offline">{{.Text.Offline}}</button>
                     </div>
-                    <div class="settings-note">Tip: click the status dot on your avatar to toggle quickly.</div>
+                    <div class="settings-note">{{.Text.StatusNote}}</div>
                 </div>
                 <div class="settings-card">
-                    <h4>Account</h4>
+                    <h4>{{.Text.AccountTitle}}</h4>
                     <div class="settings-actions">
-                        <button class="pill-btn pill-btn--register" id="settings-register"><span>Register</span></button>
-                        <button class="pill-btn pill-btn--login" id="settings-login"><span>Login</span></button>
-                        <button class="pill-btn logout-btn" id="settings-logout"><span>Log Out</span></button>
+                        <button class="pill-btn pill-btn--register" id="settings-register"><span>{{.Text.Register}}</span></button>
+                        <button class="pill-btn pill-btn--login" id="settings-login"><span>{{.Text.Login}}</span></button>
+                        <button class="pill-btn logout-btn" id="settings-logout"><span>{{.Text.Logout}}</span></button>
                     </div>
-                    <div class="settings-note">Remember me keeps you signed in on this device.</div>
+                    <div class="settings-note">{{.Text.AccountNote}}</div>
                 </div>
             </div>
 
             <div class="modal-actions" style="margin-top:12px;">
-                <button class="ghost-btn" id="settings-close">Close</button>
+                <button class="ghost-btn" id="settings-close">{{.Text.Close}}</button>
             </div>
         </div>
     </div>
 
     <div class="modal-backdrop {{if .ShowRegister}}open{{end}}" id="register-modal">
         <div class="modal">
-            <h3>Create your profile</h3>
-            <label for="reg-nickname">Nickname</label>
-            <input id="reg-nickname" placeholder="Enter nickname" />
-            <label for="reg-password">Password</label>
-            <input id="reg-password" type="password" placeholder="Enter password" />
+            <h3>{{.Text.CreateProfile}}</h3>
+            <label for="reg-nickname">{{.Text.Nickname}}</label>
+            <input id="reg-nickname" placeholder="{{.Text.Nickname}}" />
+            <label for="reg-password">{{.Text.Password}}</label>
+            <input id="reg-password" type="password" placeholder="{{.Text.Password}}" />
             <div class="remember-row">
                 <input type="checkbox" id="reg-remember" />
-                <label for="reg-remember">Remember me on this device</label>
+                <label for="reg-remember">{{.Text.RememberMe}}</label>
             </div>
             <div class="modal-actions">
-                <button class="ghost-btn" id="reg-cancel">Later</button>
-                <button class="primary-btn" id="reg-submit">Register</button>
+                <button class="ghost-btn" id="reg-cancel">{{.Text.Later}}</button>
+                <button class="primary-btn" id="reg-submit">{{.Text.Register}}</button>
             </div>
             <div id="reg-error" style="color:#ff7676;font-size:0.85rem;margin-top:6px;"></div>
         </div>
@@ -604,20 +599,20 @@
 
     <div class="modal-backdrop" id="login-modal">
         <div class="modal">
-            <h3>Login</h3>
-            <label for="login-nickname">Nickname</label>
-            <input id="login-nickname" placeholder="Enter nickname" />
-            <label for="login-tag">Tag</label>
+            <h3>{{.Text.LoginTitle}}</h3>
+            <label for="login-nickname">{{.Text.Nickname}}</label>
+            <input id="login-nickname" placeholder="{{.Text.Nickname}}" />
+            <label for="login-tag">{{.Text.Tag}}</label>
             <input id="login-tag" placeholder="0001" />
-            <label for="login-password">Password</label>
-            <input id="login-password" type="password" placeholder="Password" />
+            <label for="login-password">{{.Text.Password}}</label>
+            <input id="login-password" type="password" placeholder="{{.Text.Password}}" />
             <div class="remember-row">
                 <input type="checkbox" id="login-remember" />
-                <label for="login-remember">Remember me on this device</label>
+                <label for="login-remember">{{.Text.RememberMe}}</label>
             </div>
             <div class="modal-actions">
-                <button class="ghost-btn" id="login-cancel">Cancel</button>
-                <button class="primary-btn" id="login-submit">Login</button>
+                <button class="ghost-btn" id="login-cancel">{{.Text.Cancel}}</button>
+                <button class="primary-btn" id="login-submit">{{.Text.Login}}</button>
             </div>
             <div id="login-error" style="color:#ff7676;font-size:0.85rem;margin-top:6px;"></div>
         </div>

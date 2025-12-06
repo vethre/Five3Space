@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Friends</title>
+    <title>{{.Text.Friends}}</title>
     <link rel="stylesheet" href="/static/css/chibiki.css">
     <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.min.js"></script>
     <style>
@@ -71,10 +71,10 @@
 <body>
     <div class="container">
         <div class="top-bar">
-            <div class="brand">{{.Text.LobbyName}} <span>/ Friends</span></div>
+            <div class="brand">{{.Text.LobbyName}} <span>/ {{.Text.FriendsNav}}</span></div>
             <div class="header-actions">
-                <button class="pill-btn add" onclick="openAddModal()">+ Add Friend</button>
-                <a class="pill-btn" href="/?lang={{.Lang}}&userID={{.User.ID}}">Back to Lobby</a>
+                <button class="pill-btn add" onclick="openAddModal()">{{.Text.AddFriendBtn}}</button>
+                <a class="pill-btn" href="/?lang={{.Lang}}&userID={{.User.ID}}">{{.Text.Back}}</a>
             </div>
         </div>
 
@@ -82,7 +82,6 @@
             {{range .Friends}}
             <div class="card">
                 <div class="card-header">
-                    <!-- UPDATED: Use .AvatarURL field -->
                     <img class="avatar" src="{{.AvatarURL}}">
                     <div class="info">
                         <div class="nickname name-{{.NameColor}}">{{.Nickname}}</div>
@@ -95,55 +94,52 @@
                 <div class="stats-row">
                     <div class="stat">
                         <div class="stat-val">{{.Level}}</div>
-                        <div class="stat-label">Level</div>
+                        <div class="stat-label">{{$.Text.Level}}</div>
                     </div>
                     <div class="stat">
                         <div class="stat-val">{{.Trophies}}</div>
-                        <div class="stat-label">Trophies</div>
+                        <div class="stat-label">{{$.Text.Trophies}}</div>
                     </div>
                     <div class="stat">
                         <div class="stat-val">{{.Exp}}</div>
-                        <div class="stat-label">XP</div>
+                        <div class="stat-label">{{$.Text.XP}}</div>
                     </div>
                 </div>
                 <div class="actions">
-                    <button class="action-btn btn-chat" onclick="openChat('{{.ID}}', '{{.Nickname}}')">Chat 💬</button>
-                    <button class="action-btn btn-remove" onclick="removeFriend('{{.Nickname}}', {{.Tag}})">Remove</button>
+                    <button class="action-btn btn-chat" onclick="openChat('{{.ID}}', '{{.Nickname}}')">{{$.Text.ChatAction}}</button>
+                    <button class="action-btn btn-remove" onclick="removeFriend('{{.Nickname}}', {{.Tag}})">{{$.Text.RemoveAction}}</button>
                 </div>
             </div>
             {{else}}
             <div style="text-align:center; grid-column: 1/-1; padding: 60px; color: var(--text-muted);">
-                <h2 style="font-size: 2rem; margin-bottom: 10px;">No friends yet</h2>
-                <p style="font-size: 1.1rem;">Add friends using their Nickname and Tag #.</p>
+                <h2 style="font-size: 2rem; margin-bottom: 10px;">{{.Text.NoFriendsTitle}}</h2>
+                <p style="font-size: 1.1rem;">{{.Text.NoFriendsDesc}}</p>
             </div>
             {{end}}
         </div>
     </div>
 
-    <!-- Add Friend Modal -->
     <div class="modal-backdrop" id="add-modal">
         <div class="modal">
-            <h3>Add Friend</h3>
-            <input id="add-nick" placeholder="Nickname" />
-            <input id="add-tag" placeholder="Tag (e.g. 1234)" type="number" />
+            <h3>{{.Text.AddFriendHeader}}</h3>
+            <input id="add-nick" placeholder="{{.Text.Nickname}}" />
+            <input id="add-tag" placeholder="{{.Text.Tag}}" type="number" />
             <div class="modal-btns">
-                <button class="pill-btn" onclick="closeAddModal()">Cancel</button>
-                <button class="pill-btn add" onclick="submitAdd()">Send Request</button>
+                <button class="pill-btn" onclick="closeAddModal()">{{.Text.Cancel}}</button>
+                <button class="pill-btn add" onclick="submitAdd()">{{.Text.SendRequest}}</button>
             </div>
         </div>
     </div>
 
-    <!-- Chat Box -->
     <div id="chat-box">
         <div class="chat-header" onclick="toggleChat()">
-            <span id="chat-partner">Chat</span>
+            <span id="chat-partner">{{.Text.ChatTitle}}</span>
             <span>✖</span>
         </div>
         <div class="chat-body" id="chat-body">
-            <!-- Messages go here -->
-        </div>
+            </div>
         <div class="chat-input-area">
-            <input class="chat-input" id="chat-in" placeholder="Type a message..." onkeypress="handleChatKey(event)">
+            <input class="chat-input" id="chat-in" placeholder="..." onkeypress="handleChatKey(event)">
             <button class="pill-btn" onclick="sendMsg()">➤</button>
             <button id="emoji-btn" class="pill-btn">😊</button>
         </div>

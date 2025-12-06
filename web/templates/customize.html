@@ -72,11 +72,10 @@
 <body>
     <div class="container">
         <div class="top-bar">
-            <div class="brand">{{.Text.LobbyName}} <span>/ Customize</span></div>
-            <a href="/?lang={{.Lang}}&userID={{.User.ID}}" class="pill-btn">Back</a>
+            <div class="brand">{{.Text.LobbyName}} <span>/ {{.Text.CustomizeTitle}}</span></div>
+            <a href="/?lang={{.Lang}}&userID={{.User.ID}}" class="pill-btn">{{.Text.Back}}</a>
         </div>
 
-        <!-- Live Preview -->
         <div class="preview-section banner-{{.User.BannerColor}}" id="preview-box">
             <div class="avatar-container" onclick="document.getElementById('file-upload').click()">
                 <img class="avatar" id="avatar-img" src="{{.User.AvatarURL}}">
@@ -87,41 +86,39 @@
             <input type="file" id="file-upload" style="display: none;" accept="image/*">
             
             <div class="preview-name name-{{.User.NameColor}}" id="preview-name">{{.User.Nickname}}</div>
-            <div style="color:white; opacity:0.7; font-weight:bold; margin-top:5px; letter-spacing: 2px;">PREVIEW</div>
+            <div style="color:white; opacity:0.7; font-weight:bold; margin-top:5px; letter-spacing: 2px;">{{.Text.PreviewLabel}}</div>
         </div>
 
         <div class="controls">
-            <!-- Name Color Selector -->
             <div class="control-group">
-                <h3>Name Color</h3>
+                <h3>{{.Text.NameColorTitle}}</h3>
                 <div class="option {{if eq .User.NameColor "white"}}active{{end}}" onclick="selectName('white', this)">
-                    <div class="color-dot" style="background:white"></div> Standard White
+                    <div class="color-dot" style="background:white"></div> {{.Text.ColorWhite}}
                 </div>
                 <div class="option {{if eq .User.NameColor "gold"}}active{{end}}" onclick="selectName('gold', this)">
-                    <div class="color-dot" style="background:gold"></div> Gold
+                    <div class="color-dot" style="background:gold"></div> {{.Text.ColorGold}}
                 </div>
                 <div class="option {{if eq .User.NameColor "rainbow"}}active{{end}}" onclick="selectName('rainbow', this)">
-                    <div class="color-dot" style="background:linear-gradient(90deg, red, blue)"></div> Rainbow
+                    <div class="color-dot" style="background:linear-gradient(90deg, red, blue)"></div> {{.Text.ColorRainbow}}
                 </div>
             </div>
 
-            <!-- Banner Selector -->
             <div class="control-group">
-                <h3>Lobby Banner</h3>
+                <h3>{{.Text.BannerTitle}}</h3>
                 <div class="option {{if eq .User.BannerColor "default"}}active{{end}}" onclick="selectBanner('default', this)">
-                    <div class="color-dot" style="background:#333"></div> Default Dark
+                    <div class="color-dot" style="background:#333"></div> {{.Text.BannerDefault}}
                 </div>
                 <div class="option {{if eq .User.BannerColor "gold"}}active{{end}}" onclick="selectBanner('gold', this)">
-                    <div class="color-dot" style="background:gold"></div> Golden Glow
+                    <div class="color-dot" style="background:gold"></div> {{.Text.BannerGold}}
                 </div>
                 <div class="option {{if eq .User.BannerColor "cyber"}}active{{end}}" onclick="selectBanner('cyber', this)">
-                    <div class="color-dot" style="background:cyan"></div> Cyber Punk
+                    <div class="color-dot" style="background:cyan"></div> {{.Text.BannerCyber}}
                 </div>
             </div>
         </div>
 
         <div class="save-bar">
-            <button class="save-btn" onclick="saveProfile()">Save Changes</button>
+            <button class="save-btn" onclick="saveProfile()">{{.Text.Save}}</button>
         </div>
     </div>
 

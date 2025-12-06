@@ -43,6 +43,7 @@ type GameMode struct {
 }
 
 type Translations struct {
+	// General / Nav
 	LobbyName   string
 	Level       string
 	XP          string
@@ -50,11 +51,90 @@ type Translations struct {
 	Shop        string
 	FriendsNav  string
 	Customize   string
-	Market      string
-	MarketSub   string
-	Hangar      string
-	HangarSub   string
+	Leaderboard string
+	Back        string
+	Settings    string
+	Menu        string
+	Close       string
+	Cancel      string
+	Save        string
+	Later       string
+	Copy        string
 	LangCurrent string
+
+	// Auth & Status
+	Login         string
+	Register      string
+	Logout        string
+	Nickname      string
+	Password      string
+	Tag           string
+	RememberMe    string
+	Online        string
+	Away          string
+	Offline       string
+	CreateProfile string
+	LoginTitle    string
+
+	// Settings Modal
+	LangTitle    string
+	StatusTitle  string
+	AccountTitle string
+	LangNote     string
+	StatusNote   string
+	AccountNote  string
+
+	// Friends Page
+	AddFriendBtn    string
+	NoFriendsTitle  string
+	NoFriendsDesc   string
+	ChatAction      string
+	RemoveAction    string
+	AddFriendHeader string
+	SendRequest     string
+	ChatTitle       string
+
+	// Customize Page
+	CustomizeTitle string
+	NameColorTitle string
+	BannerTitle    string
+	PreviewLabel   string
+	ColorWhite     string
+	ColorGold      string
+	ColorRainbow   string
+	BannerDefault  string
+	BannerGold     string
+	BannerCyber    string
+
+	// Shop Page
+	ExclusiveStyles string
+	Resources       string
+	ItemRainbowName string
+	ItemRainbowDesc string
+	ItemGoldName    string
+	ItemGoldDesc    string
+	ItemCyberBanner string
+	ItemCyberDesc   string
+	ItemGoldBanner  string
+	ItemGoldBannerD string
+	ItemSack        string
+	ItemChest       string
+
+	// Leaderboard Page
+	LeaderboardTitle string
+	CurrentSeason    string
+	SeasonName       string
+	EndsIn           string
+	Rank             string
+	Trophies         string
+
+	// Game Modes
+	ChibikiTitle string
+	ChibikiSub   string
+	BobikTitle   string
+	BobikSub     string
+	PartyTitle   string
+	PartySub     string
 }
 
 type PageData struct {
@@ -77,39 +157,255 @@ var texts = map[string]Translations{
 		Shop:        "Shop",
 		FriendsNav:  "Friends",
 		Customize:   "Customization",
-		Market:      "Market",
-		MarketSub:   "Supplies",
-		Hangar:      "Hangar",
-		HangarSub:   "Style",
+		Leaderboard: "Leaderboard",
+		Back:        "Back",
+		Settings:    "Settings",
+		Menu:        "Menu",
+		Close:       "Close",
+		Cancel:      "Cancel",
+		Save:        "Save",
+		Later:       "Later",
+		Copy:        "Copy",
 		LangCurrent: "ENG",
+
+		Login:         "Login",
+		Register:      "Register",
+		Logout:        "Log Out",
+		Nickname:      "Nickname",
+		Password:      "Password",
+		Tag:           "Tag (e.g. 0001)",
+		RememberMe:    "Remember me on this device",
+		Online:        "Online",
+		Away:          "Away",
+		Offline:       "Offline",
+		CreateProfile: "Create your profile",
+		LoginTitle:    "Login",
+
+		LangTitle:    "Language",
+		StatusTitle:  "Status",
+		AccountTitle: "Account",
+		LangNote:     "We save this to your account so every page uses it.",
+		StatusNote:   "Tip: click the status dot on your avatar to toggle quickly.",
+		AccountNote:  "Remember me keeps you signed in on this device.",
+
+		AddFriendBtn:    "+ Add Friend",
+		NoFriendsTitle:  "No friends yet",
+		NoFriendsDesc:   "Add friends using their Nickname and Tag #.",
+		ChatAction:      "Chat",
+		RemoveAction:    "Remove",
+		AddFriendHeader: "Add Friend",
+		SendRequest:     "Send Request",
+		ChatTitle:       "Chat",
+
+		CustomizeTitle: "Customize",
+		NameColorTitle: "Name Color",
+		BannerTitle:    "Lobby Banner",
+		PreviewLabel:   "PREVIEW",
+		ColorWhite:     "Standard White",
+		ColorGold:      "Gold",
+		ColorRainbow:   "Rainbow",
+		BannerDefault:  "Default Dark",
+		BannerGold:     "Golden Glow",
+		BannerCyber:    "Cyber Punk",
+
+		ExclusiveStyles: "Exclusive Styles",
+		Resources:       "Resources",
+		ItemRainbowName: "Rainbow Name",
+		ItemRainbowDesc: "Make your nickname shimmer with all colors.",
+		ItemGoldName:    "Gold Name",
+		ItemGoldDesc:    "A prestigious golden glow for your name.",
+		ItemCyberBanner: "Cyber Banner",
+		ItemCyberDesc:   "Futuristic banner for your lobby background.",
+		ItemGoldBanner:  "Gold Banner",
+		ItemGoldBannerD: "Show off your wealth with this banner.",
+		ItemSack:        "Sack of Coins",
+		ItemChest:       "Chest of Coins",
+
+		LeaderboardTitle: "Leaderboard",
+		CurrentSeason:    "Current Season",
+		SeasonName:       "SEASON 1: XMAS",
+		EndsIn:           "Ends in",
+		Rank:             "Rank",
+		Trophies:         "Trophies",
+
+		ChibikiTitle: "Chibiki Royale",
+		ChibikiSub:   "Clash Royale-style",
+		BobikTitle:   "Bobik Shooter",
+		BobikSub:     "FPS-style",
+		PartyTitle:   "Five3Fun",
+		PartySub:     "Party Game (2-8 Players)",
 	},
 	"ua": {
 		LobbyName:   "П'ЯТЬ3 Ігро-Space",
 		Level:       "Рівень",
 		XP:          "Досвід",
 		DeployZone:  "Зона висадки",
-		Shop:        "Ринок",
+		Shop:        "Крамниця",
 		FriendsNav:  "Друзі",
 		Customize:   "Налаштування",
-		Market:      "Ринок",
-		MarketSub:   "Постачання",
-		Hangar:      "Ангар",
-		HangarSub:   "Стиль",
+		Leaderboard: "Топгравців",
+		Back:        "Назад",
+		Settings:    "Налаштування",
+		Menu:        "Меню",
+		Close:       "Закрити",
+		Cancel:      "Скасувати",
+		Save:        "Зберегти",
+		Later:       "Пізніше",
+		Copy:        "Копіювати",
 		LangCurrent: "UKR",
+
+		Login:         "Увійти",
+		Register:      "Реєстрація",
+		Logout:        "Вийти",
+		Nickname:      "Нікнейм",
+		Password:      "Пароль",
+		Tag:           "Теґ (напр. 0001)",
+		RememberMe:    "Запам'ятати мене",
+		Online:        "Онлайн",
+		Away:          "Відійшов",
+		Offline:       "Офлайн",
+		CreateProfile: "Створити профіль",
+		LoginTitle:    "Вхід",
+
+		LangTitle:    "Мова",
+		StatusTitle:  "Статус",
+		AccountTitle: "Акаунт",
+		LangNote:     "Ми збережемо це у твоєму профілі.",
+		StatusNote:   "Порада: тисни на кружечок біля аватарки для швидкої зміни.",
+		AccountNote:  "'Запам'ятати мене' дозволяє не вводити пароль щоразу.",
+
+		AddFriendBtn:    "+ Додати друга",
+		NoFriendsTitle:  "Поки що у тебе немає друзів",
+		NoFriendsDesc:   "Додавай друзів за нікнеймом та теґом.",
+		ChatAction:      "Чат",
+		RemoveAction:    "Видалити",
+		AddFriendHeader: "Додати друга",
+		SendRequest:     "Надіслати",
+		ChatTitle:       "Чат",
+
+		CustomizeTitle: "Кастомізація",
+		NameColorTitle: "Колір імені",
+		BannerTitle:    "Банер лобі",
+		PreviewLabel:   "ПЕРЕГЛЯД",
+		ColorWhite:     "Звичайний білий",
+		ColorGold:      "Сяючий золотавий",
+		ColorRainbow:   "Райдужний",
+		BannerDefault:  "Темний стандарт",
+		BannerGold:     "Золоте сяйво",
+		BannerCyber:    "Кіберпанк",
+
+		ExclusiveStyles: "Ексклюзив",
+		Resources:       "Ресурси",
+		ItemRainbowName: "Райдужний колір",
+		ItemRainbowDesc: "Твій нікнейм переливатиметься всіма кольорами.",
+		ItemGoldName:    "Золотий колір",
+		ItemGoldDesc:    "Престижне золоте світіння.",
+		ItemCyberBanner: "Кібербанер",
+		ItemCyberDesc:   "Футуристичний фон для твого лобі.",
+		ItemGoldBanner:  "Золотий банер",
+		ItemGoldBannerD: "Покажи своє багатство.",
+		ItemSack:        "Мішок Монет",
+		ItemChest:       "Скриня Монет",
+
+		LeaderboardTitle: "Таблиця лідерів",
+		CurrentSeason:    "Поточний сезон",
+		SeasonName:       "СЕЗОН 1: РІЗДВО",
+		EndsIn:           "Кінець через",
+		Rank:             "Ранг",
+		Trophies:         "Кубки",
+
+		ChibikiTitle: "Чібіки Рояль",
+		ChibikiSub:   "Стратегія а-ля Clash Royale",
+		BobikTitle:   "Бобік Шутер",
+		BobikSub:     "Шутер від першої особи",
+		PartyTitle:   "П'ЯТЬ3Ляп",
+		PartySub:     "Паті-гейм (2-8 Гравців)",
 	},
 	"ru": {
 		LobbyName:   "ПЯТЬ3 Игро-Space",
 		Level:       "Уровень",
 		XP:          "Опыт",
 		DeployZone:  "Зона высадки",
-		Shop:        "Рынок",
+		Shop:        "Магазин",
 		FriendsNav:  "Друзья",
 		Customize:   "Настройки",
-		Market:      "Рынок",
-		MarketSub:   "Поставки",
-		Hangar:      "Ангар",
-		HangarSub:   "Стиль",
+		Leaderboard: "Лидерборд",
+		Back:        "Назад",
+		Settings:    "Настройки",
+		Menu:        "Меню",
+		Close:       "Закрыть",
+		Cancel:      "Отмена",
+		Save:        "Сохранить",
+		Later:       "Позже",
+		Copy:        "Копировать",
 		LangCurrent: "RUS",
+
+		Login:         "Войти",
+		Register:      "Регистрация",
+		Logout:        "Выйти",
+		Nickname:      "Никнейм",
+		Password:      "Пароль",
+		Tag:           "Тег (напр. 0001)",
+		RememberMe:    "Запомнить меня",
+		Online:        "Онлайн",
+		Away:          "Отошел",
+		Offline:       "Оффлайн",
+		CreateProfile: "Создать профиль",
+		LoginTitle:    "Вход",
+
+		LangTitle:    "Язык",
+		StatusTitle:  "Статус",
+		AccountTitle: "Аккаунт",
+		LangNote:     "Мы сохраним это в твоем профиле.",
+		StatusNote:   "Совет: нажми на круг у аватарки для быстрой смены.",
+		AccountNote:  "'Запомнить меня' позволяет не вводить пароль каждый раз.",
+
+		AddFriendBtn:    "+ Добавить друга",
+		NoFriendsTitle:  "Пока нет друзей",
+		NoFriendsDesc:   "Добавляй друзей по никнейму и тегу.",
+		ChatAction:      "Чат",
+		RemoveAction:    "Удалить",
+		AddFriendHeader: "Добавить друга",
+		SendRequest:     "Отправить",
+		ChatTitle:       "Чат",
+
+		CustomizeTitle: "Редактор",
+		NameColorTitle: "Цвет имени",
+		BannerTitle:    "Баннер лобби",
+		PreviewLabel:   "ПРЕДПРОСМОТР",
+		ColorWhite:     "Обычный белый",
+		ColorGold:      "Золотистый блеск",
+		ColorRainbow:   "Радужное осуждение",
+		BannerDefault:  "Тёмный стандарт",
+		BannerGold:     "Золотое сияние",
+		BannerCyber:    "Киберпанк",
+
+		ExclusiveStyles: "Эксклюзив",
+		Resources:       "Ресурсы",
+		ItemRainbowName: "Радужный цвет",
+		ItemRainbowDesc: "Твой никнейм будет переливаться всеми цветами.",
+		ItemGoldName:    "Золотой цвет",
+		ItemGoldDesc:    "Престижное золотое свечение.",
+		ItemCyberBanner: "Кибербаннер",
+		ItemCyberDesc:   "Футуристичный фон для твоего лобби.",
+		ItemGoldBanner:  "Богатый баннер",
+		ItemGoldBannerD: "Покажи своё богатство.",
+		ItemSack:        "Мешок Монет",
+		ItemChest:       "Сундук Монет",
+
+		LeaderboardTitle: "Таблица Лидеров",
+		CurrentSeason:    "Текущий Сезон",
+		SeasonName:       "СЕЗОН 1: РОЖДЕСТВО",
+		EndsIn:           "Конец через",
+		Rank:             "Ранг",
+		Trophies:         "Кубки",
+
+		ChibikiTitle: "Чибики Рояль",
+		ChibikiSub:   "Стратегия а ля Clash Royale",
+		BobikTitle:   "Бобик Шутер",
+		BobikSub:     "Шутер от первого лица",
+		PartyTitle:   "Пять3Ёбка",
+		PartySub:     "Пати-гейм (2-8 Игроков)",
 	},
 }
 
@@ -120,7 +416,7 @@ func getModeTexts(lang string, isLocked, isConstruct bool) (string, string) {
 			return "В Розробці", "НЕДОСТУПНО"
 		}
 		if isLocked {
-			return "ЗАЧИНЕНО", "ОХОРОНА"
+			return "ЗАЧИНЕНО", "ЗАХИЩЕНО"
 		}
 		return "ГРАТИ", "ГОТОВО"
 	case "ru":
@@ -128,7 +424,7 @@ func getModeTexts(lang string, isLocked, isConstruct bool) (string, string) {
 			return "В РАЗРАБОТКЕ", "НЕДОСТУПНО"
 		}
 		if isLocked {
-			return "ЗАКРЫТО", "ОХРАНА"
+			return "ЗАКРЫТО", "ЗАЩИЩЕНО"
 		}
 		return "ИГРАТЬ", "ГОТОВО"
 	default:
@@ -266,19 +562,20 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 
 	btn1, stat1 := getModeTexts(lang, false, false)
 
+	// UPDATED MODES TO USE TRANSLATIONS
 	modes := []GameMode{
 		{
-			ID: "chibiki", Title: "Chibiki Royale", Subtitle: "Clash Royale-style",
+			ID: "chibiki", Title: t.ChibikiTitle, Subtitle: t.ChibikiSub,
 			SafeGradient: template.CSS("linear-gradient(135deg, #ff4e50 0%, #f9d423 100%)"),
 			BtnText:      btn1, StatusText: stat1, URL: fmt.Sprintf("/game?mode=chibiki&lang=%s", lang),
 		},
 		{
-			ID: "bobik", Title: "Bobik Shooter", Subtitle: "FPS-style",
+			ID: "bobik", Title: t.BobikTitle, Subtitle: t.BobikSub,
 			SafeGradient: template.CSS("linear-gradient(135deg, #36d1dc 0%, #5b86e5 100%)"),
 			BtnText:      btn1, StatusText: stat1, URL: fmt.Sprintf("/bobik?lang=%s&userID=%s&nick=%s", lang, user.ID, user.Nickname),
 		},
 		{
-			ID: "party", Title: "Five3Fun", Subtitle: "Party Game (2-8 Players)",
+			ID: "party", Title: t.PartyTitle, Subtitle: t.PartySub,
 			SafeGradient: template.CSS("linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%)"),
 			BtnText:      "JOIN", StatusText: "OPEN", URL: fmt.Sprintf("/party?lang=%s&userID=%s", lang, user.ID),
 			IsConstruct: false, IsLocked: false,
@@ -297,7 +594,6 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 
 func NewCustomizeSaveHandler(store *data.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// 1) Витягуємо userID з кукі або з query
 		userID := ""
 		if c, err := r.Cookie("user_id"); err == nil && c.Value != "" {
 			userID = c.Value
@@ -310,7 +606,6 @@ func NewCustomizeSaveHandler(store *data.Store) http.HandlerFunc {
 			return
 		}
 
-		// 2) Обмежуємо розмір JSON (аватарка + решта)
 		r.Body = http.MaxBytesReader(w, r.Body, 5*1024*1024)
 
 		var req struct {
@@ -323,7 +618,6 @@ func NewCustomizeSaveHandler(store *data.Store) http.HandlerFunc {
 			return
 		}
 
-		// 3) Зберігаємо в БД
 		if err := store.UpdateProfileLook(userID, req.NameColor, req.BannerColor, req.CustomAvatar); err != nil {
 			http.Error(w, "Error saving", http.StatusInternalServerError)
 			return
@@ -332,54 +626,47 @@ func NewCustomizeSaveHandler(store *data.Store) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 	}
 }
+
 func add(a, b int) int { return a + b }
 
 func NewLeaderboardHandler(store *data.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// 1. Get current user info for the top bar (Back button, etc)
 		pageData := commonPage(w, r, store)
 
-		// 2. Fetch raw leader data from DB
 		rawLeaders, err := store.GetLeaderboard()
 		if err != nil {
-			// In case of error, just show empty list
 			rawLeaders = []data.UserData{}
 		}
 
-		// 3. Convert to a View Model that uses template.URL
-		// We can reuse the 'User' struct from this package since we updated it to use template.URL
 		var displayLeaders []User
 		for _, u := range rawLeaders {
-			// Determine avatar source (Custom or Default)
 			avatarSrc := u.CustomAvatar
 			if avatarSrc == "" {
 				avatarSrc = fmt.Sprintf("https://api.dicebear.com/7.x/avataaars/svg?seed=%s&backgroundColor=ffdfbf", u.Nickname)
 			}
 
-			// Map to UI struct
 			displayLeaders = append(displayLeaders, User{
 				Nickname:  u.Nickname,
 				Level:     u.Level,
 				Trophies:  u.Trophies,
 				NameColor: u.NameColor,
-				// IMPORTANT: This prevents the "unsafe" blocking of base64 images
 				AvatarURL: template.URL(avatarSrc),
 			})
 		}
 
-		// 4. Prepare data for template
 		data := struct {
 			User    User
 			Lang    string
+			Text    Translations
 			Leaders []User
 		}{
 			User:    pageData.User,
 			Lang:    pageData.Lang,
+			Text:    pageData.Text, // Pass translations here!
 			Leaders: displayLeaders,
 		}
 
 		tmplPath := filepath.Join("web", "templates", "leaderboard.html")
-		// Use a helper function for math if needed, or simple indexing
 		tmpl, err := template.ParseFiles(tmplPath)
 		if err != nil {
 			http.Error(w, "Template Error: "+err.Error(), http.StatusInternalServerError)

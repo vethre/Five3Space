@@ -51,13 +51,13 @@
 <body>
     <div class="container">
         <div class="top-bar">
-            <h2 style="margin:0;">Leaderboard</h2>
-            <a href="/?lang={{.Lang}}&userID={{.User.ID}}" class="back-btn">Back</a>
+            <h2 style="margin:0;">{{.Text.LeaderboardTitle}}</h2>
+            <a href="/?lang={{.Lang}}&userID={{.User.ID}}" class="back-btn">{{.Text.Back}}</a>
         </div>
 
         <div class="season-card">
-            <div class="season-title">Current Season</div>
-            <div class="season-name">SEASON 1: XMAS</div>
+            <div class="season-title">{{.Text.CurrentSeason}}</div>
+            <div class="season-name">{{.Text.SeasonName}}</div>
             <div class="season-timer" id="season-timer">Loading...</div>
         </div>
 
@@ -68,7 +68,7 @@
                 <img class="avatar" src="{{$p.AvatarURL}}">
                 <div class="details">
                     <div class="name name-{{$p.NameColor}}">{{$p.Nickname}}</div>
-                    <div style="font-size:0.8rem; opacity:0.6;">Level {{$p.Level}}</div>
+                    <div style="font-size:0.8rem; opacity:0.6;">{{$.Text.Level}} {{$p.Level}}</div>
                 </div>
                 <div class="trophies">
                     🏆 {{$p.Trophies}}
