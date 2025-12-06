@@ -336,39 +336,53 @@ func add(a, b int) int { return a + b }
 
 func NewLeaderboardHandler(store *data.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Use commonPage to get the User info for the top bar (avatar, coins, etc.)
+		// 1. Get current user info for the top bar (Back button, etc)
 		pageData := commonPage(w, r, store)
-		pageData.ActivePage = "leaderboard" // You can use this for highlighting nav buttons
 
-		// Fetch the top players
-		leaders, err := store.GetLeaderboard()
+		// 2. Fetch raw leader data from DB
+		rawLeaders, err := store.GetLeaderboard()
 		if err != nil {
-			leaders = []data.UserData{}
+			// In case of error, just show empty list
+			rawLeaders = []data.UserData{}
 		}
 
-		// We need to pass both the Current User (for the header) and the Leaders (for the list)
-		// We can reuse PageData structure or extend it.
-		// Since PageData is specific, let's create a small wrapper or just pass it via a dynamic map/struct
-		// But the cleanest way is to just add a Field to PageData if you can edit it,
-		// OR just pass a struct here:
+		// 3. Convert to a View Model that uses template.URL
+		// We can reuse the 'User' struct from this package since we updated it to use template.URL
+		var displayLeaders []User
+		for _, u := range rawLeaders {
+			// Determine avatar source (Custom or Default)
+			avatarSrc := u.CustomAvatar
+			if avatarSrc == "" {
+				avatarSrc = fmt.Sprintf("https://api.dicebear.com/7.x/avataaars/svg?seed=%s&backgroundColor=ffdfbf", u.Nickname)
+			}
 
+			// Map to UI struct
+			displayLeaders = append(displayLeaders, User{
+				Nickname:  u.Nickname,
+				Level:     u.Level,
+				Trophies:  u.Trophies,
+				NameColor: u.NameColor,
+				// IMPORTANT: This prevents the "unsafe" blocking of base64 images
+				AvatarURL: template.URL(avatarSrc),
+			})
+		}
+
+		// 4. Prepare data for template
 		data := struct {
 			User    User
-			Text    Translations
 			Lang    string
-			Leaders []data.UserData
+			Leaders []User
 		}{
 			User:    pageData.User,
-			Text:    pageData.Text,
 			Lang:    pageData.Lang,
-			Leaders: leaders,
+			Leaders: displayLeaders,
 		}
 
 		tmplPath := filepath.Join("web", "templates", "leaderboard.html")
-		tmpl := template.New("leaderboard.html").Funcs(template.FuncMap{"add": add})
-		tmpl, err = tmpl.ParseFiles(tmplPath)
+		// Use a helper function for math if needed, or simple indexing
+		tmpl, err := template.ParseFiles(tmplPath)
 		if err != nil {
-			http.Error(w, "Could not load template: "+err.Error(), http.StatusInternalServerError)
+			http.Error(w, "Template Error: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 		tmpl.Execute(w, data)
