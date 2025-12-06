@@ -7,7 +7,24 @@
     <link rel="stylesheet" href="/static/css/chibiki.css">
     <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.min.js"></script>
     <style>
-        body { min-height: 100vh; }
+        :root {
+            --bg-dark: #0f0502;
+            --primary: #ff4500;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --font-main: "Segoe UI", sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-dark);
+            /* Add this gradient to match the lobby */
+            background-image: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #000 100%);
+            color: var(--text-main);
+            font-family: var(--font-main);
+        }
         .container { max-width: 1400px; margin: 0 auto; padding: 40px 24px 80px; }
         .top-bar { display:flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid var(--glass-border); padding-bottom: 20px; }
         .brand { font-weight: 900; letter-spacing: 2px; color: var(--text-muted); font-size: 1.2rem; }
@@ -17,7 +34,7 @@
         .pill-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
         .pill-btn.add { background: linear-gradient(135deg, #ff4e50, #f9d423); color: black; border: none; }
         
-        .grid { display:grid; flex-direction: column; alignItems: center; gap: 24px; }
+        .grid { display:grid; flex-direction: column; align-items: center; gap: 24px; }
         .card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 24px; padding: 28px; position: relative; box-shadow: 0 15px 40px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 16px; backdrop-filter: blur(12px); transition: transform 0.2s; width: min(100%, 980px); }
         .card:hover { transform: translateY(-5px); border-color: rgba(255,255,255,0.2); }
         
