@@ -38,7 +38,7 @@ type GameInstance struct {
 	Unregister   chan *Player
 	Players      map[*Player]bool
 
-	OnGameOver func(winnerTeam int, players map[*Player]bool)
+	OnGameOver func(winnerTeam int, players map[*Player]bool, gameTime float64)
 
 	// Game State Flags
 	GameOver     bool
@@ -177,6 +177,17 @@ func (g *GameInstance) handleConnections() {
 			g.Mutex.Lock()
 			delete(g.Players, player)
 			close(player.Send)
+
+			// Auto-win for remaining player if game was in progress
+			if len(g.Players) == 1 && !g.GameOver && g.GameTime > 0 {
+				for remainingPlayer := range g.Players {
+					fmt.Printf("[CHIBIKI] Player %s disconnected. Auto-win for %s (Team %d)\n",
+						player.ID, remainingPlayer.ID, remainingPlayer.Team)
+					g.finishGame(remainingPlayer.Team)
+					break
+				}
+			}
+
 			g.Mutex.Unlock()
 			fmt.Println("Player left:", player.ID)
 		}
@@ -499,7 +510,8 @@ func (g *GameInstance) finishGame(winningTeam int) {
 		for p := range g.Players {
 			playersCopy[p] = true
 		}
-		go g.OnGameOver(winningTeam, playersCopy)
+		gameTime := g.GameTime // Capture for anti-farming check
+		go g.OnGameOver(winningTeam, playersCopy, gameTime)
 	}
 }
 

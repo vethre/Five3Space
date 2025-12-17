@@ -29,6 +29,7 @@ func main() {
 	defer db.Close()
 
 	chat.DB = db
+	chat.StartMessageCleanup(db) // Start 24h TTL cleanup for ephemeral messages
 
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(5)
@@ -44,8 +45,15 @@ func main() {
 
 	// 1. Initialize the Game Engine
 	gameInstance := chibiki.NewGame()
-	gameInstance.OnGameOver = func(winnerTeam int, players map[*chibiki.Player]bool) {
-		log.Printf("GAME OVER! Winner Team: %d", winnerTeam)
+	gameInstance.OnGameOver = func(winnerTeam int, players map[*chibiki.Player]bool, gameTime float64) {
+		log.Printf("GAME OVER! Winner Team: %d (Duration: %.1fs)", winnerTeam, gameTime)
+
+		// Anti-farming: reduce rewards for suspiciously short games
+		antiFarmMultiplier := 1.0
+		if gameTime < 60 {
+			antiFarmMultiplier = 0.5
+			log.Printf("[ANTI-FARM] Game was very short (%.1fs), reducing rewards by 50%%", gameTime)
+		}
 
 		for p := range players {
 			if p.UserID == "" || p.UserID == "guest" {
@@ -55,14 +63,14 @@ func main() {
 			var trophyChange, coinChange, expChange int
 
 			if p.Team == winnerTeam {
-				trophyChange = 30
-				coinChange = 50
-				expChange = 150 // Increased XP so we can test leveling easier
+				trophyChange = int(float64(30) * antiFarmMultiplier)
+				coinChange = int(float64(50) * antiFarmMultiplier)
+				expChange = int(float64(150) * antiFarmMultiplier)
 				store.AwardMedals(p.UserID, "first_win")
 			} else {
-				trophyChange = -15
-				coinChange = 10
-				expChange = 25
+				trophyChange = int(float64(-15) * antiFarmMultiplier)
+				coinChange = int(float64(10) * antiFarmMultiplier)
+				expChange = int(float64(25) * antiFarmMultiplier)
 			}
 
 			// USE THE NEW FUNCTION

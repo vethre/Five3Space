@@ -14,6 +14,12 @@ import (
 
 var DB *sql.DB
 
+// TTL Protocol Constants
+const (
+	MessageTTL      = 24 * time.Hour
+	CleanupInterval = 5 * time.Minute
+)
+
 // Message represents a chat message
 type Message struct {
 	Type string `json:"type"`           // "dm"
@@ -24,9 +30,30 @@ type Message struct {
 
 // MessageRow is used for fetching history from DB
 type MessageRow struct {
-	Sender string    `json:"sender_id"`
-	Text   string    `json:"text"`
-	Time   time.Time `json:"created_at"`
+	Sender    string    `json:"sender_id"`
+	Text      string    `json:"text"`
+	Time      time.Time `json:"created_at"`
+	ExpiresAt time.Time `json:"expires_at"`
+}
+
+// StartMessageCleanup runs a background job to purge expired messages (24h TTL)
+func StartMessageCleanup(db *sql.DB) {
+	ticker := time.NewTicker(CleanupInterval)
+	go func() {
+		for range ticker.C {
+			cutoff := time.Now().Add(-MessageTTL)
+			result, err := db.Exec(`DELETE FROM messages WHERE created_at < $1`, cutoff)
+			if err != nil {
+				log.Printf("[CHAT] TTL cleanup error: %v", err)
+				continue
+			}
+			rows, _ := result.RowsAffected()
+			if rows > 0 {
+				log.Printf("[CHAT] Purged %d expired messages (older than 24h)", rows)
+			}
+		}
+	}()
+	log.Println("[CHAT] Message TTL cleanup started (24h TTL, 5min interval)")
 }
 
 type Client struct {
@@ -158,22 +185,27 @@ func (c *Client) readPump() {
 					From: c.UserID,
 				})
 			}
+			// Active Now / Typing indicator - sends presence update to chat partner
+			if msg.Type == "typing" && msg.To != "" {
+				MainHub.SendDirectMessage(msg.To, Message{
+					Type: "presence",
+					From: c.UserID,
+					Text: "typing", // Indicates user is actively typing
+				})
+			}
 		}
 	}
 }
 
 func (c *Client) writePump() {
 	defer c.Conn.Close()
-	for {
-		select {
-		case message, ok := <-c.Send:
-			if !ok {
-				c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
-				return
-			}
-			c.Conn.WriteMessage(websocket.TextMessage, message)
+	for message := range c.Send {
+		if err := c.Conn.WriteMessage(websocket.TextMessage, message); err != nil {
+			return
 		}
 	}
+	// Channel closed, send close message
+	c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
 }
 
 // --- HTTP Handlers ---
@@ -244,14 +276,17 @@ func HistoryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TTL filter: only fetch messages from the last 24 hours
+	cutoff := time.Now().Add(-MessageTTL)
 	rows, err := DB.Query(`
         SELECT sender_id, text, created_at
         FROM messages
-        WHERE (sender_id = $1 AND receiver_id = $2)
-           OR (sender_id = $2 AND receiver_id = $1)
+        WHERE ((sender_id = $1 AND receiver_id = $2)
+           OR (sender_id = $2 AND receiver_id = $1))
+           AND created_at > $3
         ORDER BY created_at ASC
         LIMIT 50
-    `, userID, with)
+    `, userID, with, cutoff)
 
 	if err != nil {
 		http.Error(w, "DB Error", http.StatusInternalServerError)
@@ -263,6 +298,8 @@ func HistoryHandler(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var m MessageRow
 		if err := rows.Scan(&m.Sender, &m.Text, &m.Time); err == nil {
+			// Calculate expiration time for client-side sync
+			m.ExpiresAt = m.Time.Add(MessageTTL)
 			msgs = append(msgs, m)
 		}
 	}

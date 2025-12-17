@@ -21,16 +21,50 @@ const (
 	TotalRounds   = 3
 )
 
-var Prompts = []string{
-	"Самое худшее, что можно сказать на похоронах.",
-	"Отвергнутое название для нового цвета карандаша.",
-	"Что на самом деле убило динозавров?",
-	"Плохой ледокол для первого свидания.",
-	"Самый бесполезный супергерой: Человек-...",
-	"Что нельзя говорить полицейскому?",
-	"Лучший способ расстаться с девушкой.",
-	"Надпись на твоем надгробии.",
-	"Причина, по которой тебя уволили с работы мечты.",
+// LocalizedPrompts provides prompts in all supported languages
+var LocalizedPrompts = map[string][]string{
+	"en": {
+		"The worst thing to say at a funeral.",
+		"A rejected crayon color name.",
+		"What actually killed the dinosaurs?",
+		"A bad icebreaker for a first date.",
+		"The most useless superhero: ___-Man.",
+		"What you should never say to a cop?",
+		"The best way to break up with someone.",
+		"The inscription on your tombstone.",
+		"The reason you got fired from your dream job.",
+	},
+	"ua": {
+		"Найгірше, що можна сказати на похороні.",
+		"Відхилена назва для нового кольору олівця.",
+		"Що насправді вбило динозаврів?",
+		"Поганий спосіб почати перше побачення.",
+		"Найбільш непотрібний супергерой: Людина-...",
+		"Що не варто говорити поліцейському?",
+		"Найкращий спосіб розлучитися з дівчиною.",
+		"Напис на твоєму надгробку.",
+		"Причина, через яку тебе звільнили з роботи мрії.",
+	},
+	"ru": {
+		"Самое худшее, что можно сказать на похоронах.",
+		"Отвергнутое название для нового цвета карандаша.",
+		"Что на самом деле убило динозавров?",
+		"Плохой ледокол для первого свидания.",
+		"Самый бесполезный супергерой: Человек-...",
+		"Что нельзя говорить полицейскому?",
+		"Лучший способ расстаться с девушкой.",
+		"Надпись на твоем надгробии.",
+		"Причина, по которой тебя уволили с работы мечты.",
+	},
+}
+
+// getPrompt returns a random prompt in the appropriate language
+func getPrompt(lang string) string {
+	prompts, ok := LocalizedPrompts[lang]
+	if !ok {
+		prompts = LocalizedPrompts["en"] // Fallback to English
+	}
+	return prompts[rand.Intn(len(prompts))]
 }
 
 type Player struct {
@@ -181,7 +215,9 @@ func (g *Game) nextPhase() {
 func (g *Game) startRound() {
 	g.state = "INPUT"
 	g.timer = RoundDuration
-	g.currentPrompt = Prompts[rand.Intn(len(Prompts))]
+	// TODO: Could detect player language preference from first player
+	// For now, default to Russian to match original behavior
+	g.currentPrompt = getPrompt("ru")
 	for _, p := range g.players {
 		p.Answer = ""
 		p.Voted = false
@@ -196,12 +232,23 @@ func (g *Game) startVotingPhase() {
 		}
 	}
 
-	// If less than 2 answers, we can't vote properly. Just skip or use dummy?
-	// For now, let's assume players are good.
+	// If less than 2 answers, skip to results
+	if len(g.answers) < 2 {
+		g.state = "RESULT"
+		g.timer = 10
+		return
+	}
 
 	rand.Shuffle(len(g.answers), func(i, j int) {
 		g.answers[i], g.answers[j] = g.answers[j], g.answers[i]
 	})
+
+	// Handle odd number of answers: give last player a "bye" with participation points
+	if len(g.answers)%2 == 1 {
+		byePlayer := g.answers[len(g.answers)-1]
+		byePlayer.Score += 150                   // Bye bonus - they participated but don't get voted on
+		g.answers = g.answers[:len(g.answers)-1] // Remove from voting pool
+	}
 
 	g.matchIndex = 0
 	g.nextMatch()

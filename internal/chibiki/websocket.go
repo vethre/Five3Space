@@ -75,14 +75,11 @@ func readPump(p *Player, g *GameInstance) {
 
 func writePump(p *Player) {
 	defer func() { p.Conn.Close() }()
-	for {
-		select {
-		case message, ok := <-p.Send:
-			if !ok {
-				p.Conn.WriteMessage(websocket.CloseMessage, []byte{})
-				return
-			}
-			p.Conn.WriteMessage(websocket.TextMessage, message)
+	for message := range p.Send {
+		if err := p.Conn.WriteMessage(websocket.TextMessage, message); err != nil {
+			return
 		}
 	}
+	// Channel closed - send close message
+	p.Conn.WriteMessage(websocket.CloseMessage, []byte{})
 }

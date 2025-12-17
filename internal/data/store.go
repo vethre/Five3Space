@@ -303,8 +303,13 @@ func (s *Store) ProcessGameResult(userID string, trophyDelta, coinDelta, expDelt
 	for u.Exp >= u.MaxExp {
 		u.Exp -= u.MaxExp
 		u.Level++
-		// Increase MaxExp by 20% each level (rounded)
-		u.MaxExp = int(float64(u.MaxExp) * 1.2)
+		// Increase MaxExp by 15% each level (reduced from 20% to prevent exponential explosion)
+		newMaxExp := int(float64(u.MaxExp) * 1.15)
+		// Hard cap at 50,000 to keep high-level progression reasonable
+		if newMaxExp > 50000 {
+			newMaxExp = 50000
+		}
+		u.MaxExp = newMaxExp
 		leveledUp = true
 	}
 

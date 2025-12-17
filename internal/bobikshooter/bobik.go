@@ -2,6 +2,7 @@ package bobikshooter
 
 import (
 	"encoding/json"
+	"math"
 	"math/rand"
 	"net/http"
 	"sync"
@@ -17,6 +18,21 @@ const (
 	roundDuration = 180 * time.Second
 	maxHealth     = 100
 )
+
+// WeaponStats defines server-authoritative weapon properties
+type WeaponStats struct {
+	BaseDamage   int     // Base damage at point blank
+	Falloff      float64 // Damage reduction per meter
+	MaxRange     float64 // Maximum effective range
+	HeadshotMult float64 // Headshot damage multiplier
+}
+
+// Server-side weapon definitions - prevents client damage exploits
+var Weapons = map[string]WeaponStats{
+	"pistol": {BaseDamage: 20, Falloff: 0.3, MaxRange: 50, HeadshotMult: 2.0},
+	"rifle":  {BaseDamage: 35, Falloff: 0.2, MaxRange: 80, HeadshotMult: 2.5},
+	"awp":    {BaseDamage: 100, Falloff: 0, MaxRange: 200, HeadshotMult: 1.5}, // Already lethal
+}
 
 type Vec3 struct {
 	X float64 `json:"x"`
@@ -281,16 +297,23 @@ func (g *Game) handleUpdate(p *Player, msg map[string]interface{}) {
 	}
 }
 
+// distance3D calculates Euclidean distance between two positions
+func distance3D(a, b Vec3) float64 {
+	dx := b.X - a.X
+	dy := b.Y - a.Y
+	dz := b.Z - a.Z
+	return math.Sqrt(dx*dx + dy*dy + dz*dz)
+}
+
 func (g *Game) handleHit(attacker *Player, msg map[string]interface{}) {
 	targetID, _ := msg["target"].(string)
-	damage := int(toFloat(msg["damage"]))
-	if damage <= 0 {
-		damage = 20
-	}
+	weapon, _ := msg["weapon"].(string)
+	isHeadshot, _ := msg["headshot"].(bool)
 
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
+	// Find target player
 	var target *Player
 	for p := range g.players {
 		if p.ID == targetID {
@@ -298,12 +321,43 @@ func (g *Game) handleHit(attacker *Player, msg map[string]interface{}) {
 			break
 		}
 	}
-	// Revive logic is implicit: if health <= 0, we reset health and position immediately
+
 	if target == nil || target == attacker || !g.roundActive {
 		return
 	}
 
-	target.Health -= damage
+	// Get weapon stats (default to pistol if unknown)
+	stats, ok := Weapons[weapon]
+	if !ok {
+		stats = Weapons["pistol"]
+	}
+
+	// Server-side distance calculation
+	dist := distance3D(attacker.Pos, target.Pos)
+
+	// Range check - no damage beyond max range
+	if dist > stats.MaxRange {
+		return
+	}
+
+	// Calculate damage with distance falloff
+	damage := float64(stats.BaseDamage) - (dist * stats.Falloff)
+	if damage < 5 {
+		damage = 5 // Minimum damage
+	}
+
+	// Apply headshot multiplier (server validates based on client claim)
+	if isHeadshot {
+		damage *= stats.HeadshotMult
+	}
+
+	target.Health -= int(damage)
+
+	// Send hit feedback to attacker
+	g.sendTo(attacker, map[string]interface{}{
+		"type": "hit_confirm", "target": targetID, "damage": int(damage), "headshot": isHeadshot,
+	})
+
 	if target.Health <= 0 {
 		target.Deaths++
 		attacker.Kills++
