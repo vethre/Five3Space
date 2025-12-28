@@ -44,21 +44,23 @@ type Player struct {
 	Conn     *websocket.Conn `json:"-"`
 	Send     chan []byte     `json:"-"`
 
-	Pos         Vec2    `json:"pos"`
-	Health      float64 `json:"health"`
-	Sanity      float64 `json:"sanity"`
-	Score       int     `json:"score"`
-	Alive       bool    `json:"alive"`
-	HasFlare    bool    `json:"hasFlare"`
-	FlareTime   float64 `json:"-"` // Seconds remaining
-	LightRadius float64 `json:"lightRadius"`
+	Pos             Vec2    `json:"pos"`
+	Health          float64 `json:"health"`
+	Sanity          float64 `json:"sanity"`
+	Score           int     `json:"score"`
+	Alive           bool    `json:"alive"`
+	AvailableFlares int     `json:"availableFlares"`
+	HasFlare        bool    `json:"hasFlare"` // Active flare
+	FlareTime       float64 `json:"-"`        // Seconds remaining
+	LightRadius     float64 `json:"lightRadius"`
 }
 
 type Entity struct {
-	ID     string `json:"id"`
-	Type   string `json:"type"` // "demogorgon", "light_orb", "battery", "flare"
-	Pos    Vec2   `json:"pos"`
-	Active bool   `json:"active"`
+	ID           string  `json:"id"`
+	Type         string  `json:"type"` // "demogorgon", "light_orb", "battery", "flare"
+	Pos          Vec2    `json:"pos"`
+	Active       bool    `json:"active"`
+	StunnedUntil float64 `json:"-"`
 }
 
 type Game struct {
@@ -151,6 +153,8 @@ func (g *Game) startGame() {
 		p.Sanity = MaxSanity
 		p.Score = 0
 		p.Alive = true
+		p.Alive = true
+		p.AvailableFlares = 0
 		p.HasFlare = false
 		p.FlareTime = 0
 		p.LightRadius = 3.0 // Base visibility
@@ -303,6 +307,11 @@ func (g *Game) update(dt float64) {
 			}
 		}
 
+		// Skip if stunned
+		if e.StunnedUntil > g.gameTime {
+			continue
+		}
+
 		if nearestPlayer != nil {
 			// Move towards player (slower if player has flare)
 			speed := 3.0 * g.difficulty
@@ -349,9 +358,7 @@ func (g *Game) update(dt float64) {
 					p.Score += 30
 					e.Active = false
 				case ResourceFlare:
-					p.HasFlare = true
-					p.FlareTime = 10 // 10 seconds of light
-					p.LightRadius = 8.0
+					p.AvailableFlares++
 					p.Score += 100
 					e.Active = false
 				}
@@ -422,6 +429,7 @@ func (g *Game) broadcastState() {
 			"score":       p.Score,
 			"alive":       p.Alive,
 			"hasFlare":    p.HasFlare,
+			"flares":      p.AvailableFlares,
 			"lightRadius": p.LightRadius,
 		})
 	}
@@ -539,6 +547,28 @@ func (g *Game) readPump(p *Player) {
 		case "restart":
 			if !g.gameActive {
 				g.startGame()
+			}
+		case "use_flare":
+			if p.Alive && p.AvailableFlares > 0 && !p.HasFlare {
+				p.AvailableFlares--
+				p.HasFlare = true
+				p.FlareTime = 15 // 15 seconds duration
+				p.LightRadius = 10.0
+
+				// Stun/Pushback nearby enemies
+				for _, e := range g.entities {
+					if e.Type == "demogorgon" && e.Active {
+						dist := distance(p.Pos, e.Pos)
+						if dist < 12 { // Wide range
+							e.StunnedUntil = g.gameTime + 5.0 // 5 seconds stun
+							// Push back
+							dx := e.Pos.X - p.Pos.X
+							dy := e.Pos.Y - p.Pos.Y
+							e.Pos.X += dx * 2
+							e.Pos.Y += dy * 2
+						}
+					}
+				}
 			}
 		}
 		g.mu.Unlock()

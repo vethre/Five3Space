@@ -657,25 +657,55 @@
                 const sy = centerY + (e.pos.y - camY) * scale;
 
                 if (e.type === 'demogorgon') {
-                    // Scary red monster
-                    ctx.fillStyle = '#600';
+                    // Detailed Demogorgon (Flower face)
+                    const petalCount = 5;
+                    const headRad = 25;
+                    const time = Date.now() / 200;
+
+                    // Pale body/head
+                    ctx.fillStyle = '#dcdcdc';
                     ctx.beginPath();
                     ctx.arc(sx, sy, 20, 0, Math.PI * 2);
                     ctx.fill();
-                    // Glow
-                    const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, 40);
-                    grad.addColorStop(0, 'rgba(100, 0, 0, 0.5)');
-                    grad.addColorStop(1, 'transparent');
-                    ctx.fillStyle = grad;
+
+                    // Open Flower Petals
+                    ctx.fillStyle = '#8b0000'; // Blood red
+                    for (let i = 0; i < petalCount; i++) {
+                        const angle = (i / petalCount) * Math.PI * 2 + (time * 0.1);
+                        const px = sx + Math.cos(angle) * headRad;
+                        const py = sy + Math.sin(angle) * headRad;
+
+                        ctx.beginPath();
+                        ctx.moveTo(sx, sy);
+                        ctx.quadraticCurveTo(
+                            sx + Math.cos(angle - 0.5) * 40,
+                            sy + Math.sin(angle - 0.5) * 40,
+                            px, py
+                        );
+                        ctx.quadraticCurveTo(
+                            sx + Math.cos(angle + 0.5) * 40,
+                            sy + Math.sin(angle + 0.5) * 40,
+                            sx, sy
+                        );
+                        ctx.fill();
+                    }
+
+                    // Inner Mouth - Bloody Teeth
+                    ctx.fillStyle = '#330000';
                     ctx.beginPath();
-                    ctx.arc(sx, sy, 40, 0, Math.PI * 2);
+                    ctx.arc(sx, sy, 12, 0, Math.PI * 2);
                     ctx.fill();
-                    // Eyes
-                    ctx.fillStyle = '#f00';
-                    ctx.beginPath();
-                    ctx.arc(sx - 6, sy - 5, 4, 0, Math.PI * 2);
-                    ctx.arc(sx + 6, sy - 5, 4, 0, Math.PI * 2);
-                    ctx.fill();
+
+                    // Teeth
+                    ctx.fillStyle = '#fff';
+                    for (let j = 0; j < 8; j++) {
+                        const ta = (j / 8) * Math.PI * 2 + (time * -0.2);
+                        const tx = sx + Math.cos(ta) * 8;
+                        const ty = sy + Math.sin(ta) * 8;
+                        ctx.beginPath();
+                        ctx.arc(tx, ty, 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
                 } else if (e.type === 'light_orb') {
                     // Glowing orb
                     const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, 25);

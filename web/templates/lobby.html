@@ -18,6 +18,62 @@
             --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
+        /* --- UPSIDE DOWN THEME (OPTIMIZED) --- */
+        body.upside-down-mode {
+            background-color: #050000 !important;
+            background-image:
+                radial-gradient(circle at 50% 100%, #300 0%, #000 70%),
+                radial-gradient(circle at 10% 10%, rgba(255, 0, 0, 0.1) 0%, transparent 60%) !important;
+            --primary: #c00 !important;
+            --accent: #f00 !important;
+            --text-muted: #a66 !important;
+            /* Optimize: remove blurs, use opaque semi-transparent backgrounds */
+            --glass-bg: rgba(20, 0, 0, 0.9) !important;
+            --glass-border: rgba(100, 0, 0, 0.3) !important;
+        }
+
+        body.upside-down-mode .profile-card,
+        body.upside-down-mode .game-card {
+            backdrop-filter: none !important;
+            /* Optimization */
+            box-shadow: 0 10px 50px rgba(100, 0, 0, 0.2);
+        }
+
+        /* Vignette overlay */
+        body.upside-down-mode::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle, transparent 40%, rgba(0, 0, 0, 0.8) 100%);
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Ash Fall Animation (Lightweight) */
+        body.upside-down-mode::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml;utf8,<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="50" r="1" fill="rgba(255,255,255,0.2)"/><circle cx="150" cy="80" r="1.5" fill="rgba(255,255,255,0.15)"/><circle cx="80" cy="20" r="0.8" fill="rgba(255,255,255,0.2)"/></svg>');
+            pointer-events: none;
+            z-index: 9998;
+            opacity: 0.6;
+            animation: ashFall 30s linear infinite;
+        }
+
+        @keyframes ashFall {
+            from {
+                background-position: 0 0;
+            }
+
+            to {
+                background-position: 100px 300px;
+            }
+        }
+
         /* --- ANIMATIONS --- */
         @keyframes fadeIn {
             from {

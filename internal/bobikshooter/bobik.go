@@ -71,6 +71,7 @@ type Game struct {
 	broadcast   chan []byte
 	roundActive bool
 	roundEnds   time.Time
+	dummies     []Vec3 // Practice targets
 }
 
 func NewGame(store *data.Store) *Game {
@@ -80,6 +81,7 @@ func NewGame(store *data.Store) *Game {
 		register:   make(chan *Player),
 		unregister: make(chan *Player),
 		broadcast:  make(chan []byte, 64),
+		dummies:    generateDummies(),
 	}
 	go g.run()
 	go g.stateLoop()
@@ -189,6 +191,7 @@ func (g *Game) sendWelcome(p *Player) {
 
 	g.sendTo(p, map[string]interface{}{
 		"type": "welcome", "id": p.ID, "roundActive": g.roundActive, "timeLeft": timeLeft,
+		"dummies": g.dummies,
 	})
 }
 
@@ -228,6 +231,15 @@ func (g *Game) sendTo(p *Player, v interface{}) {
 
 func randomSpawn() Vec3 {
 	return Vec3{X: rand.Float64()*160 - 80, Y: 15, Z: rand.Float64()*160 - 80}
+}
+
+func generateDummies() []Vec3 {
+	// 5 random dummies
+	d := make([]Vec3, 5)
+	for i := 0; i < 5; i++ {
+		d[i] = Vec3{X: rand.Float64()*100 - 50, Y: 15, Z: rand.Float64()*100 - 50}
+	}
+	return d
 }
 
 var upgrader = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
@@ -288,7 +300,12 @@ func (g *Game) readPump(p *Player) {
 			g.handleHit(p, msg)
 		case "buy":
 			g.handleBuy(p, msg)
+		case "hit_dummy":
+			if idx, ok := msg["index"].(float64); ok {
+				g.handleDummyHit(p, int(idx))
+			}
 		}
+
 	}
 }
 
@@ -375,6 +392,20 @@ func (g *Game) handleHit(attacker *Player, msg map[string]interface{}) {
 	}
 }
 
+// Check dummy hit
+func (g *Game) handleDummyHit(p *Player, dummyIdx int) {
+	// Simple validation: just give points in practice mode
+	if !g.roundActive {
+		p.Score += 10
+		// Respawn that dummy
+		g.dummies[dummyIdx] = Vec3{X: rand.Float64()*120 - 60, Y: 15, Z: rand.Float64()*120 - 60}
+		// Broadcast new dummies
+		g.broadcastJSON(map[string]interface{}{
+			"type": "dummies_update", "dummies": g.dummies,
+		})
+	}
+}
+
 func (g *Game) handleBuy(p *Player, msg map[string]interface{}) {
 	item, _ := msg["item"].(string)
 	g.mu.Lock()
@@ -384,13 +415,21 @@ func (g *Game) handleBuy(p *Player, msg map[string]interface{}) {
 	switch item {
 	case "ammo":
 		cost = 200
+	case "deagle":
+		cost = 700
+	case "smg":
+		cost = 1200
+	case "shotgun":
+		cost = 1800
+	case "m4a4":
+		cost = 3100
 	case "awp":
-		cost = 2500 // Expensive!
+		cost = 4750
 	}
 
 	if cost > 0 && p.Score >= cost {
 		p.Score -= cost
-		g.sendTo(p, map[string]interface{}{"type": "buy_ack", "item": item, "success": true})
+		g.sendTo(p, map[string]interface{}{"type": "buy_ack", "item": item, "success": true, "newScore": p.Score})
 	}
 }
 
