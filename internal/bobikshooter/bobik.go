@@ -28,10 +28,16 @@ type WeaponStats struct {
 }
 
 // Server-side weapon definitions - prevents client damage exploits
+// Inspired by CS2 weapon balancing
 var Weapons = map[string]WeaponStats{
-	"pistol": {BaseDamage: 20, Falloff: 0.3, MaxRange: 50, HeadshotMult: 2.0},
-	"rifle":  {BaseDamage: 35, Falloff: 0.2, MaxRange: 80, HeadshotMult: 2.5},
-	"awp":    {BaseDamage: 100, Falloff: 0, MaxRange: 200, HeadshotMult: 1.5}, // Already lethal
+	"knife":   {BaseDamage: 50, Falloff: 0, MaxRange: 3, HeadshotMult: 1.0},
+	"pistol":  {BaseDamage: 22, Falloff: 0.3, MaxRange: 50, HeadshotMult: 2.0},  // Glock
+	"deagle":  {BaseDamage: 55, Falloff: 0.2, MaxRange: 60, HeadshotMult: 2.5},  // Desert Eagle
+	"smg":     {BaseDamage: 18, Falloff: 0.4, MaxRange: 40, HeadshotMult: 1.5},  // P90
+	"shotgun": {BaseDamage: 90, Falloff: 2.0, MaxRange: 15, HeadshotMult: 1.2},  // XM1014
+	"rifle":   {BaseDamage: 36, Falloff: 0.2, MaxRange: 80, HeadshotMult: 2.5},  // AK-47
+	"m4a4":    {BaseDamage: 33, Falloff: 0.15, MaxRange: 90, HeadshotMult: 2.3}, // M4A4
+	"awp":     {BaseDamage: 115, Falloff: 0, MaxRange: 200, HeadshotMult: 1.0},  // AWP (one-shot kill)
 }
 
 type Vec3 struct {

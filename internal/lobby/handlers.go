@@ -181,6 +181,16 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 			BtnText:      "JOIN", StatusText: "OPEN", URL: fmt.Sprintf("/party?lang=%s&userID=%s", lang, user.ID),
 			IsConstruct: false, IsLocked: false,
 		},
+		{
+			ID: "slotix", Title: t.SlotixTitle, Subtitle: t.SlotixSub,
+			SafeGradient: template.CSS("linear-gradient(135deg, #ffd700 0%, #ff6b00 100%)"),
+			BtnText:      btn1, StatusText: stat1, URL: fmt.Sprintf("/slotix?lang=%s&userID=%s", lang, user.ID),
+		},
+		{
+			ID: "upsidedown", Title: t.UpsideDownTitle, Subtitle: t.UpsideDownSub,
+			SafeGradient: template.CSS("linear-gradient(135deg, #1a0000 0%, #4a0000 50%, #000000 100%)"),
+			BtnText:      btn1, StatusText: stat1, URL: fmt.Sprintf("/upsidedown?lang=%s&userID=%s", lang, user.ID),
+		},
 	}
 
 	pageData := PageData{

@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Upside Down</title>
+    <style>
+        :root {
+            --blood-red: #8B0000;
+            --void-black: #0a0000;
+            --ash-gray: #2a2020;
+            --eerie-glow: rgba(255, 50, 50, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--void-black);
+            color: #ddd;
+            overflow: hidden;
+            cursor: none;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #game-canvas {
+            display: block;
+        }
+
+        /* Vignette effect */
+        #vignette {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.8) 100%);
+            z-index: 5;
+        }
+
+        /* Scanlines for eerie TV effect */
+        #scanlines {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: repeating-linear-gradient(0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.1) 2px,
+                    rgba(0, 0, 0, 0.1) 4px);
+            z-index: 6;
+            opacity: 0.5;
+        }
+
+        /* Floating particles */
+        #particles {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: rgba(100, 50, 50, 0.5);
+            border-radius: 50%;
+            animation: float 10s infinite ease-in-out;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0.3;
+            }
+
+            50% {
+                transform: translateY(-100px) rotate(180deg);
+                opacity: 0.7;
+            }
+        }
+
+        /* HUD */
+        .hud {
+            position: fixed;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        #hud-top-left {
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .stat-bar {
+            width: 200px;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #333;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .stat-bar-fill {
+            height: 100%;
+            transition: width 0.3s, background 0.3s;
+        }
+
+        .stat-bar-label {
+            position: absolute;
+            top: 50%;
+            left: 10px;
+            transform: translateY(-50%);
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        #health-fill {
+            background: linear-gradient(90deg, #4a0000, #ff0000);
+        }
+
+        #sanity-fill {
+            background: linear-gradient(90deg, #1a0030, #8000ff);
+        }
+
+        .sanity-low #sanity-fill {
+            animation: pulse-bar 0.5s infinite;
+        }
+
+        @keyframes pulse-bar {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        #hud-top-right {
+            top: 20px;
+            right: 20px;
+            text-align: right;
+        }
+
+        #timer {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--blood-red);
+            text-shadow: 0 0 20px var(--eerie-glow);
+            font-family: 'Courier New', monospace;
+        }
+
+        #score {
+            font-size: 1.5rem;
+            color: #aaa;
+            margin-top: 10px;
+        }
+
+        #hud-bottom {
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        #flare-indicator {
+            display: none;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #ff6600, #ffaa00);
+            border-radius: 20px;
+            font-weight: bold;
+            color: black;
+            animation: flare-pulse 0.5s infinite alternate;
+        }
+
+        #flare-indicator.active {
+            display: block;
+        }
+
+        @keyframes flare-pulse {
+            from {
+                box-shadow: 0 0 10px #ff6600;
+            }
+
+            to {
+                box-shadow: 0 0 30px #ffaa00;
+            }
+        }
+
+        /* Custom cursor */
+        #cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 100, 100, 0.8);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 100;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s;
+        }
+
+        /* Screen shake effect */
+        .screen-shake {
+            animation: shake 0.2s infinite;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        /* Overlays */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 50;
+        }
+
+        .overlay.active {
+            display: flex;
+        }
+
+        .overlay h1 {
+            font-size: 4rem;
+            color: var(--blood-red);
+            text-transform: uppercase;
+            text-shadow: 0 0 30px var(--eerie-glow);
+            animation: flicker-text 2s infinite;
+        }
+
+        @keyframes flicker-text {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+
+            52% {
+                opacity: 0.3;
+            }
+
+            54% {
+                opacity: 0.9;
+            }
+        }
+
+        .btn {
+            padding: 15px 40px;
+            border-radius: 30px;
+            border: 2px solid var(--blood-red);
+            background: transparent;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: var(--blood-red);
+            box-shadow: 0 0 30px var(--eerie-glow);
+        }
+
+        #game-over-overlay .stats {
+            display: flex;
+            gap: 30px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+            background: rgba(139, 0, 0, 0.2);
+            border: 1px solid #400;
+            border-radius: 12px;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 900;
+            color: white;
+        }
+
+        .stat-card .label {
+            color: #888;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        /* Intro screen */
+        #intro-overlay {
+            display: flex;
+        }
+
+        #intro-overlay h1 {
+            font-family: 'Courier New', monospace;
+            letter-spacing: 5px;
+        }
+
+        .instructions {
+            max-width: 500px;
+            text-align: center;
+            color: #888;
+            margin: 10px 0 20px;
+        }
+
+        /* Low sanity visual effects */
+        .insane #vignette {
+            background: radial-gradient(ellipse at center, transparent 10%, rgba(50, 0, 0, 0.9) 80%);
+            animation: insane-vignette 0.5s infinite alternate;
+        }
+
+        @keyframes insane-vignette {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0.7;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        <div id="vignette"></div>
+        <div id="scanlines"></div>
+        <div id="particles"></div>
+    </div>
+
+    <div id="cursor"></div>
+
+    <div class="hud" id="hud-top-left">
+        <div class="stat-bar">
+            <div class="stat-bar-fill" id="health-fill" style="width: 100%"></div>
+            <span class="stat-bar-label">❤️ HEALTH</span>
+        </div>
+        <div class="stat-bar" id="sanity-bar">
+            <div class="stat-bar-fill" id="sanity-fill" style="width: 100%"></div>
+            <span class="stat-bar-label">🧠 SANITY</span>
+        </div>
+    </div>
+
+    <div class="hud" id="hud-top-right">
+        <div id="timer">3:00</div>
+        <div id="score">SCORE: 0</div>
+    </div>
+
+    <div class="hud" id="hud-bottom">
+        <div id="flare-indicator">🔥 FLARE ACTIVE</div>
+    </div>
+
+    <div class="overlay" id="intro-overlay">
+        <h1>The Upside Down</h1>
+        <p class="instructions">
+            Survive in the darkness. Collect light orbs to restore sanity.<br>
+            Stay away from demogorgons. Use flares to scare them.<br>
+            <strong>WASD</strong> to move. Survive as long as you can.
+        </p>
+        <button class="btn" onclick="startGame()">ENTER THE VOID</button>
+        <a href="/" class="btn" style="border-color: #444;">← ESCAPE</a>
+    </div>
+
+    <div class="overlay" id="game-over-overlay">
+        <h1 id="game-over-title">CONSUMED</h1>
+        <div class="stats">
+            <div class="stat-card">
+                <div class="value" id="final-time">0:00</div>
+                <div class="label">Survived</div>
+            </div>
+            <div class="stat-card">
+                <div class="value" id="final-score">0</div>
+                <div class="label">Score</div>
+            </div>
+        </div>
+        <button class="btn" onclick="restartGame()">TRY AGAIN</button>
+        <a href="/" class="btn" style="border-color: #444;">← ESCAPE</a>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const url = new URL(window.location.href);
+        const userID = url.searchParams.get('userID') || '';
+        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+
+        let socket;
+        let myId = null;
+        let gameState = null;
+        let mouseX = 0, mouseY = 0;
+        let keys = { w: false, a: false, s: false, d: false };
+        let playerPos = { x: 0, y: 0 };
+        let gameStarted = false;
+
+        // Canvas setup
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        // Cursor
+        document.addEventListener('mousemove', e => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            document.getElementById('cursor').style.left = e.clientX + 'px';
+            document.getElementById('cursor').style.top = e.clientY + 'px';
+        });
+
+        // Keyboard
+        document.addEventListener('keydown', e => {
+            if (e.key.toLowerCase() in keys) keys[e.key.toLowerCase()] = true;
+        });
+        document.addEventListener('keyup', e => {
+            if (e.key.toLowerCase() in keys) keys[e.key.toLowerCase()] = false;
+        });
+
+        // Create floating particles
+        const particlesContainer = document.getElementById('particles');
+        for (let i = 0; i < 50; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.top = Math.random() * 100 + '%';
+            p.style.animationDelay = Math.random() * 10 + 's';
+            p.style.animationDuration = (8 + Math.random() * 5) + 's';
+            particlesContainer.appendChild(p);
+        }
+
+        function connect() {
+            socket = new WebSocket(`${protocol}://${window.location.host}/ws/upsidedown?userID=${encodeURIComponent(userID)}`);
+
+            socket.onmessage = (ev) => {
+                const msg = JSON.parse(ev.data);
+
+                if (msg.type === 'welcome') {
+                    myId = msg.id;
+                    if (msg.active) {
+                        gameStarted = true;
+                        document.getElementById('intro-overlay').classList.remove('active');
+                    }
+                }
+
+                if (msg.type === 'state') {
+                    gameState = msg;
+                    updateHUD(msg);
+                }
+
+                if (msg.type === 'game_over') {
+                    showGameOver(msg.survived);
+                }
+            };
+
+            socket.onclose = () => setTimeout(connect, 2000);
+        }
+
+        function startGame() {
+            gameStarted = true;
+            document.getElementById('intro-overlay').classList.remove('active');
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({ type: 'restart' }));
+            }
+        }
+
+        function restartGame() {
+            document.getElementById('game-over-overlay').classList.remove('active');
+            document.body.classList.remove('insane');
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({ type: 'restart' }));
+            }
+        }
+
+        function updateHUD(state) {
+            const me = state.players.find(p => p.id === myId);
+            if (!me) return;
+
+            // Health bar
+            document.getElementById('health-fill').style.width = me.health + '%';
+
+            // Sanity bar
+            document.getElementById('sanity-fill').style.width = me.sanity + '%';
+            if (me.sanity < 30) {
+                document.getElementById('sanity-bar').classList.add('sanity-low');
+                document.body.classList.add('insane');
+            } else {
+                document.getElementById('sanity-bar').classList.remove('sanity-low');
+                document.body.classList.remove('insane');
+            }
+
+            // Timer
+            const timeLeft = Math.max(0, state.maxTime - state.time);
+            const mins = Math.floor(timeLeft / 60);
+            const secs = Math.floor(timeLeft % 60).toString().padStart(2, '0');
+            document.getElementById('timer').textContent = `${mins}:${secs}`;
+
+            // Score
+            document.getElementById('score').textContent = `SCORE: ${me.score}`;
+
+            // Flare indicator
+            if (me.hasFlare) {
+                document.getElementById('flare-indicator').classList.add('active');
+            } else {
+                document.getElementById('flare-indicator').classList.remove('active');
+            }
+
+            // Screen shake when taking damage
+            if (me.health < 50) {
+                document.getElementById('game-container').classList.add('screen-shake');
+            } else {
+                document.getElementById('game-container').classList.remove('screen-shake');
+            }
+        }
+
+        function showGameOver(survived) {
+            const mins = Math.floor(survived / 60);
+            const secs = Math.floor(survived % 60).toString().padStart(2, '0');
+            document.getElementById('final-time').textContent = `${mins}:${secs}`;
+
+            const me = gameState?.players?.find(p => p.id === myId);
+            document.getElementById('final-score').textContent = me?.score || 0;
+            document.getElementById('game-over-title').textContent = me?.alive ? 'SURVIVED' : 'CONSUMED';
+
+            document.getElementById('game-over-overlay').classList.add('active');
+        }
+
+        // Game loop
+        let lastUpdate = 0;
+        function gameLoop(timestamp) {
+            requestAnimationFrame(gameLoop);
+
+            if (!gameStarted || !gameState) return;
+
+            const dt = (timestamp - lastUpdate) / 1000;
+            lastUpdate = timestamp;
+
+            // Send movement
+            const speed = 5;
+            let dx = 0, dy = 0;
+            if (keys.w) dy -= speed * dt;
+            if (keys.s) dy += speed * dt;
+            if (keys.a) dx -= speed * dt;
+            if (keys.d) dx += speed * dt;
+
+            if ((dx !== 0 || dy !== 0) && socket?.readyState === WebSocket.OPEN) {
+                playerPos.x += dx;
+                playerPos.y += dy;
+                // Clamp to boundaries
+                playerPos.x = Math.max(-30, Math.min(30, playerPos.x));
+                playerPos.y = Math.max(-30, Math.min(30, playerPos.y));
+                socket.send(JSON.stringify({ type: 'move', pos: playerPos }));
+            }
+
+            // Render
+            render();
+        }
+
+        function render() {
+            ctx.fillStyle = '#0a0000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (!gameState) return;
+
+            const me = gameState.players.find(p => p.id === myId);
+            if (!me) return;
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const scale = 15; // Pixels per unit
+
+            // Camera follows player
+            const camX = me.pos.x;
+            const camY = me.pos.y;
+
+            // Draw grid (subtle)
+            ctx.strokeStyle = 'rgba(50, 20, 20, 0.3)';
+            ctx.lineWidth = 1;
+            for (let x = -40; x <= 40; x += 5) {
+                const screenX = centerX + (x - camX) * scale;
+                ctx.beginPath();
+                ctx.moveTo(screenX, 0);
+                ctx.lineTo(screenX, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = -40; y <= 40; y += 5) {
+                const screenY = centerY + (y - camY) * scale;
+                ctx.beginPath();
+                ctx.moveTo(0, screenY);
+                ctx.lineTo(canvas.width, screenY);
+                ctx.stroke();
+            }
+
+            // Draw entities
+            for (const e of gameState.entities) {
+                const sx = centerX + (e.pos.x - camX) * scale;
+                const sy = centerY + (e.pos.y - camY) * scale;
+
+                if (e.type === 'demogorgon') {
+                    // Scary red monster
+                    ctx.fillStyle = '#600';
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, 20, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Glow
+                    const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, 40);
+                    grad.addColorStop(0, 'rgba(100, 0, 0, 0.5)');
+                    grad.addColorStop(1, 'transparent');
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, 40, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Eyes
+                    ctx.fillStyle = '#f00';
+                    ctx.beginPath();
+                    ctx.arc(sx - 6, sy - 5, 4, 0, Math.PI * 2);
+                    ctx.arc(sx + 6, sy - 5, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (e.type === 'light_orb') {
+                    // Glowing orb
+                    const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, 25);
+                    grad.addColorStop(0, 'rgba(255, 255, 200, 0.9)');
+                    grad.addColorStop(0.5, 'rgba(255, 200, 100, 0.4)');
+                    grad.addColorStop(1, 'transparent');
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, 25, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#ffffcc';
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (e.type === 'battery') {
+                    // Green battery
+                    ctx.fillStyle = '#0f0';
+                    ctx.fillRect(sx - 8, sy - 12, 16, 24);
+                    ctx.fillStyle = '#0a0';
+                    ctx.fillRect(sx - 4, sy - 16, 8, 4);
+                } else if (e.type === 'flare') {
+                    // Orange flare
+                    ctx.fillStyle = '#f60';
+                    ctx.beginPath();
+                    ctx.moveTo(sx, sy - 15);
+                    ctx.lineTo(sx + 10, sy + 10);
+                    ctx.lineTo(sx - 10, sy + 10);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+
+            // Draw other players
+            for (const p of gameState.players) {
+                if (p.id === myId || !p.alive) continue;
+
+                const sx = centerX + (p.pos.x - camX) * scale;
+                const sy = centerY + (p.pos.y - camY) * scale;
+
+                // Player light radius
+                const lightGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, p.lightRadius * scale);
+                lightGrad.addColorStop(0, 'rgba(255, 200, 150, 0.3)');
+                lightGrad.addColorStop(1, 'transparent');
+                ctx.fillStyle = lightGrad;
+                ctx.beginPath();
+                ctx.arc(sx, sy, p.lightRadius * scale, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Player body
+                ctx.fillStyle = '#aaa';
+                ctx.beginPath();
+                ctx.arc(sx, sy, 12, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Name
+                ctx.fillStyle = '#fff';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(p.name, sx, sy - 20);
+            }
+
+            // Draw self (center of screen with light)
+            if (me.alive) {
+                // Player light
+                const lightGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, me.lightRadius * scale);
+                lightGrad.addColorStop(0, 'rgba(255, 200, 150, 0.4)');
+                lightGrad.addColorStop(1, 'transparent');
+                ctx.fillStyle = lightGrad;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, me.lightRadius * scale, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Player body
+                ctx.fillStyle = me.hasFlare ? '#ff8800' : '#fff';
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, 15, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // Darkness mask (fog of war based on sanity)
+            const darknessRadius = (me.sanity / 100) * 300 + 100;
+            const darkGrad = ctx.createRadialGradient(centerX, centerY, darknessRadius * 0.5, centerX, centerY, darknessRadius);
+            darkGrad.addColorStop(0, 'transparent');
+            darkGrad.addColorStop(1, 'rgba(0, 0, 0, 0.9)');
+            ctx.fillStyle = darkGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Initialize
+        connect();
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+
+</html>

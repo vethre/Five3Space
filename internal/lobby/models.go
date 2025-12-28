@@ -89,16 +89,18 @@ type Translations struct {
 	ChatTitle       string
 
 	// Customize Page
-	CustomizeTitle string
-	NameColorTitle string
-	BannerTitle    string
-	PreviewLabel   string
-	ColorWhite     string
-	ColorGold      string
-	ColorRainbow   string
-	BannerDefault  string
-	BannerGold     string
-	BannerCyber    string
+	CustomizeTitle   string
+	NameColorTitle   string
+	BannerTitle      string
+	PreviewLabel     string
+	ColorWhite       string
+	ColorGold        string
+	ColorRainbow     string
+	ColorHawkins     string
+	BannerDefault    string
+	BannerGold       string
+	BannerCyber      string
+	BannerUpsideDown string
 
 	// Shop Page
 	ExclusiveStyles string
@@ -123,12 +125,16 @@ type Translations struct {
 	Trophies         string
 
 	// Game Modes
-	ChibikiTitle string
-	ChibikiSub   string
-	BobikTitle   string
-	BobikSub     string
-	PartyTitle   string
-	PartySub     string
+	ChibikiTitle    string
+	ChibikiSub      string
+	BobikTitle      string
+	BobikSub        string
+	PartyTitle      string
+	PartySub        string
+	SlotixTitle     string
+	SlotixSub       string
+	UpsideDownTitle string
+	UpsideDownSub   string
 }
 
 type PageData struct {
@@ -191,16 +197,18 @@ var texts = map[string]Translations{
 		SendRequest:     "Send Request",
 		ChatTitle:       "Chat",
 
-		CustomizeTitle: "Customize",
-		NameColorTitle: "Name Color",
-		BannerTitle:    "Lobby Banner",
-		PreviewLabel:   "PREVIEW",
-		ColorWhite:     "Standard White",
-		ColorGold:      "Gold",
-		ColorRainbow:   "Rainbow",
-		BannerDefault:  "Default Dark",
-		BannerGold:     "Golden Glow",
-		BannerCyber:    "Cyber Punk",
+		CustomizeTitle:   "Customize",
+		NameColorTitle:   "Name Color",
+		BannerTitle:      "Lobby Banner",
+		PreviewLabel:     "PREVIEW",
+		ColorWhite:       "Standard White",
+		ColorGold:        "Gold",
+		ColorRainbow:     "Rainbow",
+		ColorHawkins:     "Hawkins Lights",
+		BannerDefault:    "Default Dark",
+		BannerGold:       "Golden Glow",
+		BannerCyber:      "Cyber Punk",
+		BannerUpsideDown: "The Upside Down",
 
 		ExclusiveStyles: "Exclusive Styles",
 		Resources:       "Resources",
@@ -222,12 +230,16 @@ var texts = map[string]Translations{
 		Rank:             "Rank",
 		Trophies:         "Trophies",
 
-		ChibikiTitle: "Chibiki Royale",
-		ChibikiSub:   "Clash Royale-style",
-		BobikTitle:   "Bobik Shooter",
-		BobikSub:     "FPS-style",
-		PartyTitle:   "Five3Fun",
-		PartySub:     "Party Game (2-8 Players)",
+		ChibikiTitle:    "Chibiki Royale",
+		ChibikiSub:      "Clash Royale-style",
+		BobikTitle:      "Bobik Shooter",
+		BobikSub:        "FPS-style",
+		PartyTitle:      "Five3Fun",
+		PartySub:        "Party Game (2-8 Players)",
+		SlotixTitle:     "Slotix",
+		SlotixSub:       "Lucky Slot Machine",
+		UpsideDownTitle: "The Upside Down",
+		UpsideDownSub:   "Stranger Things Survival",
 	},
 	"ua": {
 		LobbyName:   "П'ЯТЬ3 Ігро-Space",
@@ -277,16 +289,18 @@ var texts = map[string]Translations{
 		SendRequest:     "Надіслати",
 		ChatTitle:       "Чат",
 
-		CustomizeTitle: "Кастомізація",
-		NameColorTitle: "Колір імені",
-		BannerTitle:    "Банер лобі",
-		PreviewLabel:   "ПЕРЕГЛЯД",
-		ColorWhite:     "Звичайний білий",
-		ColorGold:      "Сяючий золотавий",
-		ColorRainbow:   "Райдужний",
-		BannerDefault:  "Темний стандарт",
-		BannerGold:     "Золоте сяйво",
-		BannerCyber:    "Кіберпанк",
+		CustomizeTitle:   "Кастомізація",
+		NameColorTitle:   "Колір імені",
+		BannerTitle:      "Банер лобі",
+		PreviewLabel:     "ПЕРЕГЛЯД",
+		ColorWhite:       "Звичайний білий",
+		ColorGold:        "Сяючий золотавий",
+		ColorRainbow:     "Райдужний",
+		ColorHawkins:     "Вогники Хокінса",
+		BannerDefault:    "Темний стандарт",
+		BannerGold:       "Золоте сяйво",
+		BannerCyber:      "Кіберпанк",
+		BannerUpsideDown: "Потойбіччя",
 
 		ExclusiveStyles: "Ексклюзив",
 		Resources:       "Ресурси",
@@ -308,12 +322,16 @@ var texts = map[string]Translations{
 		Rank:             "Ранг",
 		Trophies:         "Кубки",
 
-		ChibikiTitle: "Чібіки Рояль",
-		ChibikiSub:   "Стратегія а-ля Clash Royale",
-		BobikTitle:   "Бобік Шутер",
-		BobikSub:     "Шутер від першої особи",
-		PartyTitle:   "П'ЯТЬ3Ляп",
-		PartySub:     "Паті-гейм (2-8 Гравців)",
+		ChibikiTitle:    "Чібіки Рояль",
+		ChibikiSub:      "Стратегія а-ля Clash Royale",
+		BobikTitle:      "Бобік Шутер",
+		BobikSub:        "Шутер від першої особи",
+		PartyTitle:      "П'ЯТЬ3Ляп",
+		PartySub:        "Паті-гейм (2-8 Гравців)",
+		SlotixTitle:     "Слотікс",
+		SlotixSub:       "Щасливий Автомат",
+		UpsideDownTitle: "Потойбіччя",
+		UpsideDownSub:   "Виживання у Stranger Things",
 	},
 	"ru": {
 		LobbyName:   "ПЯТЬ3 Игро-Space",
@@ -363,16 +381,18 @@ var texts = map[string]Translations{
 		SendRequest:     "Отправить",
 		ChatTitle:       "Чат",
 
-		CustomizeTitle: "Редактор",
-		NameColorTitle: "Цвет имени",
-		BannerTitle:    "Баннер лобби",
-		PreviewLabel:   "ПРЕДПРОСМОТР",
-		ColorWhite:     "Обычный белый",
-		ColorGold:      "Золотистый блеск",
-		ColorRainbow:   "Радужное осуждение",
-		BannerDefault:  "Тёмный стандарт",
-		BannerGold:     "Золотое сияние",
-		BannerCyber:    "Киберпанк",
+		CustomizeTitle:   "Редактор",
+		NameColorTitle:   "Цвет имени",
+		BannerTitle:      "Баннер лобби",
+		PreviewLabel:     "ПРЕДПРОСМОТР",
+		ColorWhite:       "Обычный белый",
+		ColorGold:        "Золотистый блеск",
+		ColorRainbow:     "Радужное осуждение",
+		ColorHawkins:     "Огоньки Хокинса",
+		BannerDefault:    "Тёмный стандарт",
+		BannerGold:       "Золотое сияние",
+		BannerCyber:      "Киберпанк",
+		BannerUpsideDown: "Изнанка",
 
 		ExclusiveStyles: "Эксклюзив",
 		Resources:       "Ресурсы",
@@ -394,11 +414,15 @@ var texts = map[string]Translations{
 		Rank:             "Ранг",
 		Trophies:         "Кубки",
 
-		ChibikiTitle: "Чибики Рояль",
-		ChibikiSub:   "Стратегия а ля Clash Royale",
-		BobikTitle:   "Бобик Шутер",
-		BobikSub:     "Шутер от первого лица",
-		PartyTitle:   "Пять3Ёбка",
-		PartySub:     "Пати-гейм (2-8 Игроков)",
+		ChibikiTitle:    "Чибики Рояль",
+		ChibikiSub:      "Стратегия а ля Clash Royale",
+		BobikTitle:      "Бобик Шутер",
+		BobikSub:        "Шутер от первого лица",
+		PartyTitle:      "Пять3Ёбка",
+		PartySub:        "Пати-гейм (2-8 Игроков)",
+		SlotixTitle:     "Слотикс",
+		SlotixSub:       "Счастливый Автомат",
+		UpsideDownTitle: "Изнанка",
+		UpsideDownSub:   "Выживание в Stranger Things",
 	},
 }

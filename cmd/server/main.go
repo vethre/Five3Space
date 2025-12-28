@@ -12,6 +12,8 @@ import (
 	"main/internal/lobby"
 	"main/internal/party"
 	"main/internal/presence"
+	"main/internal/slotix"
+	"main/internal/upsidedown"
 	"net/http"
 	"os"
 )
@@ -91,6 +93,8 @@ func main() {
 	bobikGame := bobikshooter.NewGame(store)
 
 	partyGame := party.NewGame(store)
+	slotixGame := slotix.NewGame(store)
+	upsidedownGame := upsidedown.NewGame(store)
 
 	authService := auth.NewAuth(db)
 	http.HandleFunc("/register", authService.RegisterHandler)
@@ -127,6 +131,18 @@ func main() {
 	http.HandleFunc("/ws/party", func(w http.ResponseWriter, r *http.Request) {
 		party.HandleWS(partyGame, w, r, store)
 	})
+
+	// Slotix - Slot Machine Game
+	http.HandleFunc("/slotix", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "web/templates/slotix.html")
+	})
+	http.HandleFunc("/ws/slotix", slotixGame.HandleWS)
+
+	// The Upside Down - Stranger Things Survival
+	http.HandleFunc("/upsidedown", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "web/templates/upsidedown.html")
+	})
+	http.HandleFunc("/ws/upsidedown", upsidedownGame.HandleWS)
 
 	fs := http.FileServer(http.Dir("./web/static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))

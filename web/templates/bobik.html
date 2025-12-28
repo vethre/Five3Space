@@ -1,66 +1,385 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Bobik Shooter</title>
     <style>
-        :root { --hud-bg: rgba(0,0,0,0.6); --accent: #ffb300; --danger: #ff4444; --success: #44ff44; }
-        body { margin:0; overflow:hidden; background:#0b0e11; color:#fff; font-family: "Segoe UI", sans-serif; user-select:none; }
-        
-        #crosshair { position:absolute; top:50%; left:50%; width:16px; height:16px; transform:translate(-50%,-50%); pointer-events:none; z-index:5; transition: transform 0.1s; }
-        #crosshair:before, #crosshair:after { content:""; position:absolute; background:#0f0; box-shadow: 0 0 4px #0f0; }
-        #crosshair:before { width:2px; height:14px; left:7px; top:1px; }
-        #crosshair:after { width:14px; height:2px; top:7px; left:1px; }
-        #crosshair.hit { transform: translate(-50%, -50%) scale(2); background: red; }
+        :root {
+            --hud-bg: rgba(0, 0, 0, 0.6);
+            --accent: #ffb300;
+            --danger: #ff4444;
+            --success: #44ff44;
+        }
 
-        #hud-top { position:absolute; top:20px; left:20px; display:flex; gap:16px; z-index:6; align-items:flex-start; pointer-events: none; }
-        .card { background:var(--hud-bg); padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.1); box-shadow:0 8px 20px rgba(0,0,0,0.5); backdrop-filter: blur(5px); pointer-events: auto; }
-        
-        #profile { display:flex; align-items:center; gap:12px; }
-        #profile img { width:42px; height:42px; border-radius:50%; border:2px solid var(--accent); background: #333; }
-        #stats { font-weight:700; color:#ddd; font-size: 0.9rem; }
-        #score-display { color: var(--success); font-weight: 800; font-size: 1.1rem; text-shadow: 0 0 10px rgba(68,255,68,0.4); }
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #0b0e11;
+            color: #fff;
+            font-family: "Segoe UI", sans-serif;
+            user-select: none;
+        }
 
-        #timer { position:absolute; top:20px; left:50%; transform:translateX(-50%); padding:8px 20px; background:var(--hud-bg); border:1px solid rgba(255,255,255,0.1); border-radius:12px; font-weight:800; letter-spacing:2px; font-size: 1.5rem; z-index: 6; }
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 5;
+            transition: transform 0.1s;
+        }
 
-        #health-bar-container { position: absolute; bottom: 30px; left: 30px; width: 250px; height: 16px; background: rgba(0,0,0,0.8); border: 1px solid #555; border-radius: 8px; z-index: 6; overflow: hidden; }
-        #health-fill { width: 100%; height: 100%; background: var(--success); transition: width 0.2s, background 0.2s; }
-        #health-text { position: absolute; top: -25px; left: 0; font-weight: 900; letter-spacing: 1px; text-shadow: 1px 1px 2px black; }
+        #crosshair:before,
+        #crosshair:after {
+            content: "";
+            position: absolute;
+            background: #0f0;
+            box-shadow: 0 0 4px #0f0;
+        }
 
-        #weapon-bar { position:absolute; bottom:30px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:6; }
-        .slot { padding:10px 16px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.6); min-width:80px; text-align:center; color:#888; transition: all 0.1s; }
-        .slot.active { border-color:var(--accent); color:#fff; transform: translateY(-5px); box-shadow:0 0 15px rgba(255,179,0,0.3); }
+        #crosshair:before {
+            width: 2px;
+            height: 14px;
+            left: 7px;
+            top: 1px;
+        }
 
-        #ammo { position:absolute; bottom:30px; right:30px; text-align:right; z-index: 6; }
-        #ammo-count { font-size:48px; font-weight:900; line-height: 1; }
-        #ammo-reserve { font-size: 24px; color: #aaa; font-weight: 700; }
-        #weapon-name { color:var(--accent); font-weight:800; letter-spacing:2px; text-transform: uppercase; margin-top: 5px; }
+        #crosshair:after {
+            width: 14px;
+            height: 2px;
+            top: 7px;
+            left: 1px;
+        }
 
-        #reload-msg { position:absolute; top:60%; left:50%; transform:translateX(-50%); color:var(--danger); font-weight:900; font-size: 1.2rem; display:none; z-index:7; text-shadow: 0 2px 4px black; }
+        #crosshair.hit {
+            transform: translate(-50%, -50%) scale(2);
+            background: red;
+        }
 
-        #scoreboard { position:absolute; top:100px; right:20px; background:var(--hud-bg); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:15px; min-width:200px; z-index:6; }
-        #scoreboard h4 { margin:0 0 10px; font-size:12px; letter-spacing:2px; color:#aaa; border-bottom: 1px solid #444; padding-bottom: 5px; }
-        #score-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px; }
-        #score-list li { display:flex; justify-content:space-between; font-weight:700; font-size: 0.9rem; }
+        #hud-top {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 16px;
+            z-index: 6;
+            align-items: flex-start;
+            pointer-events: none;
+        }
 
-        #names-layer { position:absolute; inset:0; pointer-events:none; z-index:5; font-weight:800; text-shadow:0 1px 3px #000; }
+        .card {
+            background: var(--hud-bg);
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            pointer-events: auto;
+        }
 
-        .overlay { position:absolute; inset:0; background:rgba(0,0,0,0.85); display:none; align-items:center; justify-content:center; flex-direction:column; gap:20px; color:#fff; z-index:20; backdrop-filter: blur(5px); cursor: pointer; }
-        .overlay h1 { margin:0; font-size: 3rem; text-transform: uppercase; font-style: italic; text-shadow: 0 0 20px var(--accent); }
-        .btn { padding:12px 24px; border-radius:8px; border:none; background:var(--accent); color: black; font-weight:800; cursor:pointer; font-size: 1rem; text-decoration: none; transition: transform 0.1s; }
-        .btn:hover { transform: scale(1.05); box-shadow: 0 0 15px var(--accent); }
+        #profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-        #shop-menu { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; padding: 20px; border-radius: 16px; border: 2px solid #444; z-index: 30; width: 400px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
-        #shop-menu h2 { margin-top: 0; color: var(--accent); border-bottom: 1px solid #444; padding-bottom: 10px; display: flex; justify-content: space-between; }
-        .shop-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #222; margin-bottom: 8px; border-radius: 8px; border: 1px solid #333; transition: background 0.2s; }
-        .shop-item:hover { background: #333; }
-        .buy-btn { background: #444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .buy-btn:hover { background: var(--success); color: black; }
+        #profile img {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+            background: #333;
+        }
 
-        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s infinite linear; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        #stats {
+            font-weight: 700;
+            color: #ddd;
+            font-size: 0.9rem;
+        }
+
+        #score-display {
+            color: var(--success);
+            font-weight: 800;
+            font-size: 1.1rem;
+            text-shadow: 0 0 10px rgba(68, 255, 68, 0.4);
+        }
+
+        #timer {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 20px;
+            background: var(--hud-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            font-size: 1.5rem;
+            z-index: 6;
+        }
+
+        #health-bar-container {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            width: 250px;
+            height: 16px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #555;
+            border-radius: 8px;
+            z-index: 6;
+            overflow: hidden;
+        }
+
+        #health-fill {
+            width: 100%;
+            height: 100%;
+            background: var(--success);
+            transition: width 0.2s, background 0.2s;
+        }
+
+        #health-text {
+            position: absolute;
+            top: -25px;
+            left: 0;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        #weapon-bar {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 6;
+        }
+
+        .slot {
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.6);
+            min-width: 80px;
+            text-align: center;
+            color: #888;
+            transition: all 0.1s;
+        }
+
+        .slot.active {
+            border-color: var(--accent);
+            color: #fff;
+            transform: translateY(-5px);
+            box-shadow: 0 0 15px rgba(255, 179, 0, 0.3);
+        }
+
+        #ammo {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            text-align: right;
+            z-index: 6;
+        }
+
+        #ammo-count {
+            font-size: 48px;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        #ammo-reserve {
+            font-size: 24px;
+            color: #aaa;
+            font-weight: 700;
+        }
+
+        #weapon-name {
+            color: var(--accent);
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        #reload-msg {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--danger);
+            font-weight: 900;
+            font-size: 1.2rem;
+            display: none;
+            z-index: 7;
+            text-shadow: 0 2px 4px black;
+        }
+
+        #scoreboard {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            background: var(--hud-bg);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 15px;
+            min-width: 200px;
+            z-index: 6;
+        }
+
+        #scoreboard h4 {
+            margin: 0 0 10px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #aaa;
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+        }
+
+        #score-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        #score-list li {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        #names-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 5;
+            font-weight: 800;
+            text-shadow: 0 1px 3px #000;
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+            color: #fff;
+            z-index: 20;
+            backdrop-filter: blur(5px);
+            cursor: pointer;
+        }
+
+        .overlay h1 {
+            margin: 0;
+            font-size: 3rem;
+            text-transform: uppercase;
+            font-style: italic;
+            text-shadow: 0 0 20px var(--accent);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            background: var(--accent);
+            color: black;
+            font-weight: 800;
+            cursor: pointer;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: transform 0.1s;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--accent);
+        }
+
+        #shop-menu {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 16px;
+            border: 2px solid #444;
+            z-index: 30;
+            width: 400px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+        }
+
+        #shop-menu h2 {
+            margin-top: 0;
+            color: var(--accent);
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .shop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #222;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            transition: background 0.2s;
+        }
+
+        .shop-item:hover {
+            background: #333;
+        }
+
+        .buy-btn {
+            background: #444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .buy-btn:hover {
+            background: var(--success);
+            color: black;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s infinite linear;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
+
 <body>
     <div id="crosshair"></div>
     <div id="hud-top">
@@ -75,8 +394,14 @@
         <div style="color: #aaa; font-weight: bold; font-size: 0.8rem; align-self: center;">[B] SHOP</div>
     </div>
     <div id="timer">Waiting...</div>
-    <div id="scoreboard" class="card"><h4>LEADERBOARD</h4><ul id="score-list"></ul></div>
-    <div id="health-bar-container"><div id="health-text">HP 100</div><div id="health-fill"></div></div>
+    <div id="scoreboard" class="card">
+        <h4>LEADERBOARD</h4>
+        <ul id="score-list"></ul>
+    </div>
+    <div id="health-bar-container">
+        <div id="health-text">HP 100</div>
+        <div id="health-fill"></div>
+    </div>
     <div id="weapon-bar">
         <div id="slot-1" class="slot"><span>1</span> Knife</div>
         <div id="slot-2" class="slot active"><span>2</span> Glock</div>
@@ -84,16 +409,19 @@
         <div id="slot-4" class="slot" style="display:none;"><span>4</span> AWP</div>
     </div>
     <div id="ammo">
-        <span id="ammo-count">20</span><span style="font-size:24px;color:#888;">/</span><span id="ammo-reserve">120</span>
+        <span id="ammo-count">20</span><span style="font-size:24px;color:#888;">/</span><span
+            id="ammo-reserve">120</span>
         <div id="weapon-name">Glock</div>
     </div>
     <div id="reload-msg">RELOADING...</div>
     <div id="names-layer"></div>
 
-    <div id="waiting-overlay" class="overlay" style="display: flex;">
-        <div class="spinner"></div>
-        <h2>WAITING FOR PLAYERS</h2>
-        <div style="font-size: 0.9rem; color: #aaa;">Waiting for at least 2 players...</div>
+    <div id="waiting-overlay" class="overlay practice-overlay" style="display: flex; pointer-events: none;">
+        <h2 style="position:absolute; top:30px; color: var(--accent);">🎯 PRACTICE MODE</h2>
+        <div style="font-size: 0.9rem; color: #aaa; position:absolute; top:70px;">Waiting for players... Move and shoot
+            to warm up!</div>
+        <div style="font-size: 0.8rem; color: #666; position:absolute; top:100px;">Infinite ammo • Click to practice
+        </div>
     </div>
     <div id="game-over-overlay" class="overlay">
         <h1 id="winner-text">VICTORY</h1>
@@ -102,16 +430,59 @@
     </div>
 
     <div id="shop-menu">
-        <h2>WEAPON SHOP <span id="shop-balance">$0</span></h2>
-        <div class="shop-item">
-            <div><div style="font-weight:bold;">Refill Ammo</div><div style="font-size:0.8rem; color:#888;">Max out current clip & reserve</div></div>
-            <button class="buy-btn" onclick="buy('ammo', 200)">$200</button>
+        <h2>🔫 WEAPON SHOP <span id="shop-balance">$0</span></h2>
+        <div style="max-height: 400px; overflow-y: auto;">
+            <div
+                style="font-size:0.8rem; color:#888; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid #333;">
+                SECONDARY</div>
+            <div class="shop-item">
+                <div>
+                    <div style="font-weight:bold;">Desert Eagle</div>
+                    <div style="font-size:0.8rem; color:#888;">High damage pistol. 55 DMG</div>
+                </div>
+                <button class="buy-btn" onclick="buy('deagle', 700)">$700</button>
+            </div>
+            <div style="font-size:0.8rem; color:#888; margin:10px 0; padding-bottom:8px; border-bottom:1px solid #333;">
+                PRIMARY</div>
+            <div class="shop-item">
+                <div>
+                    <div style="font-weight:bold;">P90 SMG</div>
+                    <div style="font-size:0.8rem; color:#888;">Fast fire rate, 50 rounds. 18 DMG</div>
+                </div>
+                <button class="buy-btn" onclick="buy('smg', 1200)">$1200</button>
+            </div>
+            <div class="shop-item">
+                <div>
+                    <div style="font-weight:bold;">XM1014 Shotgun</div>
+                    <div style="font-size:0.8rem; color:#888;">Devastating close range. 90 DMG</div>
+                </div>
+                <button class="buy-btn" onclick="buy('shotgun', 1800)">$1800</button>
+            </div>
+            <div class="shop-item">
+                <div>
+                    <div style="font-weight:bold;">M4A4</div>
+                    <div style="font-size:0.8rem; color:#888;">Accurate rifle. 33 DMG</div>
+                </div>
+                <button class="buy-btn" onclick="buy('m4a4', 3100)">$3100</button>
+            </div>
+            <div class="shop-item">
+                <div>
+                    <div style="font-weight:bold;">AWP Sniper</div>
+                    <div style="font-size:0.8rem; color:#888;">One shot, one kill. 115 DMG</div>
+                </div>
+                <button class="buy-btn" onclick="buy('awp', 4750)">$4750</button>
+            </div>
+            <div style="font-size:0.8rem; color:#888; margin:10px 0; padding-bottom:8px; border-bottom:1px solid #333;">
+                UTILITY</div>
+            <div class="shop-item">
+                <div>
+                    <div style="font-weight:bold;">Refill Ammo</div>
+                    <div style="font-size:0.8rem; color:#888;">Max out current clip & reserve</div>
+                </div>
+                <button class="buy-btn" onclick="buy('ammo', 200)">$200</button>
+            </div>
         </div>
-        <div class="shop-item">
-            <div><div style="font-weight:bold;">AWP Sniper</div><div style="font-size:0.8rem; color:#888;">One shot, one kill.</div></div>
-            <button class="buy-btn" onclick="buy('awp', 2500)">$2500</button>
-        </div>
-        <div style="margin-top:10px; font-size:0.8rem; text-align:center; color:#666;">Press [B] or [ESC] to close</div>
+        <div style="margin-top:10px; font-size:0.8rem; text-align:center; color:#666;">Press [B] to close</div>
     </div>
 
     <script type="importmap">
@@ -126,7 +497,7 @@
         const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
         const nickParam = url.searchParams.get('nick') || 'Player';
         const userId = url.searchParams.get('userID') || '';
-        
+
         const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(nickParam)}&backgroundColor=ffdfbf`;
         qs('nickname').textContent = nickParam;
         qs('avatar').src = avatarUrl;
@@ -134,26 +505,31 @@
         let myId = null;
         let myScore = 0;
         let roundActive = false;
-        const remotePlayers = new Map(); 
+        const remotePlayers = new Map();
 
         const weaponStats = {
             knife: { name: "Knife", type: "melee", slot: 1, damage: 50, delay: 500, clip: 0, reserve: 0 },
-            pistol: { name: "Glock", type: "gun", slot: 2, damage: 20, delay: 200, clip: 20, reserve: 120 },
-            ak47:   { name: "AK-47", type: "auto", slot: 3, damage: 30, delay: 100, clip: 30, reserve: 90 },
-            awp:    { name: "AWP", type: "sniper", slot: 4, damage: 100, delay: 1500, clip: 5, reserve: 20 }
+            pistol: { name: "Glock", type: "gun", slot: 2, damage: 22, delay: 200, clip: 20, reserve: 120 },
+            deagle: { name: "Desert Eagle", type: "gun", slot: 2, damage: 55, delay: 400, clip: 7, reserve: 35 },
+            smg: { name: "P90", type: "auto", slot: 3, damage: 18, delay: 66, clip: 50, reserve: 100 },
+            shotgun: { name: "XM1014", type: "shotgun", slot: 3, damage: 90, delay: 700, clip: 7, reserve: 32 },
+            ak47: { name: "AK-47", type: "auto", slot: 3, damage: 36, delay: 100, clip: 30, reserve: 90 },
+            m4a4: { name: "M4A4", type: "auto", slot: 3, damage: 33, delay: 90, clip: 30, reserve: 90 },
+            awp: { name: "AWP", type: "sniper", slot: 4, damage: 115, delay: 1500, clip: 5, reserve: 20 }
         };
 
         const gameState = {
             activeSlot: 2,
-            inventory: { 1: 'knife', 2: 'pistol', 3: 'ak47' }, 
+            inventory: { 1: 'knife', 2: 'pistol', 3: 'ak47' },
             ammo: { clip: 20, reserve: 120 },
             canShoot: true,
             isReloading: false,
-            health: 100
+            health: 100,
+            practiceMode: true // Enable shooting during wait
         };
 
         const socket = new WebSocket(`${protocol}://${window.location.host}/ws/bobik?nick=${encodeURIComponent(nickParam)}&userID=${encodeURIComponent(userId)}`);
-        
+
         socket.onmessage = (ev) => {
             const msg = JSON.parse(ev.data);
             if (msg.type === 'welcome') {
@@ -243,7 +619,7 @@
         function makeGunModel(color, length) {
             const g = new THREE.Group();
             const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, length), new THREE.MeshStandardMaterial({ color }));
-            body.position.z = -length/2;
+            body.position.z = -length / 2;
             g.add(body);
             g.position.set(1.5, -1.5, -1);
             return g;
@@ -255,8 +631,8 @@
             awp: makeGunModel(0x224422, 5)
         };
         // Add scope to AWP
-        const scope = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.8), new THREE.MeshStandardMaterial({color:0x000000}));
-        scope.rotation.x = Math.PI/2; scope.position.set(0, 0.4, -1.5);
+        const scope = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.8), new THREE.MeshStandardMaterial({ color: 0x000000 }));
+        scope.rotation.x = Math.PI / 2; scope.position.set(0, 0.4, -1.5);
         models.awp.children[0].add(scope);
 
         function equip(slot) {
@@ -266,14 +642,14 @@
             gameState.activeSlot = slot;
             recoilGroup.clear();
             recoilGroup.add(models[key]);
-            
+
             // Reset FOV
             camera.fov = 75; camera.updateProjectionMatrix();
 
             const s = weaponStats[key];
             if (s.type !== 'melee') {
-                gameState.ammo.clip = s.clip; 
-                gameState.ammo.reserve = s.reserve; 
+                gameState.ammo.clip = s.clip;
+                gameState.ammo.reserve = s.reserve;
             }
             updateHUD();
         }
@@ -314,15 +690,15 @@
             }
 
             const ray = new THREE.Raycaster();
-            ray.setFromCamera(new THREE.Vector2(0,0), camera);
+            ray.setFromCamera(new THREE.Vector2(0, 0), camera);
             const targets = Array.from(remotePlayers.values()).map(e => e.mesh);
             const hits = ray.intersectObjects(targets, true); // true for recursive (mesh group)
-            
+
             if (hits.length > 0 && hits[0].distance < 300) {
                 // Find the root object with userData.id
                 let obj = hits[0].object;
                 while (obj.parent && !obj.userData.id) obj = obj.parent;
-                
+
                 if (obj.userData.id) {
                     send({ type: "hit", target: obj.userData.id, damage: s.damage });
                     // Hit Marker
@@ -372,7 +748,7 @@
 
         document.addEventListener('keydown', (e) => {
             if (qs('shop-menu').style.display === 'block' && e.code !== 'KeyB' && e.code !== 'Escape') return;
-            switch(e.code) {
+            switch (e.code) {
                 case 'KeyB': toggleShop(); break;
                 case 'KeyR': reload(); break;
                 case 'Digit1': equip(1); break;
@@ -386,7 +762,7 @@
                 case 'Space': if (velocity.y === 0) velocity.y = 80; break;
             }
         });
-        
+
         document.addEventListener('mousedown', (e) => {
             if (e.button === 2 && gameState.inventory[gameState.activeSlot] === 'awp') {
                 camera.fov = (camera.fov === 75) ? 20 : 75;
@@ -395,13 +771,13 @@
         });
 
         document.addEventListener('keyup', (e) => {
-            if (e.code==='KeyW') moveFwd=false; if (e.code==='KeyS') moveBwd=false;
-            if (e.code==='KeyA') moveLeft=false; if (e.code==='KeyD') moveRight=false;
+            if (e.code === 'KeyW') moveFwd = false; if (e.code === 'KeyS') moveBwd = false;
+            if (e.code === 'KeyA') moveLeft = false; if (e.code === 'KeyD') moveRight = false;
         });
 
         // Movement
         const velocity = new THREE.Vector3();
-        let moveFwd=false, moveBwd=false, moveLeft=false, moveRight=false;
+        let moveFwd = false, moveBwd = false, moveLeft = false, moveRight = false;
         let prevTime = performance.now();
 
         function animate() {
@@ -414,7 +790,7 @@
                 // Physics
                 velocity.x -= velocity.x * 10.0 * delta;
                 velocity.z -= velocity.z * 10.0 * delta;
-                velocity.y -= 200.0 * delta; 
+                velocity.y -= 200.0 * delta;
                 const direction = new THREE.Vector3();
                 direction.z = Number(moveFwd) - Number(moveBwd);
                 direction.x = Number(moveRight) - Number(moveLeft);
@@ -428,7 +804,7 @@
 
                 // Simple collision floor
                 if (controls.getObject().position.y < 6) { velocity.y = 0; controls.getObject().position.y = 6; }
-                
+
                 // Simple wall collision (push back)
                 const pos = controls.getObject().position;
                 colliders.forEach(box => {
@@ -461,7 +837,7 @@
                 if (!entry) {
                     const mesh = new THREE.Group();
                     mesh.userData.id = p.id; // Crucial for raycast
-                    
+
                     const body = new THREE.Mesh(new THREE.CapsuleGeometry(1.5, 4, 4, 8), new THREE.MeshStandardMaterial({ color: 0xff0000 }));
                     mesh.add(body);
                     const head = new THREE.Mesh(new THREE.SphereGeometry(1.5), new THREE.MeshStandardMaterial({ color: 0xffccaa }));
@@ -481,9 +857,9 @@
                 entry.div.textContent = `${p.name} [${p.health}]`;
             });
             for (const [id, entry] of remotePlayers) { if (!seen.has(id)) { scene.remove(entry.mesh); entry.div.remove(); remotePlayers.delete(id); } }
-            
+
             const ul = qs('score-list'); ul.innerHTML = '';
-            list.sort((a,b) => b.kills - a.kills).forEach(p => {
+            list.sort((a, b) => b.kills - a.kills).forEach(p => {
                 const li = document.createElement('li');
                 li.innerHTML = `<span>${p.name}</span> <span>${p.kills}/${p.deaths}</span>`;
                 ul.appendChild(li);
@@ -502,9 +878,9 @@
         }
 
         function updateGameFlow(msg) { qs('waiting-overlay').style.display = msg.roundActive ? 'none' : 'flex'; }
-        function updateTimer(s, c) { 
-            const m = Math.floor(s/60), sec = (s%60).toString().padStart(2,'0'); 
-            qs('timer').textContent = `${m}:${sec}`; 
+        function updateTimer(s, c) {
+            const m = Math.floor(s / 60), sec = (s % 60).toString().padStart(2, '0');
+            qs('timer').textContent = `${m}:${sec}`;
             if (!roundActive && c < 2) qs('waiting-overlay').style.display = 'flex';
         }
         function showGameOver(msg) {
@@ -516,7 +892,8 @@
         }
 
         equip(2);
-        window.addEventListener('resize', () => { camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+        window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
     </script>
 </body>
+
 </html>
