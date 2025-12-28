@@ -889,6 +889,10 @@
             }
         }
 
+        // Expose functions to global scope for onclick handlers
+        window.buy = buy;
+        window.toggleShop = toggleShop;
+
         document.addEventListener('keydown', (e) => {
             if (qs('shop-menu').style.display === 'block' && e.code !== 'KeyB' && e.code !== 'Escape') return;
             switch (e.code) {

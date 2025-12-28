@@ -432,9 +432,10 @@
         let myId = null;
         let gameState = null;
         let mouseX = 0, mouseY = 0;
-        let keys = { w: false, a: false, s: false, d: false };
+        let keys = { w: false, a: false, s: false, d: false, shift: false };
         let playerPos = { x: 0, y: 0 };
         let gameStarted = false;
+        let isSprinting = false;
 
         // Canvas setup
         function resize() {
@@ -454,10 +455,25 @@
 
         // Keyboard
         document.addEventListener('keydown', e => {
-            if (e.key.toLowerCase() in keys) keys[e.key.toLowerCase()] = true;
+            const key = e.key.toLowerCase();
+            if (key in keys) keys[key] = true;
+            if (e.key === 'Shift') { keys.shift = true; isSprinting = true; }
+            // F to use flare
+            if (key === 'f' && gameStarted && socket?.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({ type: 'use_flare' }));
+            }
         });
         document.addEventListener('keyup', e => {
-            if (e.key.toLowerCase() in keys) keys[e.key.toLowerCase()] = false;
+            const key = e.key.toLowerCase();
+            if (key in keys) keys[key] = false;
+            if (e.key === 'Shift') { keys.shift = false; isSprinting = false; }
+        });
+
+        // Click to use flare
+        canvas.addEventListener('click', () => {
+            if (gameStarted && socket?.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({ type: 'use_flare' }));
+            }
         });
 
         // Create floating particles
@@ -578,8 +594,9 @@
             const dt = (timestamp - lastUpdate) / 1000;
             lastUpdate = timestamp;
 
-            // Send movement
-            const speed = 5;
+            // Send movement with sprint support
+            const baseSpeed = 5;
+            const speed = isSprinting ? baseSpeed * 1.8 : baseSpeed;
             let dx = 0, dy = 0;
             if (keys.w) dy -= speed * dt;
             if (keys.s) dy += speed * dt;
