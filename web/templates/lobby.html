@@ -5,16 +5,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>{{.Text.LobbyName}}</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <style>
         /* --- GLOBAL THEME --- */
         :root {
-            --bg-dark: #0f0502;
-            --primary: #ff4500;
-            --accent: #ffae00;
-            --glass-bg: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --bg-dark: #050000;
+            --primary: #cc0000;
+            --accent: #ff0000;
+            --glass-bg: rgba(20, 0, 0, 0.9);
+            --glass-border: rgba(100, 0, 0, 0.3);
             --text-main: #ffffff;
-            --text-muted: rgba(255, 255, 255, 0.5);
+            --text-muted: #aa6666;
             --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
@@ -107,8 +110,8 @@
         body {
             background-color: var(--bg-dark);
             background-image:
-                radial-gradient(circle at 10% 10%, rgba(255, 69, 0, 0.25) 0%, transparent 60%),
-                radial-gradient(circle at 90% 90%, rgba(139, 0, 0, 0.3) 0%, transparent 60%);
+                radial-gradient(circle at 50% 100%, #300 0%, #000 70%),
+                radial-gradient(circle at 10% 10%, rgba(255, 0, 0, 0.1) 0%, transparent 60%);
             background-attachment: fixed;
             color: var(--text-main);
             font-family: var(--font-main);

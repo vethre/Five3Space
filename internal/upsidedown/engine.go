@@ -60,6 +60,7 @@ type Entity struct {
 	Type         string  `json:"type"` // "demogorgon", "light_orb", "battery", "flare"
 	Pos          Vec2    `json:"pos"`
 	Active       bool    `json:"active"`
+	Health       int     `json:"-"`
 	StunnedUntil float64 `json:"-"`
 }
 
@@ -549,28 +550,81 @@ func (g *Game) readPump(p *Player) {
 				g.startGame()
 			}
 		case "use_flare":
-			if p.Alive && p.AvailableFlares > 0 && !p.HasFlare {
-				p.AvailableFlares--
-				p.HasFlare = true
-				p.FlareTime = 15 // 15 seconds duration
-				p.LightRadius = 10.0
-
-				// Stun/Pushback nearby enemies
-				for _, e := range g.entities {
-					if e.Type == "demogorgon" && e.Active {
-						dist := distance(p.Pos, e.Pos)
-						if dist < 12 { // Wide range
-							e.StunnedUntil = g.gameTime + 5.0 // 5 seconds stun
-							// Push back
-							dx := e.Pos.X - p.Pos.X
-							dy := e.Pos.Y - p.Pos.Y
-							e.Pos.X += dx * 2
-							e.Pos.Y += dy * 2
-						}
-					}
-				}
+			g.handleFlareUse(p)
+		case "attack":
+			if angle, ok := msg["angle"].(float64); ok {
+				g.handleAttack(p, angle)
 			}
 		}
 		g.mu.Unlock()
+	}
+}
+
+func (g *Game) handleFlareUse(p *Player) {
+	if p.Alive && p.AvailableFlares > 0 && !p.HasFlare {
+		p.AvailableFlares--
+		p.HasFlare = true
+		p.FlareTime = 15 // 15 seconds duration
+		p.LightRadius = 10.0
+
+		// Stun/Pushback nearby enemies
+		for _, e := range g.entities {
+			if e.Type == "demogorgon" && e.Active {
+				dist := distance(p.Pos, e.Pos)
+				if dist < 12 { // Wide range
+					e.StunnedUntil = g.gameTime + 5.0 // 5 seconds stun
+					// Push back
+					dx := e.Pos.X - p.Pos.X
+					dy := e.Pos.Y - p.Pos.Y
+					e.Pos.X += dx * 2
+					e.Pos.Y += dy * 2
+				}
+			}
+		}
+	}
+}
+
+func (g *Game) handleAttack(p *Player, angle float64) {
+	if !p.Alive {
+		return
+	}
+
+	// Raycast parameters
+	reach := 20.0
+	ex := p.Pos.X + math.Cos(angle)*reach
+	ey := p.Pos.Y + math.Sin(angle)*reach
+
+	for _, e := range g.entities {
+		if !e.Active || e.Type != "demogorgon" {
+			continue
+		}
+
+		// Circle-Line collision check
+		dx := ex - p.Pos.X
+		dy := ey - p.Pos.Y
+		lenSq := dx*dx + dy*dy
+
+		epx := e.Pos.X - p.Pos.X
+		epy := e.Pos.Y - p.Pos.Y
+
+		t := (epx*dx + epy*dy) / lenSq
+		t = math.Max(0, math.Min(1, t))
+
+		cx := p.Pos.X + t*dx
+		cy := p.Pos.Y + t*dy
+
+		// Distance to entity (radius ~1.5)
+		distX := e.Pos.X - cx
+		distY := e.Pos.Y - cy
+
+		if (distX*distX + distY*distY) < (1.5 * 1.5) {
+			// Hit!
+			e.Health -= 34 // 3 hits to kill
+			if e.Health <= 0 {
+				e.Active = false
+				p.Score += 100
+			}
+			break
+		}
 	}
 }

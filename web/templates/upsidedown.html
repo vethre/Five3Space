@@ -469,9 +469,43 @@
             if (e.key === 'Shift') { keys.shift = false; isSprinting = false; }
         });
 
-        // Click to use flare
-        canvas.addEventListener('click', () => {
-            if (gameStarted && socket?.readyState === WebSocket.OPEN) {
+        // Click to attack (shoot)
+        canvas.addEventListener('mousedown', (e) => {
+            if (!gameStarted || !socket || socket.readyState !== WebSocket.OPEN) return;
+
+            // Left click: Shoot
+            if (e.button === 0) {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                // Calculate angle relative to center (player)
+                const cx = canvas.width / 2;
+                const cy = canvas.height / 2;
+                const angle = Math.atan2(y - cy, x - cx);
+
+                socket.send(JSON.stringify({ type: 'attack', angle: angle }));
+
+                // Visual feedback (muzzle flash / tracer)
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(angle);
+                ctx.strokeStyle = '#ffff00';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(15, 0); // Start from player edge
+                ctx.lineTo(300, 0); // Tracer length
+                ctx.stroke();
+                ctx.restore();
+
+                // Sound effect (optional placeholder)
+                // new Audio('/static/shoot.mp3').play().catch(()=>{});
+            }
+        });
+
+        // F key for Flare
+        document.addEventListener('keydown', e => {
+            if (e.key.toLowerCase() === 'f' && gameStarted) {
                 socket.send(JSON.stringify({ type: 'use_flare' }));
             }
         });

@@ -769,7 +769,11 @@
             const key = gameState.inventory[slot];
             if (!key) return;
             gameState.activeSlot = slot;
-            recoilGroup.clear();
+
+            // Fix: remove previous models properly
+            while (recoilGroup.children.length > 0) {
+                recoilGroup.remove(recoilGroup.children[0]);
+            }
             recoilGroup.add(models[key]);
 
             // Reset FOV
@@ -887,10 +891,15 @@
 
         // --- INPUT ---
         // Lock pointer on any click if not in shop/overlays
+        // Lock pointer on any click if not in shop/overlays
         document.addEventListener('click', (e) => {
             if (qs('shop-menu').style.display === 'block') return;
-            if (!controls.isLocked) controls.lock();
-            else shoot();
+            // Ensure we lock if not locked
+            if (!controls.isLocked) {
+                controls.lock();
+                return;
+            }
+            shoot();
         });
 
         // Toggle Shop
@@ -901,12 +910,16 @@
                 controls.lock();
             } else {
                 menu.style.display = 'block';
+                qs('shop-balance').textContent = "$" + myScore;
                 controls.unlock();
             }
         }
 
         // Buy weapons/items from shop
         function buy(item, cost) {
+            // Practice Mode (waiting state) -> Free items
+            if (!roundActive) cost = 0;
+
             if (myScore < cost) {
                 // Show insufficient funds feedback
                 const shopBalance = qs('shop-balance');
