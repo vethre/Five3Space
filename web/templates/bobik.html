@@ -330,6 +330,7 @@
             z-index: 30;
             width: 400px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            pointer-events: auto;
         }
 
         #shop-menu h2 {
@@ -536,7 +537,9 @@
             isReloading: false,
             health: 100,
             practiceMode: true, // Enable shooting during wait
-            dummies: [] // Practice targets
+            dummies: [], // Practice targets
+            isShooting: false, // For automatic fire
+            lastShotTime: 0
         };
 
         const socket = new WebSocket(`${protocol}://${window.location.host}/ws/bobik?nick=${encodeURIComponent(nickParam)}&userID=${encodeURIComponent(userId)}`);
@@ -820,8 +823,13 @@
 
         function shoot() {
             if (gameState.isReloading || !gameState.canShoot) return;
+            const now = performance.now();
             const key = gameState.inventory[gameState.activeSlot];
             const s = weaponStats[key];
+
+            // Fire rate limiter
+            if (now - gameState.lastShotTime < s.delay) return;
+            gameState.lastShotTime = now;
 
             if (s.type !== 'melee') {
                 if (gameState.ammo.clip <= 0) { reload(); return; }
@@ -906,18 +914,20 @@
             }, 1500);
         }
 
-        // --- INPUT ---
-        // Lock pointer on any click if not in shop/overlays
         // Lock pointer on any click if not in shop/overlays
         document.addEventListener('click', (e) => {
             if (qs('shop-menu').style.display === 'block') return;
+            if (qs('game-over-overlay').style.display === 'flex') return;
             // Ensure we lock if not locked
             if (!controls.isLocked) {
                 controls.lock();
-                return;
             }
-            shoot();
         });
+
+        // Prevent shop clicks from reaching the document and causing shots/locking
+        qs('shop-menu').addEventListener('click', (e) => e.stopPropagation());
+        qs('shop-menu').addEventListener('mousedown', (e) => e.stopPropagation());
+        qs('shop-menu').addEventListener('mouseup', (e) => e.stopPropagation());
 
         // Toggle Shop
         function toggleShop() {
@@ -1023,9 +1033,21 @@
         });
 
         document.addEventListener('mousedown', (e) => {
+            if (qs('shop-menu').style.display === 'block') return;
+            if (e.button === 0) {
+                gameState.isShooting = true;
+                // Immediate shot
+                shoot();
+            }
             if (e.button === 2 && gameState.inventory[gameState.activeSlot] === 'awp') {
                 camera.fov = (camera.fov === 75) ? 20 : 75;
                 camera.updateProjectionMatrix();
+            }
+        });
+
+        document.addEventListener('mouseup', (e) => {
+            if (e.button === 0) {
+                gameState.isShooting = false;
             }
         });
 
@@ -1044,6 +1066,16 @@
             const time = performance.now();
             const delta = (time - prevTime) / 1000;
             prevTime = time;
+
+            if (gameState.isShooting && !gameState.isReloading) {
+                const key = gameState.inventory[gameState.activeSlot];
+                const s = weaponStats[key];
+                if (s && (s.type === 'auto' || s.type === 'smg')) { // Rifles or SMG
+                    if (time - gameState.lastShotTime > s.delay) {
+                        shoot();
+                    }
+                }
+            }
 
             if (controls.isLocked) {
                 // Physics
