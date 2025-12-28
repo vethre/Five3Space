@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{.Lang}}">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -18,21 +19,46 @@
         }
 
         /* --- ANIMATIONS --- */
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body {
             background-color: var(--bg-dark);
-            background-image: 
+            background-image:
                 radial-gradient(circle at 10% 10%, rgba(255, 69, 0, 0.25) 0%, transparent 60%),
                 radial-gradient(circle at 90% 90%, rgba(139, 0, 0, 0.3) 0%, transparent 60%);
             background-attachment: fixed;
             color: var(--text-main);
             font-family: var(--font-main);
             min-height: 100vh;
-            display: flex; flex-direction: column;
+            display: flex;
+            flex-direction: column;
             overflow-x: hidden;
         }
 
@@ -55,20 +81,23 @@
             margin-bottom: 10px;
             gap: 12px;
         }
+
         .brand {
             font-weight: 900;
             letter-spacing: 2px;
             font-size: 0.9rem;
             color: var(--text-muted);
         }
+
         .header-actions {
             display: flex;
             gap: 10px;
         }
+
         .pill-btn {
             padding: 8px 14px;
             border-radius: 999px;
-            border: 1px solid rgba(255,255,255,0.08);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             color: white;
             font-weight: 800;
             text-decoration: none;
@@ -77,19 +106,34 @@
             overflow: hidden;
             transition: transform 0.2s, box-shadow 0.2s;
         }
+
         .pill-btn::before {
             content: "";
             position: absolute;
             inset: 0;
-            background: linear-gradient(120deg, rgba(255,69,0,0.8), rgba(255,174,0,0.8));
+            background: linear-gradient(120deg, rgba(255, 69, 0, 0.8), rgba(255, 174, 0, 0.8));
             opacity: 0;
             transition: opacity 0.2s;
             z-index: 0;
         }
-        .pill-btn span { position: relative; z-index: 1; }
-        .pill-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
-        .pill-btn:hover::before { opacity: 1; }
-        .pill-btn--settings { background: linear-gradient(135deg, #8e2de2, #4a00e0); }
+
+        .pill-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .pill-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .pill-btn:hover::before {
+            opacity: 1;
+        }
+
+        .pill-btn--settings {
+            background: linear-gradient(135deg, #8e2de2, #4a00e0);
+        }
 
         /* Profile Card */
         .profile-card {
@@ -103,12 +147,26 @@
             align-items: center;
             gap: 24px;
             margin-bottom: 40px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
             animation: slideUp 0.6s ease-out;
         }
 
-        .avatar-box { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
-        .avatar { width: 100%; height: 100%; border-radius: 50%; border: 3px solid var(--primary); background: #111; object-fit: cover; }
+        .avatar-box {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            flex-shrink: 0;
+        }
+
+        .avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid var(--primary);
+            background: #111;
+            object-fit: cover;
+        }
+
         .status-dot {
             position: absolute;
             bottom: -2px;
@@ -117,19 +175,43 @@
             height: 18px;
             border-radius: 50%;
             border: 2px solid #0f0502;
-            box-shadow: 0 0 10px rgba(0,0,0,0.4);
-        }
-        .status-online { background: #4ade80; box-shadow: 0 0 12px rgba(74,222,128,0.8); }
-        .status-away { background: #facc15; box-shadow: 0 0 12px rgba(250,204,21,0.8); }
-        .status-offline { background: #737373; box-shadow: 0 0 12px rgba(115,115,115,0.6); }
-        .level-badge { 
-            position: absolute; bottom: -5px; right: -5px; 
-            background: var(--primary); color: white; 
-            font-size: 11px; font-weight: 900; padding: 4px 8px; 
-            border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
         }
 
-        .profile-details { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        .status-online {
+            background: #4ade80;
+            box-shadow: 0 0 12px rgba(74, 222, 128, 0.8);
+        }
+
+        .status-away {
+            background: #facc15;
+            box-shadow: 0 0 12px rgba(250, 204, 21, 0.8);
+        }
+
+        .status-offline {
+            background: #737373;
+            box-shadow: 0 0 12px rgba(115, 115, 115, 0.6);
+        }
+
+        .level-badge {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background: var(--primary);
+            color: white;
+            font-size: 11px;
+            font-weight: 900;
+            padding: 4px 8px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .profile-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
 
         .name-row {
             display: flex;
@@ -147,6 +229,7 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
         .nickname .tag {
             font-size: 1rem;
             font-weight: 800;
@@ -155,6 +238,7 @@
             -webkit-text-fill-color: #ffae00;
             margin-left: 8px;
         }
+
         .coin-chip {
             display: inline-flex;
             align-items: center;
@@ -179,25 +263,81 @@
             box-shadow: 0 0 15px rgba(255, 174, 0, 0.1);
             transition: transform 0.2s;
         }
-        .medal-display:hover { transform: scale(1.05); cursor: pointer; }
 
-        .medal-icon { width: 32px; height: 32px; fill: var(--accent); filter: drop-shadow(0 0 5px rgba(255, 174, 0, 0.6)); }
-        .medal-count { font-size: 1.2rem; font-weight: 800; color: var(--accent); }
-        
-        .medal-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
-        .medal-chip {
-            display: flex; align-items: center; gap: 10px; padding: 8px 12px;
-            background: rgba(255, 174, 0, 0.08); border: 1px solid rgba(255, 174, 0, 0.25);
-            border-radius: 12px; min-width: 180px;
+        .medal-display:hover {
+            transform: scale(1.05);
+            cursor: pointer;
         }
-        .medal-chip-icon { font-size: 16px; }
-        .medal-chip-name { font-weight: 800; font-size: 0.9rem; }
-        .medal-chip-desc { font-size: 0.75rem; color: var(--text-muted); }
+
+        .medal-icon {
+            width: 32px;
+            height: 32px;
+            fill: var(--accent);
+            filter: drop-shadow(0 0 5px rgba(255, 174, 0, 0.6));
+        }
+
+        .medal-count {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .medal-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .medal-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: rgba(255, 174, 0, 0.08);
+            border: 1px solid rgba(255, 174, 0, 0.25);
+            border-radius: 12px;
+            min-width: 180px;
+        }
+
+        .medal-chip-icon {
+            font-size: 16px;
+        }
+
+        .medal-chip-name {
+            font-weight: 800;
+            font-size: 0.9rem;
+        }
+
+        .medal-chip-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
 
         /* XP Bar */
-        .xp-container { width: 100%; margin-top: 8px; }
-        .xp-labels { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 800; color: var(--text-muted); margin-bottom: 6px; letter-spacing: 1px; }
-        .xp-bar-bg { width: 100%; height: 10px; background: rgba(0,0,0,0.5); border-radius: 5px; overflow: hidden; }
+        .xp-container {
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .xp-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+        }
+
+        .xp-bar-bg {
+            width: 100%;
+            height: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
         .xp-bar-fill {
             height: 100%;
             background: linear-gradient(90deg, #ff8c00, #ff4500);
@@ -209,12 +349,25 @@
 
         /* Modes Grid */
         .section-label {
-            font-size: 0.85rem; font-weight: 800; text-transform: uppercase; 
-            letter-spacing: 2px; color: var(--primary); margin-bottom: 20px; 
-            display: flex; align-items: center; gap: 10px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             animation: fadeIn 1s ease-out;
         }
-        .section-label::after { content: ''; height: 1px; background: linear-gradient(90deg, var(--primary), transparent); flex: 1; opacity: 0.3; }
+
+        .section-label::after {
+            content: '';
+            height: 1px;
+            background: linear-gradient(90deg, var(--primary), transparent);
+            flex: 1;
+            opacity: 0.3;
+        }
 
         .modes-grid {
             display: grid;
@@ -228,55 +381,131 @@
             height: 260px;
             border-radius: 24px;
             overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.05);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             background: #111;
             transition: all 0.3s ease;
             animation: slideUp 0.8s ease-out backwards;
         }
+
         /* Stagger animations */
-        .game-card:nth-child(1) { animation-delay: 0.1s; }
-        .game-card:nth-child(2) { animation-delay: 0.2s; }
-        .game-card:nth-child(3) { animation-delay: 0.3s; }
+        .game-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .game-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .game-card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
 
         .game-card:hover {
             transform: translateY(-5px);
-            border-color: rgba(255,255,255,0.3);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
-        .game-card-link { text-decoration: none; color: inherit; }
-        .card-bg { position: absolute; inset: 0; opacity: 0.6; transition: opacity 0.4s; }
-        .game-card:hover .card-bg { opacity: 0.8; }
-        
+        .game-card-link {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .card-bg {
+            position: absolute;
+            inset: 0;
+            opacity: 0.6;
+            transition: opacity 0.4s;
+        }
+
+        .game-card:hover .card-bg {
+            opacity: 0.8;
+        }
+
         .card-content {
-            position: relative; h-full; height: 100%;
-            background: linear-gradient(to top, rgba(0,0,0,0.9) 10%, transparent 80%);
+            position: relative;
+            h-full;
+            height: 100%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 10%, transparent 80%);
             padding: 24px;
-            display: flex; flex-direction: column; justify-content: flex-end;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
             align-items: flex-start;
         }
 
         .status-badge {
-            position: absolute; top: 20px; right: 20px;
-            padding: 6px 12px; border-radius: 8px;
-            font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;
-            display: flex; align-items: center; gap: 6px;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        .status-badge.wip { background: #ffae00; color: black; box-shadow: 0 0 10px rgba(255, 174, 0, 0.4); }
-        .status-badge.lock { background: rgba(255,255,255,0.1); color: #888; border: 1px solid rgba(255,255,255,0.1); }
-        .status-badge.ready { background: rgba(0,255,0,0.15); color: #6cf08b; border: 1px solid rgba(0,255,0,0.2); }
 
-        .card-title { font-size: 1.8rem; font-weight: 900; font-style: italic; line-height: 1; margin-bottom: 6px; text-transform: uppercase; }
-        .card-sub { font-size: 0.9rem; color: #ccc; margin-bottom: 20px; }
+        .status-badge.wip {
+            background: #ffae00;
+            color: black;
+            box-shadow: 0 0 10px rgba(255, 174, 0, 0.4);
+        }
+
+        .status-badge.lock {
+            background: rgba(255, 255, 255, 0.1);
+            color: #888;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-badge.ready {
+            background: rgba(0, 255, 0, 0.15);
+            color: #6cf08b;
+            border: 1px solid rgba(0, 255, 0, 0.2);
+        }
+
+        .card-title {
+            font-size: 1.8rem;
+            font-weight: 900;
+            font-style: italic;
+            line-height: 1;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .card-sub {
+            font-size: 0.9rem;
+            color: #ccc;
+            margin-bottom: 20px;
+        }
 
         .action-btn {
-            background: white; color: black;
-            border: none; padding: 12px 24px; border-radius: 12px;
-            font-weight: 900; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;
-            cursor: pointer; transition: transform 0.2s;
+            background: white;
+            color: black;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: transform 0.2s;
         }
-        .action-btn:hover { transform: scale(1.05); }
-        .action-btn.disabled { background: transparent; color: #555; border: 1px solid #333; cursor: not-allowed; }
+
+        .action-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .action-btn.disabled {
+            background: transparent;
+            color: #555;
+            border: 1px solid #333;
+            cursor: not-allowed;
+        }
 
         /* Sidebar */
         .main-grid {
@@ -284,6 +513,7 @@
             grid-template-columns: 240px 1fr;
             gap: 20px;
         }
+
         .sidebar {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
@@ -292,9 +522,15 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
         }
-        .sidebar h4 { font-size: 0.9rem; color: var(--text-muted); letter-spacing: 1px; }
+
+        .sidebar h4 {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+
         .side-link {
             display: flex;
             align-items: center;
@@ -303,28 +539,49 @@
             border-radius: 12px;
             color: white;
             text-decoration: none;
-            background: rgba(255,255,255,0.03);
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid transparent;
             transition: all 0.2s;
         }
-        .side-link:hover { border-color: var(--glass-border); background: rgba(255,255,255,0.06); transform: translateX(2px); }
-        .side-pill {
-            width: 32px; height: 32px; border-radius: 10px;
-            display: inline-flex; align-items: center; justify-content: center;
-            background: linear-gradient(135deg, #ff4e50, #f9d423);
-            color: #0f0502; font-weight: 900;
+
+        .side-link:hover {
+            border-color: var(--glass-border);
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateX(2px);
         }
-        .side-pill.blue { background: linear-gradient(135deg, #36d1dc, #5b86e5); }
-        .side-pill.green { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+
+        .side-pill {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #ff4e50, #f9d423);
+            color: #0f0502;
+            font-weight: 900;
+        }
+
+        .side-pill.blue {
+            background: linear-gradient(135deg, #36d1dc, #5b86e5);
+        }
+
+        .side-pill.green {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+        }
 
         /* --- CUSTOMIZATION STYLES --- */
         /* Name Colors */
-        .name-white { color: white; }
+        .name-white {
+            color: white;
+        }
+
         .name-gold {
             color: #ffd700;
             text-shadow: 0 0 10px rgba(255, 215, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.4);
             font-weight: 900;
         }
+
         .name-rainbow {
             background: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8f00ff);
             background-size: 200% auto;
@@ -333,25 +590,208 @@
             animation: rainbowAnim 3s linear infinite;
             font-weight: 900;
         }
-        @keyframes rainbowAnim { to { background-position: 200% center; } }
+
+        @keyframes rainbowAnim {
+            to {
+                background-position: 200% center;
+            }
+        }
 
         /* Banners */
-        .banner-default { /* Default glass handled by .profile-card */ }
+        .banner-default {
+            /* Default glass handled by .profile-card */
+        }
+
         .banner-gold {
             background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(184, 134, 11, 0.15)) !important;
             border: 1px solid rgba(255, 215, 0, 0.4) !important;
             box-shadow: 0 10px 40px rgba(255, 215, 0, 0.1) !important;
         }
+
         .banner-cyber {
             background: linear-gradient(135deg, rgba(0, 242, 96, 0.15), rgba(5, 117, 230, 0.15)) !important;
             border: 1px solid rgba(0, 242, 96, 0.4) !important;
             box-shadow: 0 10px 40px rgba(0, 242, 96, 0.1) !important;
         }
 
+        .banner-upside_down {
+            background: linear-gradient(180deg, rgba(26, 0, 0, 0.9), rgba(45, 10, 10, 0.8), rgba(0, 0, 0, 0.95)) !important;
+            border: 1px solid rgba(139, 0, 0, 0.6) !important;
+            box-shadow: 0 0 50px rgba(139, 0, 0, 0.4), inset 0 0 30px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        /* Hawkins Name Color */
+        .name-hawkins {
+            color: #ffb347 !important;
+            text-shadow: 0 0 10px #ff6600, 0 0 20px #ff3300, 0 0 40px #ff0000 !important;
+            -webkit-text-fill-color: #ffb347 !important;
+            background: none !important;
+            animation: hawkinsFlicker 3s infinite !important;
+        }
+
+        @keyframes hawkinsFlicker {
+
+            0%,
+            100% {
+                opacity: 1;
+                text-shadow: 0 0 10px #ff6600, 0 0 20px #ff3300, 0 0 40px #ff0000;
+            }
+
+            50% {
+                opacity: 0.9;
+                text-shadow: 0 0 5px #ff6600, 0 0 15px #ff3300;
+            }
+
+            52% {
+                opacity: 0.4;
+                text-shadow: 0 0 2px #ff6600;
+            }
+
+            54% {
+                opacity: 0.95;
+                text-shadow: 0 0 10px #ff6600, 0 0 25px #ff3300, 0 0 50px #ff0000;
+            }
+        }
+
+        /* ========== UPSIDE DOWN FULL THEME MODE ========== */
+        body.upside-down-mode {
+            background-color: #050000 !important;
+            background-image:
+                radial-gradient(circle at 10% 10%, rgba(139, 0, 0, 0.4) 0%, transparent 50%),
+                radial-gradient(circle at 90% 90%, rgba(50, 0, 0, 0.5) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.8) 0%, transparent 70%) !important;
+        }
+
+        /* Floating ash particles */
+        body.upside-down-mode::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: 0;
+            animation: noiseAnim 0.5s steps(10) infinite;
+        }
+
+        @keyframes noiseAnim {
+            0% {
+                transform: translate(0, 0);
+            }
+
+            10% {
+                transform: translate(-5%, -5%);
+            }
+
+            20% {
+                transform: translate(-10%, 5%);
+            }
+
+            30% {
+                transform: translate(5%, -10%);
+            }
+
+            40% {
+                transform: translate(-5%, 15%);
+            }
+
+            50% {
+                transform: translate(-10%, 5%);
+            }
+
+            60% {
+                transform: translate(15%, 0);
+            }
+
+            70% {
+                transform: translate(0, 10%);
+            }
+
+            80% {
+                transform: translate(-15%, 0);
+            }
+
+            90% {
+                transform: translate(10%, 5%);
+            }
+
+            100% {
+                transform: translate(5%, 0);
+            }
+        }
+
+        /* Vignette effect */
+        body.upside-down-mode::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.7) 100%);
+            pointer-events: none;
+            z-index: 99;
+        }
+
+        /* Red-tinted accent colors */
+        body.upside-down-mode {
+            --primary: #8b0000;
+            --accent: #ff3300;
+        }
+
+        body.upside-down-mode .section-label {
+            color: #8b0000 !important;
+        }
+
+        body.upside-down-mode .section-label::after {
+            background: linear-gradient(90deg, #8b0000, transparent) !important;
+        }
+
+        body.upside-down-mode .game-card {
+            border-color: rgba(139, 0, 0, 0.3) !important;
+        }
+
+        body.upside-down-mode .game-card:hover {
+            border-color: rgba(139, 0, 0, 0.6) !important;
+        }
+
+        body.upside-down-mode .sidebar {
+            background: rgba(20, 0, 0, 0.6) !important;
+            border-color: rgba(139, 0, 0, 0.3) !important;
+        }
+
+        body.upside-down-mode .side-link:hover {
+            border-color: rgba(139, 0, 0, 0.5) !important;
+            background: rgba(139, 0, 0, 0.1) !important;
+        }
+
+        body.upside-down-mode .status-badge.ready {
+            background: rgba(139, 0, 0, 0.3) !important;
+            color: #ff6b6b !important;
+            border-color: rgba(139, 0, 0, 0.5) !important;
+        }
+
+        /* Scanline effect for extra eeriness */
+        body.upside-down-mode .container {
+            position: relative;
+        }
+
+        body.upside-down-mode .container::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.1) 2px,
+                    rgba(0, 0, 0, 0.1) 4px);
+            pointer-events: none;
+            z-index: 98;
+            opacity: 0.4;
+        }
+
         /* Modal */
         .modal-backdrop {
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,0.65);
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
             display: none;
             align-items: center;
             justify-content: center;
@@ -359,82 +799,192 @@
             opacity: 0;
             transition: opacity 0.2s ease;
         }
-        .modal-backdrop.open { display: flex; opacity: 1; }
+
+        .modal-backdrop.open {
+            display: flex;
+            opacity: 1;
+        }
+
         .modal {
             background: #121212;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 16px;
             padding: 20px;
             width: min(420px, 90vw);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
             transform: scale(0.96);
             transition: transform 0.2s ease;
         }
-        .modal-backdrop.open .modal { transform: scale(1); }
-        .modal h3 { margin-bottom: 10px; font-weight: 900; }
-        .modal label { display: block; margin: 8px 0 4px; font-size: 0.9rem; color: var(--text-muted); }
+
+        .modal-backdrop.open .modal {
+            transform: scale(1);
+        }
+
+        .modal h3 {
+            margin-bottom: 10px;
+            font-weight: 900;
+        }
+
+        .modal label {
+            display: block;
+            margin: 8px 0 4px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
         .modal input {
             width: 100%;
             padding: 10px;
             border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.2);
-            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.04);
             color: white;
         }
+
         .modal-actions {
             display: flex;
             gap: 10px;
             margin-top: 14px;
             justify-content: flex-end;
         }
-        .ghost-btn { background: transparent; color: #ccc; border: 1px solid rgba(255,255,255,0.2); padding: 10px 14px; border-radius: 10px; cursor: pointer; }
-        .primary-btn { background: #ff4500; color: #fff; border: none; padding: 10px 14px; border-radius: 10px; cursor: pointer; font-weight: 800; }
 
-        .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 10px; }
+        .ghost-btn {
+            background: transparent;
+            color: #ccc;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .primary-btn {
+            background: #ff4500;
+            color: #fff;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 800;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin-top: 10px;
+        }
+
         .settings-card {
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 14px;
             padding: 14px;
-            background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
-            box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
         }
-        .settings-card h4 { margin: 0 0 8px; font-size: 0.95rem; letter-spacing: 0.5px; color: var(--text-muted); }
-        .settings-chips { display: flex; gap: 8px; flex-wrap: wrap; }
-        .settings-note { font-size: 0.85rem; color: var(--text-muted); margin-top: 6px; }
-        .settings-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-        .logout-btn { background: linear-gradient(135deg, #1f1f1f, #111); border: 1px solid rgba(255,255,255,0.15); color: #ffb4b4; }
 
-        .remember-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; color: var(--text-muted); font-size: 0.9rem; }
-        .remember-row input { width: auto; accent-color: var(--primary); }
+        .settings-card h4 {
+            margin: 0 0 8px;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
 
-        .status-dot { cursor: pointer; }
+        .settings-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .settings-note {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        .settings-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, #1f1f1f, #111);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #ffb4b4;
+        }
+
+        .remember-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .remember-row input {
+            width: auto;
+            accent-color: var(--primary);
+        }
+
+        .status-dot {
+            cursor: pointer;
+        }
+
         .status-menu {
             position: absolute;
             top: 90px;
             left: 0;
             background: #161616;
-            border: 1px solid rgba(255,255,255,0.12);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 12px;
             padding: 10px;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.45);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.45);
             display: none;
             flex-direction: column;
             gap: 8px;
             z-index: 20;
         }
-        .status-menu.open { display: flex; }
-        .status-menu button { width: 100%; text-align: left; }
+
+        .status-menu.open {
+            display: flex;
+        }
+
+        .status-menu button {
+            width: 100%;
+            text-align: left;
+        }
 
         @media (max-width: 600px) {
-            .profile-card { flex-direction: column; text-align: center; }
-            .name-row { flex-direction: column; gap: 10px; }
-            .modes-grid { grid-template-columns: 1fr; }
-            .main-grid { grid-template-columns: 1fr; }
-            .sidebar { order: -1; flex-direction: row; flex-wrap: wrap; }
+            .profile-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .name-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .modes-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                order: -1;
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
         }
     </style>
 </head>
-<body>
+
+<body class="{{if eq .User.BannerColor " upside_down"}}upside-down-mode{{end}}">
     <div class="container">
         <div class="top-bar">
             <div class="brand">{{.Text.LobbyName}}</div>
@@ -446,17 +996,20 @@
         <div class="main-grid">
             <aside class="sidebar">
                 <h4>{{.Text.Menu}}</h4>
-                <a class="side-link" href="/shop?lang={{.Lang}}&userID={{.User.ID}}"><span class="side-pill">S</span> <span>{{.Text.Shop}}</span></a>
-                <a class="side-link" href="/friends?lang={{.Lang}}&userID={{.User.ID}}"><span class="side-pill green">F</span> <span>{{.Text.FriendsNav}}</span></a>
-                <a class="side-link" href="/customize?lang={{.Lang}}&userID={{.User.ID}}"><span class="side-pill blue">C</span> <span>{{.Text.Customize}}</span></a>
+                <a class="side-link" href="/shop?lang={{.Lang}}&userID={{.User.ID}}"><span class="side-pill">S</span>
+                    <span>{{.Text.Shop}}</span></a>
+                <a class="side-link" href="/friends?lang={{.Lang}}&userID={{.User.ID}}"><span
+                        class="side-pill green">F</span> <span>{{.Text.FriendsNav}}</span></a>
+                <a class="side-link" href="/customize?lang={{.Lang}}&userID={{.User.ID}}"><span
+                        class="side-pill blue">C</span> <span>{{.Text.Customize}}</span></a>
                 <a class="side-link" href="/leaderboard?lang={{.Lang}}&userID={{.User.ID}}">
-                    <span class="side-pill" style="background: linear-gradient(135deg, #ffd700, #ff8c00);">L</span> 
+                    <span class="side-pill" style="background: linear-gradient(135deg, #ffd700, #ff8c00);">L</span>
                     <span>{{.Text.Leaderboard}}</span>
                 </a>
             </aside>
 
             <div class="main-column" style="display:flex; flex-direction:column; gap:24px;">
-                
+
                 <div class="profile-card banner-{{.User.BannerColor}}">
                     <div class="avatar-box">
                         <img src="{{.User.AvatarURL}}" class="avatar" alt="Avatar">
@@ -473,12 +1026,14 @@
                             <div class="nickname name-{{.User.NameColor}}">
                                 {{.User.Nickname}}<span class="tag">#{{.User.Tag}}</span>
                             </div>
-                            
+
                             <div class="medal-display">
                                 <svg class="medal-icon" viewBox="0 0 24 24">
-                                    <path d="M12 7.5a4.5 4.5 0 1 1 4.5 4.5A4.5 4.5 0 0 1 12 7.5zm0 0V2M10.5 2h3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M12 14l-2.5 7.5L12 19l2.5 2.5L12 14z" fill="currentColor"/>
-                                    <circle cx="12" cy="8" r="3" fill="currentColor" fill-opacity="0.4"/>
+                                    <path d="M12 7.5a4.5 4.5 0 1 1 4.5 4.5A4.5 4.5 0 0 1 12 7.5zm0 0V2M10.5 2h3"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                    <path d="M12 14l-2.5 7.5L12 19l2.5 2.5L12 14z" fill="currentColor" />
+                                    <circle cx="12" cy="8" r="3" fill="currentColor" fill-opacity="0.4" />
                                 </svg>
                                 <span class="medal-count">{{.User.Trophies}}</span>
                             </div>
@@ -512,21 +1067,22 @@
                 </div>
 
                 <div class="section-label">{{.Text.DeployZone}}</div>
-                
+
                 <div class="modes-grid">
                     {{range .Modes}}
                     <a href="{{if .URL}}{{.URL}}{{else}}#{{end}}" class="game-card-link">
                         <div class="game-card">
                             <div class="card-bg" style="background: {{.SafeGradient}};"></div>
-                            
-                            <div class="status-badge {{if .IsConstruct}}wip{{else if .IsLocked}}lock{{else}}ready{{end}}">
-                               {{.StatusText}}
+
+                            <div
+                                class="status-badge {{if .IsConstruct}}wip{{else if .IsLocked}}lock{{else}}ready{{end}}">
+                                {{.StatusText}}
                             </div>
 
                             <div class="card-content">
                                 <div class="card-title">{{.Title}}</div>
                                 <div class="card-sub">{{.Subtitle}}</div>
-                                
+
                                 <div class="action-btn {{if or .IsLocked .IsConstruct}}disabled{{end}}">
                                     {{.BtnText}}
                                 </div>
@@ -564,8 +1120,10 @@
                 <div class="settings-card">
                     <h4>{{.Text.AccountTitle}}</h4>
                     <div class="settings-actions">
-                        <button class="pill-btn pill-btn--register" id="settings-register"><span>{{.Text.Register}}</span></button>
-                        <button class="pill-btn pill-btn--login" id="settings-login"><span>{{.Text.Login}}</span></button>
+                        <button class="pill-btn pill-btn--register"
+                            id="settings-register"><span>{{.Text.Register}}</span></button>
+                        <button class="pill-btn pill-btn--login"
+                            id="settings-login"><span>{{.Text.Login}}</span></button>
                         <button class="pill-btn logout-btn" id="settings-logout"><span>{{.Text.Logout}}</span></button>
                     </div>
                     <div class="settings-note">{{.Text.AccountNote}}</div>
@@ -619,194 +1177,195 @@
     </div>
 
     <script>
-    (function() {
-        const qs = (id) => document.getElementById(id);
-        const regModal = qs('register-modal');
-        const loginModal = qs('login-modal');
-        const settingsModal = qs('settings-modal');
-        [regModal, loginModal, settingsModal].forEach(el => { if (el) el.style.display = ''; });
-        const show = (el) => { if (el) el.classList.add('open'); };
-        const hide = (el) => { if (el) el.classList.remove('open'); };
+        (function () {
+            const qs = (id) => document.getElementById(id);
+            const regModal = qs('register-modal');
+            const loginModal = qs('login-modal');
+            const settingsModal = qs('settings-modal');
+            [regModal, loginModal, settingsModal].forEach(el => { if (el) el.style.display = ''; });
+            const show = (el) => { if (el) el.classList.add('open'); };
+            const hide = (el) => { if (el) el.classList.remove('open'); };
 
-        const userId = '{{.User.ID}}';
-        const currentLang = document.documentElement.lang || '{{.Lang}}' || 'en';
-        let currentStatus = '{{.User.Status}}' || 'online';
-        const statusDot = document.querySelector('.status-dot');
-        const statusMenu = document.getElementById('status-menu');
+            const userId = '{{.User.ID}}';
+            const currentLang = document.documentElement.lang || '{{.Lang}}' || 'en';
+            let currentStatus = '{{.User.Status}}' || 'online';
+            const statusDot = document.querySelector('.status-dot');
+            const statusMenu = document.getElementById('status-menu');
 
-        function updateStatusDot(status) {
-            if (!statusDot) return;
-            statusDot.classList.remove('status-online', 'status-away', 'status-offline');
-            statusDot.classList.add(`status-${status}`);
-        }
-
-        async function pingPresence() {
-            if (!userId) return;
-            try {
-                await fetch('/presence/ping', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: currentStatus })
-                });
-            } catch (e) { }
-        }
-
-        if (userId) {
-            setInterval(pingPresence, 30000);
-            pingPresence();
-        }
-
-        async function saveLanguage(lang) {
-            const url = new URL(window.location.href);
-            url.searchParams.set('lang', lang);
-            if (!userId) {
-                window.location = url.toString();
-                return;
+            function updateStatusDot(status) {
+                if (!statusDot) return;
+                statusDot.classList.remove('status-online', 'status-away', 'status-offline');
+                statusDot.classList.add(`status-${status}`);
             }
-            try {
-                const res = await fetch('/settings/language', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ language: lang })
-                });
-            } catch (err) { } finally {
-                window.location = url.toString();
+
+            async function pingPresence() {
+                if (!userId) return;
+                try {
+                    await fetch('/presence/ping', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: currentStatus })
+                    });
+                } catch (e) { }
             }
-        }
 
-        async function setStatus(status) {
-            currentStatus = status;
-            updateStatusDot(currentStatus);
-            await pingPresence();
-            if (statusMenu) statusMenu.classList.remove('open');
-        }
-
-        if (statusDot) {
-            statusDot.onclick = (e) => {
-                e.stopPropagation();
-                if (statusMenu) statusMenu.classList.toggle('open');
-            };
-        }
-        document.addEventListener('click', (e) => {
-            if (!statusMenu || !statusMenu.classList.contains('open')) return;
-            if (!statusMenu.contains(e.target) && (!statusDot || !statusDot.contains(e.target))) {
-                statusMenu.classList.remove('open');
+            if (userId) {
+                setInterval(pingPresence, 30000);
+                pingPresence();
             }
-        });
 
-        if (statusMenu) {
-            statusMenu.querySelectorAll('[data-status]').forEach(btn => {
-                btn.onclick = () => setStatus(btn.getAttribute('data-status'));
+            async function saveLanguage(lang) {
+                const url = new URL(window.location.href);
+                url.searchParams.set('lang', lang);
+                if (!userId) {
+                    window.location = url.toString();
+                    return;
+                }
+                try {
+                    const res = await fetch('/settings/language', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ language: lang })
+                    });
+                } catch (err) { } finally {
+                    window.location = url.toString();
+                }
+            }
+
+            async function setStatus(status) {
+                currentStatus = status;
+                updateStatusDot(currentStatus);
+                await pingPresence();
+                if (statusMenu) statusMenu.classList.remove('open');
+            }
+
+            if (statusDot) {
+                statusDot.onclick = (e) => {
+                    e.stopPropagation();
+                    if (statusMenu) statusMenu.classList.toggle('open');
+                };
+            }
+            document.addEventListener('click', (e) => {
+                if (!statusMenu || !statusMenu.classList.contains('open')) return;
+                if (!statusMenu.contains(e.target) && (!statusDot || !statusDot.contains(e.target))) {
+                    statusMenu.classList.remove('open');
+                }
             });
-        }
 
-        // Registration
-        const regSubmit = qs('reg-submit');
-        if (regSubmit) {
-            regSubmit.onclick = async () => {
-                const nickname = qs('reg-nickname').value.trim();
-                const password = qs('reg-password').value.trim();
-                const errBox = qs('reg-error');
-                errBox.textContent = '';
-                if (!nickname || !password) { errBox.textContent = 'Nickname and password required'; return; }
-                if (password.length < 6) { errBox.textContent = 'Password too short'; return; }
-                try {
-                    const res = await fetch('/register', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            nickname,
-                            password,
-                            remember_me: qs('reg-remember').checked,
-                            language: currentLang
-                        })
-                    });
-                    if (!res.ok) {
-                        errBox.textContent = 'Failed to register';
-                        return;
+            if (statusMenu) {
+                statusMenu.querySelectorAll('[data-status]').forEach(btn => {
+                    btn.onclick = () => setStatus(btn.getAttribute('data-status'));
+                });
+            }
+
+            // Registration
+            const regSubmit = qs('reg-submit');
+            if (regSubmit) {
+                regSubmit.onclick = async () => {
+                    const nickname = qs('reg-nickname').value.trim();
+                    const password = qs('reg-password').value.trim();
+                    const errBox = qs('reg-error');
+                    errBox.textContent = '';
+                    if (!nickname || !password) { errBox.textContent = 'Nickname and password required'; return; }
+                    if (password.length < 6) { errBox.textContent = 'Password too short'; return; }
+                    try {
+                        const res = await fetch('/register', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                nickname,
+                                password,
+                                remember_me: qs('reg-remember').checked,
+                                language: currentLang
+                            })
+                        });
+                        if (!res.ok) {
+                            errBox.textContent = 'Failed to register';
+                            return;
+                        }
+                        const data = await res.json();
+                        const lang = data.language || currentLang;
+                        const next = new URL('/', window.location.origin);
+                        next.searchParams.set('userID', data.user_id);
+                        next.searchParams.set('lang', lang);
+                        window.location = next.toString();
+                    } catch (e) {
+                        errBox.textContent = 'Network error';
                     }
-                    const data = await res.json();
-                    const lang = data.language || currentLang;
-                    const next = new URL('/', window.location.origin);
-                    next.searchParams.set('userID', data.user_id);
-                    next.searchParams.set('lang', lang);
-                    window.location = next.toString();
-                } catch (e) {
-                    errBox.textContent = 'Network error';
-                }
-            };
-            qs('reg-cancel').onclick = () => hide(regModal);
-        }
-        // Login
-        const loginSubmit = qs('login-submit');
-        if (loginSubmit) {
-            loginSubmit.onclick = async () => {
-                const nickname = qs('login-nickname').value.trim();
-                const tag = qs('login-tag').value.trim();
-                const password = qs('login-password').value.trim();
-                const errBox = qs('login-error');
-                errBox.textContent = '';
-                if (!nickname || !tag || !password) { errBox.textContent = 'Nickname, tag and password required'; return; }
-                try {
-                    const res = await fetch('/login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            nickname,
-                            tag: parseInt(tag, 10),
-                            password,
-                            remember_me: qs('login-remember').checked,
-                            language: currentLang
-                        })
-                    });
-                    if (!res.ok) {
-                        errBox.textContent = res.status === 404 ? 'User not found' : 'Failed to login';
-                        return;
+                };
+                qs('reg-cancel').onclick = () => hide(regModal);
+            }
+            // Login
+            const loginSubmit = qs('login-submit');
+            if (loginSubmit) {
+                loginSubmit.onclick = async () => {
+                    const nickname = qs('login-nickname').value.trim();
+                    const tag = qs('login-tag').value.trim();
+                    const password = qs('login-password').value.trim();
+                    const errBox = qs('login-error');
+                    errBox.textContent = '';
+                    if (!nickname || !tag || !password) { errBox.textContent = 'Nickname, tag and password required'; return; }
+                    try {
+                        const res = await fetch('/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                nickname,
+                                tag: parseInt(tag, 10),
+                                password,
+                                remember_me: qs('login-remember').checked,
+                                language: currentLang
+                            })
+                        });
+                        if (!res.ok) {
+                            errBox.textContent = res.status === 404 ? 'User not found' : 'Failed to login';
+                            return;
+                        }
+                        const data = await res.json();
+                        const uid = data.user_id || data.userID || data.UserID;
+                        const lang = data.language || currentLang;
+                        const next = new URL('/', window.location.origin);
+                        next.searchParams.set('userID', uid);
+                        next.searchParams.set('lang', lang);
+                        window.location = next.toString();
+                    } catch (e) {
+                        errBox.textContent = 'Network error';
                     }
-                    const data = await res.json();
-                    const uid = data.user_id || data.userID || data.UserID;
-                    const lang = data.language || currentLang;
-                    const next = new URL('/', window.location.origin);
-                    next.searchParams.set('userID', uid);
-                    next.searchParams.set('lang', lang);
-                    window.location = next.toString();
-                } catch (e) {
-                    errBox.textContent = 'Network error';
-                }
+                };
+                qs('login-cancel').onclick = () => hide(loginModal);
+            }
+
+            // Settings
+            const btnSettings = document.getElementById('btn-settings');
+            if (btnSettings) btnSettings.onclick = () => show(settingsModal);
+
+            qs('settings-close').onclick = () => hide(settingsModal);
+            const settingsRegister = document.getElementById('settings-register');
+            const settingsLogin = document.getElementById('settings-login');
+            const settingsLogout = document.getElementById('settings-logout');
+            if (settingsRegister) settingsRegister.onclick = () => { hide(settingsModal); show(regModal); };
+            if (settingsLogin) settingsLogin.onclick = () => { hide(settingsModal); show(loginModal); };
+            if (settingsLogout) settingsLogout.onclick = async () => {
+                try { await fetch('/logout', { method: 'POST' }); } catch (e) { }
+                const next = new URL('/', window.location.origin);
+                next.searchParams.set('lang', currentLang);
+                window.location = next.toString();
             };
-            qs('login-cancel').onclick = () => hide(loginModal);
-        }
 
-        // Settings
-        const btnSettings = document.getElementById('btn-settings');
-        if (btnSettings) btnSettings.onclick = () => show(settingsModal);
+            settingsModal.querySelectorAll('[data-lang]').forEach(btn => {
+                btn.onclick = () => {
+                    const lang = btn.getAttribute('data-lang');
+                    saveLanguage(lang);
+                };
+            });
 
-        qs('settings-close').onclick = () => hide(settingsModal);
-        const settingsRegister = document.getElementById('settings-register');
-        const settingsLogin = document.getElementById('settings-login');
-        const settingsLogout = document.getElementById('settings-logout');
-        if (settingsRegister) settingsRegister.onclick = () => { hide(settingsModal); show(regModal); };
-        if (settingsLogin) settingsLogin.onclick = () => { hide(settingsModal); show(loginModal); };
-        if (settingsLogout) settingsLogout.onclick = async () => {
-            try { await fetch('/logout', { method: 'POST' }); } catch (e) {}
-            const next = new URL('/', window.location.origin);
-            next.searchParams.set('lang', currentLang);
-            window.location = next.toString();
-        };
-
-        settingsModal.querySelectorAll('[data-lang]').forEach(btn => {
-            btn.onclick = () => {
-                const lang = btn.getAttribute('data-lang');
-                saveLanguage(lang);
-            };
-        });
-
-        settingsModal.querySelectorAll('[data-status]').forEach(btn => {
-            btn.onclick = async () => {
-                await setStatus(btn.getAttribute('data-status'));
-            };
-        });
-    })();
+            settingsModal.querySelectorAll('[data-status]').forEach(btn => {
+                btn.onclick = async () => {
+                    await setStatus(btn.getAttribute('data-status'));
+                };
+            });
+        })();
     </script>
 </body>
+
 </html>

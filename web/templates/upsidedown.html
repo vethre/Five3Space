@@ -329,8 +329,8 @@
             font-size: 0.8rem;
         }
 
-        /* Intro screen */
-        #intro-overlay {
+        /* Intro screen - starts visible with .active, hidden when removed */
+        #intro-overlay.active {
             display: flex;
         }
 
@@ -394,7 +394,7 @@
         <div id="flare-indicator">🔥 FLARE ACTIVE</div>
     </div>
 
-    <div class="overlay" id="intro-overlay">
+    <div class="overlay active" id="intro-overlay">
         <h1>The Upside Down</h1>
         <p class="instructions">
             Survive in the darkness. Collect light orbs to restore sanity.<br>

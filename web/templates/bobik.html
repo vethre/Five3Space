@@ -282,6 +282,12 @@
             cursor: pointer;
         }
 
+        /* Practice overlay should not blur the game */
+        .practice-overlay {
+            background: transparent !important;
+            backdrop-filter: none !important;
+        }
+
         .overlay h1 {
             margin: 0;
             font-size: 3rem;
@@ -610,30 +616,106 @@
         addBox(-30, 0, 30, 30, 12, 0x556b2f); // Mid cover
         addBox(30, 30, 30, 30, 12, 0x556b2f); // Mid cover 2
 
-        // Weapon Models (Simplified Geometries)
+        // Weapon Models - Improved gun shapes
         const weaponGroup = new THREE.Group();
         camera.add(weaponGroup);
         const recoilGroup = new THREE.Group();
         weaponGroup.add(recoilGroup);
 
-        function makeGunModel(color, length) {
+        function makeGunModel(config) {
             const g = new THREE.Group();
-            const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, length), new THREE.MeshStandardMaterial({ color }));
-            body.position.z = -length / 2;
+            const { color, barrelLen, barrelRad, bodyLen, bodyH, bodyW, hasStock, hasMag, hasScope } = config;
+
+            // Barrel
+            const barrel = new THREE.Mesh(
+                new THREE.CylinderGeometry(barrelRad || 0.08, barrelRad || 0.08, barrelLen || 1.5, 8),
+                new THREE.MeshStandardMaterial({ color: color || 0x333333, metalness: 0.8, roughness: 0.3 })
+            );
+            barrel.rotation.x = Math.PI / 2;
+            barrel.position.z = -(barrelLen || 1.5) / 2;
+            g.add(barrel);
+
+            // Body/Receiver
+            const body = new THREE.Mesh(
+                new THREE.BoxGeometry(bodyW || 0.25, bodyH || 0.35, bodyLen || 0.8),
+                new THREE.MeshStandardMaterial({ color: color || 0x333333, metalness: 0.6, roughness: 0.4 })
+            );
+            body.position.set(0, -(bodyH || 0.35) / 2 + 0.1, 0.2);
             g.add(body);
-            g.position.set(1.5, -1.5, -1);
+
+            // Grip
+            const grip = new THREE.Mesh(
+                new THREE.BoxGeometry(0.15, 0.4, 0.2),
+                new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9 })
+            );
+            grip.position.set(0, -0.45, 0.3);
+            grip.rotation.x = 0.2;
+            g.add(grip);
+
+            // Stock (for rifles)
+            if (hasStock) {
+                const stock = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.15, 0.25, 0.6),
+                    new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.8 })
+                );
+                stock.position.set(0, -0.15, 0.7);
+                g.add(stock);
+            }
+
+            // Magazine
+            if (hasMag) {
+                const mag = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.1, 0.35, 0.15),
+                    new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.5 })
+                );
+                mag.position.set(0, -0.55, 0.1);
+                g.add(mag);
+            }
+
+            // Scope
+            if (hasScope) {
+                const scope = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.12, 0.12, 0.5, 8),
+                    new THREE.MeshStandardMaterial({ color: 0x000000, metalness: 0.9 })
+                );
+                scope.rotation.x = Math.PI / 2;
+                scope.position.set(0, 0.25, -0.3);
+                g.add(scope);
+            }
+
+            g.position.set(1.2, -1.2, -1.5);
             return g;
         }
+
+        // Simple knife model
+        function makeKnifeModel() {
+            const g = new THREE.Group();
+            const blade = new THREE.Mesh(
+                new THREE.BoxGeometry(0.05, 0.15, 1.2),
+                new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.2 })
+            );
+            blade.position.z = -0.6;
+            g.add(blade);
+            const handle = new THREE.Mesh(
+                new THREE.BoxGeometry(0.12, 0.2, 0.3),
+                new THREE.MeshStandardMaterial({ color: 0x3d2817, roughness: 0.8 })
+            );
+            handle.position.set(0, -0.05, 0.15);
+            g.add(handle);
+            g.position.set(1.2, -1.2, -1.2);
+            return g;
+        }
+
         const models = {
-            knife: makeGunModel(0xaaaaaa, 1.5),
-            pistol: makeGunModel(0x333333, 2),
-            ak47: makeGunModel(0x8B4513, 3.5),
-            awp: makeGunModel(0x224422, 5)
+            knife: makeKnifeModel(),
+            pistol: makeGunModel({ color: 0x2a2a2a, barrelLen: 0.6, bodyLen: 0.5, bodyH: 0.25, bodyW: 0.18, hasMag: true }),
+            deagle: makeGunModel({ color: 0x8b8b8b, barrelLen: 0.8, barrelRad: 0.1, bodyLen: 0.6, bodyH: 0.35, bodyW: 0.22, hasMag: true }),
+            smg: makeGunModel({ color: 0x1a1a1a, barrelLen: 1.0, bodyLen: 0.7, bodyH: 0.3, bodyW: 0.2, hasMag: true }),
+            shotgun: makeGunModel({ color: 0x2d2d2d, barrelLen: 1.8, barrelRad: 0.12, bodyLen: 0.6, bodyH: 0.3, bodyW: 0.25, hasStock: true }),
+            ak47: makeGunModel({ color: 0x8B4513, barrelLen: 1.5, bodyLen: 0.8, bodyH: 0.3, bodyW: 0.22, hasStock: true, hasMag: true }),
+            m4a4: makeGunModel({ color: 0x2d2d2d, barrelLen: 1.4, bodyLen: 0.85, bodyH: 0.28, bodyW: 0.2, hasStock: true, hasMag: true }),
+            awp: makeGunModel({ color: 0x224422, barrelLen: 2.2, barrelRad: 0.1, bodyLen: 1.0, bodyH: 0.35, bodyW: 0.25, hasStock: true, hasMag: true, hasScope: true })
         };
-        // Add scope to AWP
-        const scope = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.8), new THREE.MeshStandardMaterial({ color: 0x000000 }));
-        scope.rotation.x = Math.PI / 2; scope.position.set(0, 0.4, -1.5);
-        models.awp.children[0].add(scope);
 
         function equip(slot) {
             if (gameState.isReloading) return;
@@ -743,6 +825,67 @@
             } else {
                 menu.style.display = 'block';
                 controls.unlock();
+            }
+        }
+
+        // Buy weapons/items from shop
+        function buy(item, cost) {
+            if (myScore < cost) {
+                // Show insufficient funds feedback
+                const shopBalance = qs('shop-balance');
+                shopBalance.style.color = '#ff4444';
+                setTimeout(() => shopBalance.style.color = '', 500);
+                return;
+            }
+
+            myScore -= cost;
+            updateHUD();
+
+            // Handle different purchases
+            switch (item) {
+                case 'ammo':
+                    const key = gameState.inventory[gameState.activeSlot];
+                    if (key && weaponStats[key]) {
+                        gameState.ammo.clip = weaponStats[key].clip;
+                        gameState.ammo.reserve = weaponStats[key].reserve;
+                        updateHUD();
+                    }
+                    break;
+                case 'deagle':
+                    gameState.inventory[2] = 'deagle'; // Replace pistol slot
+                    updateSlotDisplay(2, 'D.Eagle');
+                    equip(2);
+                    break;
+                case 'smg':
+                    gameState.inventory[3] = 'smg';
+                    updateSlotDisplay(3, 'P90');
+                    equip(3);
+                    break;
+                case 'shotgun':
+                    gameState.inventory[3] = 'shotgun';
+                    updateSlotDisplay(3, 'XM1014');
+                    equip(3);
+                    break;
+                case 'm4a4':
+                    gameState.inventory[3] = 'm4a4';
+                    updateSlotDisplay(3, 'M4A4');
+                    equip(3);
+                    break;
+                case 'awp':
+                    gameState.inventory[4] = 'awp';
+                    qs('slot-4').style.display = 'block';
+                    updateSlotDisplay(4, 'AWP');
+                    equip(4);
+                    break;
+            }
+
+            toggleShop(); // Close shop after purchase
+        }
+
+        function updateSlotDisplay(slot, name) {
+            const slotEl = qs(`slot-${slot}`);
+            if (slotEl) {
+                slotEl.innerHTML = `<span>${slot}</span> ${name}`;
             }
         }
 
