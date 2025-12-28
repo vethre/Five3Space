@@ -190,8 +190,8 @@ func (g *Game) sendWelcome(p *Player) {
 	g.mu.Unlock()
 
 	g.sendTo(p, map[string]interface{}{
-		"type": "welcome", "id": p.ID, "roundActive": g.roundActive, "timeLeft": timeLeft,
-		"dummies": g.dummies,
+		"type": "welcome", "id": p.ID, "nickname": p.Nickname, "roundActive": g.roundActive,
+		"timeLeft": timeLeft, "score": p.Score, "dummies": g.dummies,
 	})
 }
 

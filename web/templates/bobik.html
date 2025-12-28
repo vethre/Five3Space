@@ -4,6 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Bobik Shooter</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <style>
         :root {
             --hud-bg: rgba(0, 0, 0, 0.6);
@@ -542,11 +545,13 @@
             const msg = JSON.parse(ev.data);
             if (msg.type === 'welcome') {
                 myId = msg.id;
+                myScore = msg.score !== undefined ? msg.score : 0;
                 roundActive = msg.roundActive;
                 if (msg.dummies) {
                     gameState.dummies = msg.dummies;
                     updateDummies();
                 }
+                updateHUD();
                 updateGameFlow(msg);
             }
             if (msg.type === 'dummies_update') {
@@ -644,6 +649,17 @@
             scene.add(mesh);
             colliders.push(new THREE.Box3().setFromObject(mesh));
         }
+
+        // Map Layout Enhancements
+        addBox(-40, -40, 8, 8, 8, 0x5d4037); // Large crate
+        addBox(40, 40, 10, 10, 6, 0x455a64); // Container
+        addBox(-20, 30, 6, 6, 6, 0x795548); // Small crate
+        addBox(30, -20, 8, 8, 12, 0x263238); // Tall pillar
+        addBox(0, 60, 15, 15, 10, 0x3e2723); // Central block
+        addBox(60, 0, 12, 12, 8, 0x212121); // Dark container
+        addBox(-60, 20, 10, 10, 15, 0x546e7a); // Sniper tower base
+        addBox(20, -60, 12, 5, 8, 0x4e342e); // Low wall
+        addBox(-30, -10, 6, 12, 10, 0x37474f); // Side block
         // Classic Map Layout
         addBox(0, -60, 120, 40, 20, 0x8B4513); // Back wall
         addBox(-80, 40, 40, 220, 30, 0x666666); // Left wall
@@ -798,6 +814,7 @@
             qs('health-text').textContent = "HP " + gameState.health;
             document.querySelectorAll('.slot').forEach(el => el.classList.remove('active'));
             qs(`slot-${gameState.activeSlot}`).classList.add('active');
+            qs('score-display').textContent = "$" + myScore;
             qs('shop-balance').textContent = "$" + myScore;
         }
 
@@ -1036,26 +1053,6 @@
                 const direction = new THREE.Vector3();
                 direction.z = Number(moveFwd) - Number(moveBwd);
                 direction.x = Number(moveRight) - Number(moveLeft);
-                // Hit dummies (practice)
-                const dHits = ray.intersectObjects(Array.from(dummyObjects.values()), false);
-                if (dHits.length > 0 && dHits[0].distance < 300) {
-                    const dObj = dHits[0].object;
-                    const dIdx = dObj.userData.index;
-                    // Visual feedback
-                    dObj.material.color.setHex(0xff0000);
-                    setTimeout(() => dObj.material.color.setHex(0xffaa00), 100);
-
-                    // Show hit marker
-                    const marker = document.createElement('div');
-                    marker.className = 'damage-number';
-                    marker.style.left = window.innerWidth / 2 + 'px';
-                    marker.style.top = window.innerHeight / 2 - 50 + 'px';
-                    marker.textContent = "10";
-                    document.body.appendChild(marker);
-                    setTimeout(() => marker.remove(), 800);
-
-                    socket.send(JSON.stringify({ type: 'hit_dummy', index: dIdx }));
-                }
                 if (moveFwd || moveBwd) velocity.z -= direction.z * 400.0 * delta;
                 if (moveLeft || moveRight) velocity.x -= direction.x * 400.0 * delta;
 
