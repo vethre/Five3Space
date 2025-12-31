@@ -144,10 +144,7 @@ func main() {
 	})
 	http.HandleFunc("/ws/upsidedown", upsidedownGame.HandleWS)
 
-	// New Year's Express
-	http.HandleFunc("/express", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "web/templates/express.html")
-	})
+	http.HandleFunc("/express", lobby.NewExpressHandler(store))
 
 	fs := http.FileServer(http.Dir("./web/static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))

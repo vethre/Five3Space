@@ -163,6 +163,18 @@ func NewShopHandler(store *data.Store) http.HandlerFunc {
 	}
 }
 
+func NewExpressHandler(store *data.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		data := commonPage(w, r, store)
+		tmpl, err := template.ParseFiles(filepath.Join("web", "templates", "express.html"))
+		if err != nil {
+			http.Error(w, "Could not load template", http.StatusInternalServerError)
+			return
+		}
+		_ = tmpl.Execute(w, data)
+	}
+}
+
 func NewCustomizeHandler(store *data.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data := commonPage(w, r, store)

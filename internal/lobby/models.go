@@ -135,6 +135,19 @@ type Translations struct {
 	SlotixSub       string
 	UpsideDownTitle string
 	UpsideDownSub   string
+
+	// Express Game
+	ExpressTitle       string
+	ExpressSub         string
+	ExpressScore       string
+	ExpressGameOver    string
+	ExpressFinalScore  string
+	ExpressPlayAgain   string
+	ExpressExit        string
+	ExpressDoubleClash string
+	ExpressTripleClash string
+	ExpressQuadClash   string
+	ExpressMegaClash   string
 }
 
 type PageData struct {
@@ -240,6 +253,18 @@ var texts = map[string]Translations{
 		SlotixSub:       "Lucky Slot Machine",
 		UpsideDownTitle: "The Upside Down",
 		UpsideDownSub:   "Stranger Things Survival",
+
+		ExpressTitle:       "New Year's Express",
+		ExpressSub:         "Festive Block Puzzle",
+		ExpressScore:       "Score",
+		ExpressGameOver:    "Game Over!",
+		ExpressFinalScore:  "Your Final Score: ",
+		ExpressPlayAgain:   "Play Again",
+		ExpressExit:        "Exit",
+		ExpressDoubleClash: "DOUBLE CLASH!",
+		ExpressTripleClash: "TRIPLE CLASH!",
+		ExpressQuadClash:   "QUADRUPLE CLASH!",
+		ExpressMegaClash:   "MEGA CLASH!",
 	},
 	"ua": {
 		LobbyName:   "П'ЯТЬ3 Ігро-Space",
@@ -332,6 +357,18 @@ var texts = map[string]Translations{
 		SlotixSub:       "Щасливий Автомат",
 		UpsideDownTitle: "Виворіт",
 		UpsideDownSub:   "Виживання у Дивних дивах",
+
+		ExpressTitle:       "Новорічний Експрес",
+		ExpressSub:         "Святкова головоломка",
+		ExpressScore:       "Рахунок",
+		ExpressGameOver:    "Кінець гри!",
+		ExpressFinalScore:  "Твій фінальний рахунок: ",
+		ExpressPlayAgain:   "Грати знову",
+		ExpressExit:        "Вихід",
+		ExpressDoubleClash: "ПОДВІЙНИЙ КЛЕШ!",
+		ExpressTripleClash: "ПОТРІЙНИЙ КЛЕШ!",
+		ExpressQuadClash:   "КВАДРО-КЛЕШ!",
+		ExpressMegaClash:   "МЕГАКЛЕШ!",
 	},
 	"ru": {
 		LobbyName:   "ПЯТЬ3 Игро-Space",
@@ -424,5 +461,17 @@ var texts = map[string]Translations{
 		SlotixSub:       "Счастливый Автомат",
 		UpsideDownTitle: "Изнанка",
 		UpsideDownSub:   "Выживание в Stranger Things",
+
+		ExpressTitle:       "Новогодний Экспресс",
+		ExpressSub:         "Праздничная головоломка",
+		ExpressScore:       "Счет",
+		ExpressGameOver:    "Игра окончена!",
+		ExpressFinalScore:  "Твой финальный счет: ",
+		ExpressPlayAgain:   "Играть снова",
+		ExpressExit:        "Выход",
+		ExpressDoubleClash: "ДВОЙНОЙ КЛЕШ!",
+		ExpressTripleClash: "ТРОЙНОЙ КЛЕШ!",
+		ExpressQuadClash:   "КВАДРО-КЛЕШ!",
+		ExpressMegaClash:   "МЕГАКЛЕШ!",
 	},
 }

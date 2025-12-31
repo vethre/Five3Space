@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>New Year's Express</title>
+    <title>{{.Text.ExpressTitle}}</title>
     <link rel="stylesheet" href="/static/css/express.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
@@ -18,11 +18,11 @@
 
     <div class="game-container">
         <header class="game-header">
-            <a href="/" class="back-btn">← Back to Lobby</a>
-            <h1 class="game-title">New Year's Express</h1>
+            <a href="/" class="back-btn">← {{.Text.Back}}</a>
+            <h1 class="game-title">{{.Text.ExpressTitle}}</h1>
             <div class="score-board">
                 <div class="score-box">
-                    <span class="score-label">Score</span>
+                    <span class="score-label">{{.Text.ExpressScore}}</span>
                     <span class="score-value" id="currentScore">0</span>
                 </div>
                 <!-- <div class="score-box">
@@ -44,14 +44,22 @@
 
         <div class="game-over-modal hidden" id="gameOverModal">
             <div class="modal-content">
-                <h2>Game Over!</h2>
-                <p>Your Final Score: <span id="finalScore">0</span></p>
-                <button class="restart-btn" id="restartBtn">Play Again</button>
-                <a href="/" class="exit-btn">Exit</a>
+                <h2>{{.Text.ExpressGameOver}}</h2>
+                <p>{{.Text.ExpressFinalScore}}<span id="finalScore">0</span></p>
+                <button class="restart-btn" id="restartBtn">{{.Text.ExpressPlayAgain}}</button>
+                <a href="/" class="exit-btn">{{.Text.ExpressExit}}</a>
             </div>
         </div>
     </div>
 
+    <script>
+        window.translations = {
+            doubleClash: "{{.Text.ExpressDoubleClash}}",
+            tripleClash: "{{.Text.ExpressTripleClash}}",
+            quadClash: "{{.Text.ExpressQuadClash}}",
+            megaClash: "{{.Text.ExpressMegaClash}}"
+        };
+    </script>
     <script src="/static/js/express.js"></script>
 </body>
 

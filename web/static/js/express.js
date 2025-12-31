@@ -89,9 +89,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const fx = new ParticleSystem();
 
     function showComboFeedback(count, x, y) {
-        const messages = ["", "", "DOUBLE CLEAR!", "TRIPLE CLEAR!", "QUADRUPLE CLEAR!", "MEGA CLEAR!"];
+        const t = window.translations || {
+            doubleClash: "DOUBLE CLASH!",
+            tripleClash: "TRIPLE CLASH!",
+            quadClash: "QUADRUPLE CLASH!",
+            megaClash: "MEGA CLASH!"
+        };
+        const messages = ["", "", t.doubleClash, t.tripleClash, t.quadClash, t.megaClash];
         const msg = messages[Math.min(count, messages.length - 1)];
         if (!msg) return;
+
+        // Extra VFX for higher combos
+        if (count >= 3) {
+            for (let i = 0; i < (count - 1); i++) {
+                setTimeout(() => {
+                    fx.createBurst(x + (Math.random() - 0.5) * 100, y + (Math.random() - 0.5) * 100, 'var(--gold)', 20);
+                    fx.createBurst(x + (Math.random() - 0.5) * 100, y + (Math.random() - 0.5) * 100, 'var(--accent)', 15);
+                }, i * 200);
+            }
+        }
 
         const el = document.createElement('div');
         el.className = 'combo-text';
