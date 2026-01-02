@@ -19,7 +19,7 @@ let score = 0;
 let lastTime = 0;
 let fishTimer = 0;
 let biteTimer = 0;
-let gameDuration = 60; // 1 minute round
+let gameDuration = 150; // 2:30 minutes round
 let timeLeft = gameDuration;
 let gameStarted = false;
 
