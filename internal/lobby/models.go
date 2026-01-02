@@ -394,6 +394,18 @@ var texts = map[string]Translations{
 		ExpressTripleClash: "ПОТРІЙНИЙ КЛЕШ!",
 		ExpressQuadClash:   "КВАДРО-КЛЕШ!",
 		ExpressMegaClash:   "МЕГАКЛЕШ!",
+
+		FishingTitle:     "Чумова рибалка",
+		FishingSub:       "Зимовий релакс",
+		FishingCast:      "ЗАКИНУТИ!",
+		FishingReel:      "ПІДСІКТИ!",
+		FishingCatch:     "СПІЙМАНО!",
+		FishingMiss:      "Упущено...",
+		FishingWait:      "Чекаємо...",
+		FishingScore:     "Рибка на гачку",
+		FishingGameOver:  "Замерзло!",
+		FishingPlayAgain: "Знов за рибку гроші",
+		FishingExit:      "Зігрітись",
 	},
 	"ru": {
 		LobbyName:   "ПЯТЬ3 Игро-Space",
