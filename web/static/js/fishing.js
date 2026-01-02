@@ -7,6 +7,11 @@ const toastEl = document.getElementById('toast');
 const gameOverModal = document.getElementById('gameOverModal');
 const finalScoreVal = document.getElementById('finalScoreVal');
 const replayBtn = document.getElementById('replayBtn');
+const timerEl = document.getElementById('gameTimer');
+const reelingUI = document.getElementById('reelingUI');
+const tensionBar = document.getElementById('tensionBar');
+const progressBar = document.getElementById('progressBar');
+const tensionWarning = document.getElementById('tensionWarning');
 
 // Game State
 let gameState = 'IDLE'; // IDLE, CASTING, WAITING, BITING, REELING, CAUGHT, GAMEOVER
@@ -14,8 +19,19 @@ let score = 0;
 let lastTime = 0;
 let fishTimer = 0;
 let biteTimer = 0;
-let gameDuration = 120; // 2 minutes round
+let gameDuration = 60; // 1 minute round
 let timeLeft = gameDuration;
+let gameStarted = false;
+
+// Reeling Physics
+let tension = 0;
+let catchProgress = 0;
+let isReeling = false;
+const TENSION_LIMIT = 100;
+const REEL_STRENGTH = 40; // Tension increase per second
+const TENSION_RECOVERY = 30; // Tension decrease per second
+const PROGRESS_SPEED = 25; // Progress per second when reeling
+const FISH_STRUGGLE = 15; // Progress lost per second when not reeling
 
 // Assets (Procedural for now)
 const colors = {
@@ -27,18 +43,18 @@ const colors = {
 };
 
 // Player Position
-const playerX = window.innerWidth / 2;
-const playerY = window.innerHeight * 0.6;
+let playerX = window.innerWidth / 2;
+let playerY = window.innerHeight * 0.7;
 
 // Physics
 let line = {
-    startX: playerX + 20,
-    startY: playerY - 40,
-    endX: playerX + 20,
-    endY: playerY - 40,
-    targetY: playerY + 100,
-    velocity: 0,
-    state: 'RETRACTED' // RETRACTED, EXTENDING, IN_WATER
+    startX: 0,
+    startY: 0,
+    endX: 0,
+    endY: 0,
+    targetX: 0,
+    targetY: 0,
+    state: 'RETRACTED'
 };
 
 let float = {
@@ -50,7 +66,7 @@ let float = {
 
 // Particles (Snow)
 const particles = [];
-for (let i = 0; i < 100; i++) {
+for (let i = 0; i < 150; i++) {
     particles.push({
         x: Math.random() * window.innerWidth,
         y: Math.random() * window.innerHeight,
@@ -63,6 +79,8 @@ for (let i = 0; i < 100; i++) {
 function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    playerX = canvas.width / 2;
+    playerY = canvas.height * 0.7;
 }
 window.addEventListener('resize', resize);
 resize();
@@ -70,7 +88,17 @@ resize();
 function showToast(msg, duration = 1000) {
     toastEl.innerText = msg;
     toastEl.classList.add('show');
-    setTimeout(() => toastEl.classList.remove('show'), duration);
+    toastEl.style.opacity = '1';
+    setTimeout(() => {
+        toastEl.classList.remove('show');
+        toastEl.style.opacity = '0';
+    }, duration);
+}
+
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
 function startGame() {
@@ -78,82 +106,107 @@ function startGame() {
     timeLeft = gameDuration;
     scoreEl.innerText = score;
     gameState = 'IDLE';
+    gameStarted = true;
     updateUI();
     gameOverModal.classList.add('hidden');
+    lastTime = performance.now();
     requestAnimationFrame(loop);
 }
 
 function updateUI() {
     const t = window.translations;
-    // Show button logic
     if (gameState === 'IDLE') {
         actionBtn.style.display = 'block';
         actionBtn.innerText = t.cast;
-        actionBtn.className = 'action-btn';
-    } else if (gameState === 'WAITING') {
+        actionBtn.classList.remove('reef');
+        actionBtn.disabled = false;
+        reelingUI.style.display = 'none';
+        actionBtn.style.opacity = 1;
+    } else if (gameState === 'WAITING' || gameState === 'CASTING') {
         actionBtn.style.display = 'block';
         actionBtn.innerText = t.wait;
-        actionBtn.className = 'action-btn';
         actionBtn.disabled = true;
         actionBtn.style.opacity = 0.5;
+        reelingUI.style.display = 'none';
     } else if (gameState === 'BITING') {
         actionBtn.style.display = 'block';
         actionBtn.innerText = t.reel;
         actionBtn.className = 'action-btn reef';
         actionBtn.disabled = false;
         actionBtn.style.opacity = 1;
+        reelingUI.style.display = 'none';
+    } else if (gameState === 'REELING') {
+        actionBtn.style.display = 'block';
+        actionBtn.innerText = t.reel;
+        actionBtn.className = 'action-btn reef';
+        reelingUI.style.display = 'flex';
     } else {
         actionBtn.style.display = 'none';
+        reelingUI.style.display = 'none';
     }
 }
+
+// Support both click and hold
+actionBtn.addEventListener('mousedown', () => { if (gameState === 'REELING') isReeling = true; });
+actionBtn.addEventListener('mouseup', () => { isReeling = false; });
+actionBtn.addEventListener('touchstart', (e) => { e.preventDefault(); if (gameState === 'REELING') isReeling = true; });
+actionBtn.addEventListener('touchend', () => { isReeling = false; });
 
 actionBtn.addEventListener('click', () => {
     if (gameState === 'IDLE') {
         castLine();
     } else if (gameState === 'BITING') {
-        reelIn();
+        startReeling();
     }
 });
 
 function castLine() {
     gameState = 'CASTING';
-    line.state = 'EXTENDING';
-    line.endX = playerX + 150; // Throw distance
-    line.targetY = playerY + 150; // Water depth
-    float.x = line.endX;
-    float.y = line.startY;
+    float.x = playerX + 60;
+    float.y = playerY - 60;
+    line.targetX = playerX + 200;
+    line.targetY = playerY + 80;
     updateUI();
 }
 
-function reelIn() {
-    if (gameState === 'BITING') {
-        gameState = 'CAUGHT';
-        score++;
-        scoreEl.innerText = score;
-        showToast(window.translations.catch, 1500);
-        // Particle Burst
-        createWaterSplash(float.x, float.y);
-    } else {
-        gameState = 'IDLE';
-        showToast(window.translations.miss, 1000);
-    }
+function startReeling() {
+    gameState = 'REELING';
+    tension = 0;
+    catchProgress = 0;
+    isReeling = true;
+    updateUI();
+}
 
-    // Reset line
-    setTimeout(() => {
-        gameState = 'IDLE';
-        line.state = 'RETRACTED';
-        updateUI();
-    }, 1000);
+function reelInSuccess() {
+    score++;
+    scoreEl.innerText = score;
+    showToast(window.translations.catch, 1500);
+    createWaterSplash(float.x, float.y);
+    resetFishing();
+}
+
+function reelInFailure(msg) {
+    showToast(msg || window.translations.miss, 1500);
+    resetFishing();
+}
+
+function resetFishing() {
+    gameState = 'IDLE';
+    float.submerged = false;
+    tension = 0;
+    catchProgress = 0;
+    isReeling = false;
+    updateUI();
 }
 
 function createWaterSplash(x, y) {
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 30; i++) {
         particles.push({
             x: x,
             y: y,
-            vx: (Math.random() - 0.5) * 10,
-            vy: -Math.random() * 10,
-            size: Math.random() * 5 + 2,
+            vx: (Math.random() - 0.5) * 15,
+            vy: -Math.random() * 15,
+            size: Math.random() * 4 + 2,
             life: 1.0,
             type: 'splash'
         });
@@ -161,31 +214,33 @@ function createWaterSplash(x, y) {
 }
 
 function loop(timestamp) {
+    if (!gameStarted) return;
     const dt = (timestamp - lastTime) / 1000;
     lastTime = timestamp;
 
     update(dt);
     draw();
 
-    if (timeLeft > 0 && gameState !== 'GAMEOVER') {
+    if (timeLeft > 0) {
         requestAnimationFrame(loop);
+    } else {
+        endGame();
     }
 }
 
 function update(dt) {
     timeLeft -= dt;
-    if (timeLeft <= 0) {
-        endGame();
-        return;
-    }
+    timerEl.innerText = formatTime(Math.max(0, timeLeft));
 
-    // Snow logic
-    particles.forEach(p => {
+    // Snow and Splash particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
         if (p.type === 'splash') {
             p.x += p.vx;
             p.y += p.vy;
-            p.vy += 0.5; // gravity
-            p.life -= dt * 2;
+            p.vy += 0.8; // higher gravity
+            p.life -= dt * 2.5;
+            if (p.life <= 0) particles.splice(i, 1);
         } else {
             p.x += p.vx;
             p.y += p.vy;
@@ -193,174 +248,173 @@ function update(dt) {
             if (p.x > canvas.width) p.x = 0;
             if (p.x < 0) p.x = canvas.width;
         }
-    });
+    }
 
-    // Fishing Logic
+    // Fishing State Machine
     if (gameState === 'CASTING') {
-        // Simple animation
-        float.y += (line.targetY - float.y) * 5 * dt;
-        if (Math.abs(float.y - line.targetY) < 5) {
+        float.x += (line.targetX - float.x) * 4 * dt;
+        float.y += (line.targetY - float.y) * 4 * dt;
+        if (Math.abs(float.x - line.targetX) < 5) {
             gameState = 'WAITING';
-            line.state = 'IN_WATER';
-            fishTimer = Math.random() * 3 + 2; // Wait 2-5 seconds
+            fishTimer = Math.random() * 4 + 2;
             updateUI();
         }
     }
 
     if (gameState === 'WAITING') {
         fishTimer -= dt;
-        float.bobOffset = Math.sin(timestamp() / 200) * 5;
+        float.bobOffset = Math.sin(Date.now() / 300) * 3;
         if (fishTimer <= 0) {
             gameState = 'BITING';
-            biteTimer = 1.0; // 1 second to react
+            biteTimer = 1.2;
             updateUI();
-
-            // Visual cue
             float.submerged = true;
-            setTimeout(() => float.submerged = false, 200);
+            // Immediate splash for bite
+            createWaterSplash(float.x, float.y);
         }
     }
 
     if (gameState === 'BITING') {
         biteTimer -= dt;
-        float.bobOffset = Math.sin(timestamp() / 50) * 10; // Violent shaking
+        float.bobOffset = Math.sin(Date.now() / 50) * 8;
         if (biteTimer <= 0) {
-            // Failed
-            gameState = 'IDLE';
-            showToast(window.translations.miss);
-            line.state = 'RETRACTED';
-            updateUI();
+            reelInFailure(window.translations.miss);
+        }
+    }
+
+    if (gameState === 'REELING') {
+        if (isReeling) {
+            tension += REEL_STRENGTH * dt;
+            catchProgress += PROGRESS_SPEED * dt;
+        } else {
+            tension -= TENSION_RECOVERY * dt;
+            catchProgress -= FISH_STRUGGLE * dt;
+        }
+
+        tension = Math.max(0, tension);
+        catchProgress = Math.max(0, catchProgress);
+
+        // Visual tension feedback
+        tensionBar.style.width = `${tension}%`;
+        progressBar.style.width = `${catchProgress}%`;
+
+        if (tension > 70) {
+            tensionWarning.classList.add('visible');
+        } else {
+            tensionWarning.classList.remove('visible');
+        }
+
+        if (tension >= TENSION_LIMIT) {
+            reelInFailure("Line Snapped!");
+        } else if (catchProgress >= 100) {
+            reelInSuccess();
         }
     }
 }
 
-function timestamp() { return new Date().getTime(); }
-
 function draw() {
-    // Sky
-    const grd = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Dynamic Sky
+    const grd = ctx.createLinearGradient(0, 0, 0, canvas.height * 0.7);
     grd.addColorStop(0, colors.skyTop);
     grd.addColorStop(1, colors.skyBottom);
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Ice / Ground
+    // Ground / Ice
     ctx.fillStyle = colors.ice;
-    ctx.beginPath();
-    ctx.moveTo(0, playerY + 50);
-    ctx.lineTo(canvas.width, playerY + 50);
-    ctx.lineTo(canvas.width, canvas.height);
-    ctx.lineTo(0, canvas.height);
-    ctx.fill();
+    ctx.fillRect(0, playerY + 20, canvas.width, canvas.height - playerY);
 
-    // Ice Hole
+    // Fishing Hole
     if (gameState !== 'IDLE') {
         ctx.fillStyle = colors.hole;
         ctx.beginPath();
-        ctx.ellipse(line.endX, line.targetY, 40, 10, 0, 0, Math.PI * 2);
+        ctx.ellipse(playerX + 200, playerY + 80, 50, 15, 0, 0, Math.PI * 2);
         ctx.fill();
     }
 
-    // Player (Stick figure for now, or simple shape)
     drawPlayer(playerX, playerY);
 
-    // Fishing Line
+    // Draw Line
     if (gameState !== 'IDLE') {
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.moveTo(line.startX, line.startY);
-        // Curve
-        const midX = (line.startX + float.x) / 2;
-        const midY = Math.max(line.startY, float.y) + 50; // Hang slack
-        ctx.quadraticCurveTo(midX, midY, float.x, float.y);
+        ctx.moveTo(playerX + 60, playerY - 60); // Tip of rod
+
+        let fy = float.y + (gameState === 'WAITING' || gameState === 'BITING' ? float.bobOffset : 0);
+        if (float.submerged) fy += 15;
+
+        // Slack curve
+        const cpX = (playerX + 60 + float.x) / 2;
+        const cpY = Math.max(playerY - 60, fy) + 40;
+        ctx.quadraticCurveTo(cpX, cpY, float.x, fy);
         ctx.stroke();
 
-        // Float
-        ctx.fillStyle = 'red';
-        ctx.beginPath();
-        let fy = float.y + (gameState === 'WAITING' || gameState === 'BITING' ? float.bobOffset : 0);
-        if (float.submerged) fy += 20;
-        ctx.arc(float.x, fy, 5, 0, Math.PI * 2);
-        ctx.fill();
+        // Bobber
         ctx.fillStyle = 'white';
         ctx.beginPath();
-        ctx.arc(float.x, fy, 5, 0, Math.PI, true);
+        ctx.arc(float.x, fy, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'red';
+        ctx.beginPath();
+        ctx.arc(float.x, fy, 6, 0, Math.PI, true);
         ctx.fill();
     }
 
-    // Snow
-    ctx.fillStyle = 'white';
+    // Snow and particles
     particles.forEach(p => {
-        if (p.life !== undefined && p.life <= 0) return;
+        ctx.fillStyle = p.type === 'splash' ? '#4facfe' : 'white';
         ctx.globalAlpha = p.life !== undefined ? p.life : 0.8;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fill();
     });
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = 1.0;
 }
 
 function drawPlayer(x, y) {
-    // Body
-    ctx.fillStyle = '#ff7043'; // Orange coat
+    // Suit
+    ctx.fillStyle = '#ff7043';
     ctx.beginPath();
-    ctx.ellipse(x, y, 20, 30, 0, 0, Math.PI * 2);
+    ctx.roundRect(x - 20, y - 10, 40, 50, 10);
     ctx.fill();
 
-    // Head
-    ctx.fillStyle = '#ffcc80'; // Skin
+    // Head / Mask
+    ctx.fillStyle = '#ffcc80';
     ctx.beginPath();
-    ctx.arc(x, y - 40, 15, 0, Math.PI * 2);
+    ctx.arc(x, y - 35, 18, 0, Math.PI * 2);
     ctx.fill();
 
-    // Hat
-    ctx.fillStyle = '#d32f2f'; // Red hat
+    // Cold-weather hood
+    ctx.strokeStyle = '#d32f2f';
+    ctx.lineWidth = 5;
     ctx.beginPath();
-    ctx.arc(x, y - 45, 16, Math.PI, 0);
-    ctx.fill();
-    // Pom pom
-    ctx.fillStyle = 'white';
-    ctx.beginPath();
-    ctx.arc(x, y - 60, 5, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.arc(x, y - 35, 20, Math.PI, 0);
+    ctx.stroke();
 
     // Rod
     ctx.strokeStyle = '#5d4037';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.moveTo(x + 10, y - 10);
-    line.startX = x + 60;
-    line.startY = y - 60;
-    ctx.lineTo(line.startX, line.startY); // Tip
+    ctx.moveTo(x + 10, y + 10);
+    ctx.lineTo(x + 60, y - 60);
     ctx.stroke();
 }
 
 function endGame() {
-    gameState = 'GAMEOVER';
+    gameStarted = false;
     finalScoreVal.innerText = score;
     gameOverModal.classList.remove('hidden');
 
-    // Submit Score
+    // Submit result to backend if user is logged in
     if (window.userID && window.userID !== 'guest') {
-        const payload = {
-            winnerTeam: 0, // Abuse existing endpoint? No, need a generic one. 
-            // Actually, we don't have a generic AJAX score endpoint for single player games in the plan.
-            // But Express game probably submits?
-            // Let's check Express.js
-        };
-        // Wait, models.go suggests Express is strictly client side score for now?
-        // Ah, the plan said "submits score". But I didn't add a submission input in handlers.go.
-        // Express uses websocket? No, it's just a JS game.
-        // Let's assume for this MVP it's local only OR sends to a generic endpoint if it existed.
-        // Wait, `internal/chibiki/engine.go` handles game over.
-        // We need a way to save XP. 
-        // I will implement a simple POST to a new endpoint if I can, OR just leave it local for now as per "Express" pattern if Express doesn't save.
-        // Checking Express... Express text has "Your Final Score". It doesn't seem to have a save handler in `handlers.go`.
-        // So I will stick to Local score for now to match Express pattern, unless I see a "Submit" in Express.
+        // We don't have a specific endpoint for fishing results yet, 
+        // but we could use a generic one if added to the store/handlers.
     }
 }
 
 replayBtn.addEventListener('click', startGame);
-
 startGame();

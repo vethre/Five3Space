@@ -237,6 +237,107 @@
         .modal-btn:hover {
             transform: scale(1.05);
         }
+
+        /* Timer */
+        .game-timer {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timer-icon {
+            color: #fdbb2d;
+        }
+
+        /* Reeling UI */
+        .reeling-ui {
+            position: absolute;
+            bottom: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            display: none;
+            /* Hidden by default */
+            flex-direction: column;
+            gap: 10px;
+            z-index: 20;
+        }
+
+        .bar-container {
+            width: 100%;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-label {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.7em;
+            font-weight: bold;
+            color: white;
+            z-index: 2;
+            text-transform: uppercase;
+            text-shadow: 0 1px 2px black;
+        }
+
+        .tension-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #4caf50 0%, #ffeb3b 60%, #f44336 100%);
+            transition: width 0.1s linear;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #2196f3, #00bcd4);
+            transition: width 0.1s linear;
+        }
+
+        .warning-text {
+            color: #f44336;
+            font-weight: 900;
+            text-align: center;
+            text-transform: uppercase;
+            opacity: 0;
+            transition: opacity 0.2s;
+            text-shadow: 0 0 10px red;
+        }
+
+        .warning-text.visible {
+            opacity: 1;
+            animation: flash 0.5s infinite;
+        }
+
+        @keyframes flash {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
     </style>
 </head>
 
@@ -249,6 +350,26 @@
             <div class="score-board">
                 <div class="score-title">{{.Text.FishingScore}}</div>
                 <div class="score-value" id="scoreValue">0</div>
+            </div>
+
+            <div class="game-timer">
+                <span class="timer-icon">⏱</span>
+                <span id="gameTimer">00:00</span>
+            </div>
+        </div>
+
+        <!-- Reeling UI -->
+        <div id="reelingUI" class="reeling-ui">
+            <div class="warning-text" id="tensionWarning">TENSION HIGH!</div>
+
+            <div class="bar-container">
+                <span class="bar-label">Tension</span>
+                <div class="tension-fill" id="tensionBar"></div>
+            </div>
+
+            <div class="bar-container">
+                <span class="bar-label">Catch</span>
+                <div class="progress-fill" id="progressBar"></div>
             </div>
         </div>
 
