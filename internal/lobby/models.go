@@ -148,6 +148,19 @@ type Translations struct {
 	ExpressTripleClash string
 	ExpressQuadClash   string
 	ExpressMegaClash   string
+
+	// Cozy Fishing Case
+	FishingTitle     string
+	FishingSub       string
+	FishingCast      string
+	FishingReel      string
+	FishingCatch     string
+	FishingMiss      string
+	FishingWait      string
+	FishingScore     string
+	FishingGameOver  string
+	FishingPlayAgain string
+	FishingExit      string
 }
 
 type PageData struct {
@@ -238,7 +251,7 @@ var texts = map[string]Translations{
 
 		LeaderboardTitle: "Leaderboard",
 		CurrentSeason:    "Current Season",
-		SeasonName:       "SEASON 1: XMAS",
+		SeasonName:       "SEASON 2: WINTER THINGS",
 		EndsIn:           "Ends in",
 		Rank:             "Rank",
 		Trophies:         "Trophies",
@@ -265,6 +278,18 @@ var texts = map[string]Translations{
 		ExpressTripleClash: "TRIPLE CLASH!",
 		ExpressQuadClash:   "QUADRUPLE CLASH!",
 		ExpressMegaClash:   "MEGA CLASH!",
+
+		FishingTitle:     "Cozy Fishing",
+		FishingSub:       "Winter Relax",
+		FishingCast:      "CAST LINE",
+		FishingReel:      "REEL IN!",
+		FishingCatch:     "CATCH!",
+		FishingMiss:      "Missed...",
+		FishingWait:      "Waiting...",
+		FishingScore:     "Fish Caught",
+		FishingGameOver:  "Frozen Over!",
+		FishingPlayAgain: "Fish Again",
+		FishingExit:      "Warm Up",
 	},
 	"ua": {
 		LobbyName:   "П'ЯТЬ3 Ігро-Space",
@@ -342,7 +367,7 @@ var texts = map[string]Translations{
 
 		LeaderboardTitle: "Таблиця лідерів",
 		CurrentSeason:    "Поточний сезон",
-		SeasonName:       "СЕЗОН 1: РІЗДВО",
+		SeasonName:       "СЕЗОН 2: ЗИМОВІ ДИВА",
 		EndsIn:           "Кінець через",
 		Rank:             "Ранг",
 		Trophies:         "Кубки",
@@ -446,7 +471,7 @@ var texts = map[string]Translations{
 
 		LeaderboardTitle: "Таблица Лидеров",
 		CurrentSeason:    "Текущий Сезон",
-		SeasonName:       "СЕЗОН 1: РОЖДЕСТВО",
+		SeasonName:       "СЕЗОН 2: ЗИМНИЕ ДЕЛА",
 		EndsIn:           "Конец через",
 		Rank:             "Ранг",
 		Trophies:         "Кубки",
@@ -473,5 +498,17 @@ var texts = map[string]Translations{
 		ExpressTripleClash: "ТРОЙНОЙ КЛЕШ!",
 		ExpressQuadClash:   "КВАДРО-КЛЕШ!",
 		ExpressMegaClash:   "МЕГАКЛЕШ!",
+
+		FishingTitle:     "Чумовая Рыбалка",
+		FishingSub:       "Зимний Релакс",
+		FishingCast:      "ЗАБРОСИТЬ",
+		FishingReel:      "ТЯНИ!",
+		FishingCatch:     "ЕСТЬ!",
+		FishingMiss:      "Сорвалась...",
+		FishingWait:      "Ждем...",
+		FishingScore:     "Рыбы поймано",
+		FishingGameOver:  "Замерзло!",
+		FishingPlayAgain: "Рыбачить еще",
+		FishingExit:      "Греться",
 	},
 }

@@ -391,9 +391,11 @@ func (g *Game) endGame() {
 			exp += 200
 		}
 
-		g.store.AdjustCoins(p.UserID, coins)
-		g.store.AdjustTrophies(p.UserID, trophies)
-		g.store.AdjustExp(p.UserID, exp)
+		// Use centralized result processor to handle Level Up logic correctly
+		err := g.store.ProcessGameResult(p.UserID, trophies, coins, exp)
+		if err != nil {
+			// Log error if needed, but continue
+		}
 
 		// Award medal for surviving full duration
 		if p.Alive && g.gameTime >= GameDuration-1 {

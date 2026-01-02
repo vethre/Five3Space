@@ -339,9 +339,8 @@ func (g *Game) endGame() {
 				exp = 150
 			}
 		}
-		g.store.AdjustTrophies(p.UserID, trophies)
-		g.store.AdjustCoins(p.UserID, coins)
-		g.store.AdjustExp(p.UserID, exp)
+
+		g.store.ProcessGameResult(p.UserID, trophies, coins, exp)
 	}
 }
 

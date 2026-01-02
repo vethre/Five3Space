@@ -145,6 +145,7 @@ func main() {
 	http.HandleFunc("/ws/upsidedown", upsidedownGame.HandleWS)
 
 	http.HandleFunc("/express", lobby.NewExpressHandler(store))
+	http.HandleFunc("/fishing", lobby.NewFishingHandler(store))
 
 	fs := http.FileServer(http.Dir("./web/static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
