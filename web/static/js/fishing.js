@@ -115,30 +115,30 @@ function startGame() {
 
 function updateUI() {
     const t = window.translations;
+    actionBtn.style.display = 'block'; // Always show button container if game active
+
     if (gameState === 'IDLE') {
-        actionBtn.style.display = 'block';
         actionBtn.innerText = t.cast;
         actionBtn.classList.remove('reef');
         actionBtn.disabled = false;
         reelingUI.style.display = 'none';
         actionBtn.style.opacity = 1;
     } else if (gameState === 'WAITING' || gameState === 'CASTING') {
-        actionBtn.style.display = 'block';
         actionBtn.innerText = t.wait;
         actionBtn.disabled = true;
         actionBtn.style.opacity = 0.5;
         reelingUI.style.display = 'none';
     } else if (gameState === 'BITING') {
-        actionBtn.style.display = 'block';
         actionBtn.innerText = t.reel;
         actionBtn.className = 'action-btn reef';
         actionBtn.disabled = false;
         actionBtn.style.opacity = 1;
         reelingUI.style.display = 'none';
     } else if (gameState === 'REELING') {
-        actionBtn.style.display = 'block';
         actionBtn.innerText = t.reel;
         actionBtn.className = 'action-btn reef';
+        actionBtn.disabled = false;
+        actionBtn.style.opacity = 1;
         reelingUI.style.display = 'flex';
     } else {
         actionBtn.style.display = 'none';
