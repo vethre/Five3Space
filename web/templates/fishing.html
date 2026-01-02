@@ -1,277 +1,290 @@
-{{ define "content" }}
-<link rel="stylesheet" href="/static/css/fishing.css">
-<style>
-    body {
-        margin: 0;
-        background: #0f1c2e;
-        color: white;
-        overflow: hidden;
-        font-family: 'Montserrat', sans-serif;
-    }
+<!DOCTYPE html>
+<html lang="{{.Lang}}">
 
-    #gameContainer {
-        position: relative;
-        width: 100vw;
-        height: 100vh;
-        background: linear-gradient(180deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%);
-        /* Sunset/Winter sky */
-        overflow: hidden;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Text.FishingTitle}}</title>
+    <link rel="stylesheet" href="/static/css/fishing.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap');
 
-    canvas {
-        display: block;
-        max-width: 100%;
-        max-height: 100%;
-        box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
-    }
-
-    #uiLayer {
-        position: absolute;
-        top: 20px;
-        left: 20px;
-        z-index: 10;
-        pointer-events: none;
-    }
-
-    .score-board {
-        background: rgba(0, 0, 0, 0.6);
-        padding: 15px 25px;
-        border-radius: 15px;
-        border: 2px solid rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(10px);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    }
-
-    .score-title {
-        font-size: 0.9em;
-        color: #ddd;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-    }
-
-    .score-value {
-        font-size: 2.5em;
-        font-weight: 800;
-        color: #4facfe;
-        text-shadow: 0 0 10px rgba(79, 172, 254, 0.6);
-    }
-
-    #controls {
-        position: absolute;
-        bottom: 50px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 10;
-        display: none;
-        /* Initially hidden, shown by JS */
-    }
-
-    .action-btn {
-        background: linear-gradient(135deg, #00f260 0%, #0575e6 100%);
-        border: none;
-        padding: 20px 60px;
-        font-size: 1.5em;
-        font-weight: bold;
-        color: white;
-        border-radius: 50px;
-        cursor: pointer;
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-        transition: transform 0.1s, filter 0.2s;
-        text-transform: uppercase;
-        pointer-events: auto;
-    }
-
-    .action-btn:active {
-        transform: translateX(-50%) scale(0.95);
-    }
-
-    .action-btn:hover {
-        filter: brightness(1.2);
-    }
-
-    .action-btn.reef {
-        background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
-        animation: pulse 0.5s infinite alternate;
-    }
-
-    @keyframes pulse {
-        from {
-            transform: translateX(-50%) scale(1);
-            box-shadow: 0 0 10px red;
+        body {
+            margin: 0;
+            background: #0f1c2e;
+            color: white;
+            overflow: hidden;
+            font-family: 'Montserrat', sans-serif;
         }
 
-        to {
-            transform: translateX(-50%) scale(1.05);
-            box-shadow: 0 0 30px red;
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(180deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%);
+            /* Sunset/Winter sky */
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-    }
 
-    #backBtn {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        z-index: 100;
-        background: rgba(255, 255, 255, 0.1);
-        color: white;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        padding: 10px 20px;
-        border-radius: 8px;
-        cursor: pointer;
-        text-decoration: none;
-        font-weight: 600;
-        backdrop-filter: blur(5px);
-        transition: all 0.2s;
-    }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+        }
 
-    #backBtn:hover {
-        background: rgba(255, 255, 255, 0.2);
-        transform: translateY(-2px);
-    }
+        #uiLayer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            pointer-events: none;
+        }
 
-    /* Message Toast */
-    .toast {
-        position: absolute;
-        top: 40%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 3em;
-        font-weight: 900;
-        color: white;
-        text-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-        opacity: 0;
-        transition: opacity 0.3s, transform 0.3s;
-        pointer-events: none;
-        z-index: 20;
-        white-space: nowrap;
-    }
+        .score-board {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px 25px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
 
-    .toast.show {
-        opacity: 1;
-        transform: translate(-50%, -60%);
-    }
+        .score-title {
+            font-size: 0.9em;
+            color: #ddd;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
 
-    /* Modal */
-    #gameOverModal {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.85);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 50;
-    }
+        .score-value {
+            font-size: 2.5em;
+            font-weight: 800;
+            color: #4facfe;
+            text-shadow: 0 0 10px rgba(79, 172, 254, 0.6);
+        }
 
-    .hidden {
-        display: none !important;
-    }
+        #controls {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: none;
+            /* Initially hidden, shown by JS */
+        }
 
-    .modal-content {
-        background: #1e1e1e;
-        padding: 40px;
-        border-radius: 20px;
-        text-align: center;
-        border: 1px solid #333;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-        max-width: 400px;
-        width: 90%;
-    }
+        .action-btn {
+            background: linear-gradient(135deg, #00f260 0%, #0575e6 100%);
+            border: none;
+            padding: 20px 60px;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.1s, filter 0.2s;
+            text-transform: uppercase;
+            pointer-events: auto;
+        }
 
-    .modal-title {
-        font-size: 2em;
-        margin-bottom: 20px;
-        color: #4facfe;
-    }
+        .action-btn:active {
+            transform: translateX(-50%) scale(0.95);
+        }
 
-    .final-score {
-        font-size: 1.2em;
-        color: #aaa;
-        margin-bottom: 30px;
-    }
+        .action-btn:hover {
+            filter: brightness(1.2);
+        }
 
-    .final-score span {
-        color: white;
-        font-weight: bold;
-        font-size: 1.5em;
-    }
+        .action-btn.reef {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            animation: pulse 0.5s infinite alternate;
+        }
 
-    .btn-group {
-        display: flex;
-        gap: 10px;
-        justify-content: center;
-    }
+        @keyframes pulse {
+            from {
+                transform: translateX(-50%) scale(1);
+                box-shadow: 0 0 10px red;
+            }
 
-    .modal-btn {
-        padding: 12px 24px;
-        border-radius: 8px;
-        border: none;
-        font-weight: bold;
-        cursor: pointer;
-        transition: transform 0.1s;
-    }
+            to {
+                transform: translateX(-50%) scale(1.05);
+                box-shadow: 0 0 30px red;
+            }
+        }
 
-    .btn-primary {
-        background: #4facfe;
-        color: black;
-    }
+        #backBtn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 600;
+            backdrop-filter: blur(5px);
+            transition: all 0.2s;
+        }
 
-    .btn-secondary {
-        background: #333;
-        color: white;
-        border: 1px solid #555;
-    }
+        #backBtn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
 
-    .modal-btn:hover {
-        transform: scale(1.05);
-    }
-</style>
+        /* Message Toast */
+        .toast {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3em;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
+            z-index: 20;
+            white-space: nowrap;
+        }
 
-<div id="gameContainer">
-    <a href="/" id="backBtn">Exit</a>
+        .toast.show {
+            opacity: 1;
+            transform: translate(-50%, -60%);
+        }
 
-    <div id="uiLayer">
-        <div class="score-board">
-            <div class="score-title">{{.Text.FishingScore}}</div>
-            <div class="score-value" id="scoreValue">0</div>
-        </div>
-    </div>
+        /* Modal */
+        #gameOverModal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
 
-    <div id="toast" class="toast"></div>
+        .hidden {
+            display: none !important;
+        }
 
-    <div id="controls">
-        <button id="actionBtn" class="action-btn">{{.Text.FishingCast}}</button>
-    </div>
+        .modal-content {
+            background: #1e1e1e;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            border: 1px solid #333;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            max-width: 400px;
+            width: 90%;
+        }
 
-    <div id="gameOverModal" class="hidden">
-        <div class="modal-content">
-            <div class="modal-title">{{.Text.FishingGameOver}}</div>
-            <div class="final-score">{{.Text.FishingScore}}: <span id="finalScoreVal">0</span></div>
-            <div class="btn-group">
-                <button id="replayBtn" class="modal-btn btn-primary">{{.Text.FishingPlayAgain}}</button>
-                <a href="/" class="modal-btn btn-secondary">{{.Text.FishingExit}}</a>
+        .modal-title {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #4facfe;
+        }
+
+        .final-score {
+            font-size: 1.2em;
+            color: #aaa;
+            margin-bottom: 30px;
+        }
+
+        .final-score span {
+            color: white;
+            font-weight: bold;
+            font-size: 1.5em;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .btn-primary {
+            background: #4facfe;
+            color: black;
+        }
+
+        .btn-secondary {
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+        }
+
+        .modal-btn:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="gameContainer">
+        <a href="/" id="backBtn">{{.Text.Back}}</a>
+
+        <div id="uiLayer">
+            <div class="score-board">
+                <div class="score-title">{{.Text.FishingScore}}</div>
+                <div class="score-value" id="scoreValue">0</div>
             </div>
         </div>
+
+        <div id="toast" class="toast"></div>
+
+        <div id="controls">
+            <button id="actionBtn" class="action-btn">{{.Text.FishingCast}}</button>
+        </div>
+
+        <div id="gameOverModal" class="hidden">
+            <div class="modal-content">
+                <div class="modal-title">{{.Text.FishingGameOver}}</div>
+                <div class="final-score">{{.Text.FishingScore}}: <span id="finalScoreVal">0</span></div>
+                <div class="btn-group">
+                    <button id="replayBtn" class="modal-btn btn-primary">{{.Text.FishingPlayAgain}}</button>
+                    <a href="/" class="modal-btn btn-secondary">{{.Text.FishingExit}}</a>
+                </div>
+            </div>
+        </div>
+
+        <canvas id="fishingCanvas"></canvas>
     </div>
 
-    <canvas id="fishingCanvas"></canvas>
-</div>
+    <!-- Pass translations to JS -->
+    <script>
+        window.translations = {
+            cast: "{{.Text.FishingCast}}",
+            reel: "{{.Text.FishingReel}}",
+            catch: "{{.Text.FishingCatch}}",
+            miss: "{{.Text.FishingMiss}}",
+            wait: "{{.Text.FishingWait}}"
+        };
+        window.userID = "{{.User.ID}}";
+    </script>
+    <script src="/static/js/net.js"></script>
+    <script src="/static/js/fishing.js"></script>
+</body>
 
-<!-- Pass translations to JS -->
-<script>
-    window.translations = {
-        cast: "{{.Text.FishingCast}}",
-        reel: "{{.Text.FishingReel}}",
-        catch: "{{.Text.FishingCatch}}",
-        miss: "{{.Text.FishingMiss}}",
-        wait: "{{.Text.FishingWait}}"
-    };
-    window.userID = "{{.User.ID}}";
-</script>
-<script src="/static/js/net.js"></script>
-<script src="/static/js/fishing.js"></script>
-{{ end }}
+</html>
