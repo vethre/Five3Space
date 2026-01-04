@@ -8,6 +8,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="/static/css/upsidedown_shop.css">
     <style>
         :root {
             --blood-red: #8B0000;
@@ -397,15 +398,39 @@
         <div id="flare-indicator">🔥 FLARE ACTIVE</div>
     </div>
 
-    <div class="overlay active" id="intro-overlay">
-        <h1>The Upside Down</h1>
-        <p class="instructions">
-            Survive in the darkness. Collect light orbs to restore sanity.<br>
-            Stay away from demogorgons. Use flares to scare them.<br>
-            <strong>WASD</strong> to move. Survive as long as you can.
-        </p>
-        <button class="btn" onclick="startGame()">ENTER THE VOID</button>
-        <a href="/" class="btn" style="border-color: #444;">← ESCAPE</a>
+    <div class="rogue-overlay" id="meta-lobby">
+        <div class="rogue-panel">
+            <div class="rogue-header">
+                <div class="rogue-title">THE VOID</div>
+                <div class="ember-display">
+                    <div class="ember-icon"></div>
+                    <span id="ember-count">---</span>
+                </div>
+            </div>
+
+            <div class="rogue-tabs">
+                <button class="rogue-tab-btn active" onclick="switchTab('upgrades')">Upgrades</button>
+                <button class="rogue-tab-btn" onclick="switchTab('classes')">Classes</button>
+                <button class="rogue-tab-btn" onclick="switchTab('modifiers')">Modifiers</button>
+            </div>
+
+            <div class="rogue-content active" id="tab-upgrades"></div>
+            <div class="rogue-content" id="tab-classes"></div>
+            <div class="rogue-content" id="tab-modifiers">
+                <div style="width: 100%; margin-bottom: 20px; color: #aaa;">
+                    <label style="display: flex; align-items: center; gap: 10px; font-size: 1.2rem; cursor: pointer;">
+                        <input type="checkbox" id="endless-mode-check" style="width: 20px; height: 20px;">
+                        ENDLESS NIGHTMARE MODE (Waves & Bosses)
+                    </label>
+                </div>
+                <div id="mods-list"
+                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">
+                </div>
+            </div>
+
+            <button class="start-run-btn" onclick="initGame()">ENTER THE DARKNESS</button>
+            <a href="/" class="back-home">EXIT TO LOBBY</a>
+        </div>
     </div>
 
     <div class="overlay" id="game-over-overlay">
@@ -525,8 +550,158 @@
             particlesContainer.appendChild(p);
         }
 
-        function connect() {
-            socket = new WebSocket(`${protocol}://${window.location.host}/ws/upsidedown?userID=${encodeURIComponent(userID)}`);
+
+        // ROGUELITE METADATA DEFINITIONS
+        const UPGRADES = {
+            "max_health": { name: "Hardened Body", desc: "+5% max health per level", baseCost: 50 },
+            "max_sanity": { name: "Mental Fortitude", desc: "+5% max sanity per level", baseCost: 50 },
+            "start_flares": { name: "Prepared", desc: "+1 starting flare per level", baseCost: 100 },
+            "light_radius": { name: "Inner Light", desc: "+10% light radius per level", baseCost: 75 },
+            "resource_spawn": { name: "Scavenger's Luck", desc: "+5% resource spawn rate per level", baseCost: 80 },
+            "move_speed": { name: "Swift Feet", desc: "+3% movement speed per level", baseCost: 60 },
+            "sanity_regen": { name: "Calm Mind", desc: "+10% sanity regen near light per level", baseCost: 70 },
+            "damage_resist": { name: "Thick Skin", desc: "+5% damage resistance per level", baseCost: 90 },
+        };
+
+        const CLASSES = {
+            "survivor": { name: "Survivor", desc: "Balanced stats. The default choice.", cost: 0 },
+            "scout": { name: "Scout", desc: "+Speed, -Health. Fast and fragile.", cost: 200 },
+            "psychic": { name: "Psychic", desc: "High Sanity Regen, but enemies sense you.", cost: 300 },
+            "pyromancer": { name: "Pyromancer", desc: "Start with 3 Flares (Shorter duration).", cost: 250 },
+        };
+
+        const MODIFIERS = {
+            "void_surge": { name: "Void Surge", desc: "+50% Enemies, +100% Embers.", mult: 2.0 },
+            "dim_light": { name: "Dim Light", desc: "-50% Light Restore, +Resources.", mult: 1.3 },
+            "quick_decay": { name: "Quick Decay", desc: "2x Sanity Drain.", mult: 1.5 },
+            "hunter_moon": { name: "Hunter's Moon", desc: "+Enemy Sight, -Enemy Speed.", mult: 1.4 },
+            "ghostly_mist": { name: "Ghostly Mist", desc: "Reduced Visibility.", mult: 1.6 },
+            "blood_moon": { name: "Blood Moon", desc: "Hardcore. +200% Embers.", mult: 3.0 },
+        };
+
+        let playerMeta = null;
+        let selectedMods = new Set();
+        let selectedClass = "survivor";
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.rogue-tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.rogue-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+        }
+
+        async function fetchMeta() {
+            try {
+                const res = await fetch(`/upsidedown/shop?userID=${userID}`);
+                playerMeta = await res.json();
+                renderShop();
+            } catch (e) {
+                console.error("Failed to load meta", e);
+            }
+        }
+
+        async function buyItem(action, id) {
+            try {
+                const res = await fetch(`/upsidedown/shop?userID=${userID}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, id })
+                });
+                if (res.ok) {
+                    playerMeta = await res.json();
+                    renderShop();
+                } else {
+                    alert("Cannot purchase!");
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function selectClass(id) {
+            selectedClass = id;
+            renderShop();
+        }
+
+        function toggleMod(id) {
+            if (selectedMods.has(id)) selectedMods.delete(id);
+            else selectedMods.add(id);
+            renderShop();
+        }
+
+        function renderShop() {
+            if (!playerMeta) return;
+            document.getElementById('ember-count').innerText = playerMeta.emberShards;
+
+            // Upgrades
+            const upContainer = document.getElementById('tab-upgrades');
+            upContainer.innerHTML = '';
+            for (const [id, def] of Object.entries(UPGRADES)) {
+                const lvl = playerMeta.upgradeLevels[id] || 0;
+                const cost = def.baseCost * (lvl + 1);
+                const maxed = lvl >= 10;
+
+                const div = document.createElement('div');
+                div.className = 'rogue-card';
+                div.innerHTML = `
+                    <div class="card-title">${def.name} <span style="font-size:0.8em; color:#888;">Lvl ${lvl}</span></div>
+                    <div class="card-desc">${def.desc}</div>
+                    <div class="card-cost">${maxed ? 'MAX' : cost + ' <span class="ember-icon" style="display:inline-block;width:12px;height:12px;"></span>'}</div>
+                    <button class="buy-btn" onclick="buyItem('upgrade', '${id}')" ${maxed || playerMeta.emberShards < cost ? 'disabled' : ''}>
+                        ${maxed ? 'MAXED' : 'UPGRADE'}
+                    </button>`;
+                upContainer.appendChild(div);
+            }
+
+            // Classes
+            const classContainer = document.getElementById('tab-classes');
+            classContainer.innerHTML = '';
+            for (const [id, def] of Object.entries(CLASSES)) {
+                const unlocked = id === 'survivor' || playerMeta.unlockedClasses[id];
+                const isSelected = selectedClass === id;
+                const div = document.createElement('div');
+                div.className = `rogue-card ${!unlocked ? 'locked' : ''}`;
+                if (isSelected) div.style.borderColor = '#0f0';
+
+                div.innerHTML = `
+                    <div class="card-title">${def.name}</div>
+                    <div class="card-desc">${def.desc}</div>
+                    ${unlocked ?
+                        `<button class="buy-btn" style="${isSelected ? 'background:#004400' : 'background:#444'}" onclick="selectClass('${id}')">${isSelected ? 'SELECTED' : 'SELECT'}</button>` :
+                        `<div class="card-cost">${def.cost} <span class="ember-icon" style="display:inline-block;width:12px;height:12px;"></span></div>
+                         <button class="buy-btn" onclick="buyItem('class', '${id}')" ${playerMeta.emberShards < def.cost ? 'disabled' : ''}>UNLOCK</button>`
+                    }
+                `;
+                classContainer.appendChild(div);
+            }
+
+            // Mods
+            const modContainer = document.getElementById('mods-list');
+            modContainer.innerHTML = '';
+            for (const [id, def] of Object.entries(MODIFIERS)) {
+                const active = selectedMods.has(id);
+                const div = document.createElement('div');
+                div.className = `rogue-card mod-card ${active ? 'selected' : ''}`;
+                div.onclick = () => toggleMod(id);
+                div.innerHTML = `
+                    <div class="card-title">${def.name}</div>
+                    <div class="card-desc">${def.desc}</div>
+                    <div class="card-stats" style="color: #0f0;">x${def.mult} Embers</div>
+                `;
+                modContainer.appendChild(div);
+            }
+        }
+
+        function initGame() {
+            const endless = document.getElementById('endless-mode-check').checked;
+            const mods = Array.from(selectedMods).join(',');
+            document.getElementById('meta-lobby').style.display = 'none';
+            connect(selectedClass, mods, endless);
+        }
+
+        // --- CORE GAME LOBBY ---
+
+        function connect(cls = 'survivor', mods = '', endless = false) {
+            const url = `${protocol}://${window.location.host}/ws/upsidedown?userID=${encodeURIComponent(userID)}&class=${cls}&mods=${mods}&endless=${endless}`;
+            socket = new WebSocket(url);
 
             socket.onmessage = (ev) => {
                 const msg = JSON.parse(ev.data);
@@ -535,7 +710,6 @@
                     myId = msg.id;
                     if (msg.active) {
                         gameStarted = true;
-                        document.getElementById('intro-overlay').classList.remove('active');
                     }
                 }
 
@@ -545,38 +719,45 @@
                 }
 
                 if (msg.type === 'game_over') {
-                    showGameOver(msg.survived);
+                    showGameOver(msg);
                 }
             };
 
-            socket.onclose = () => setTimeout(connect, 2000);
-        }
-
-        function startGame() {
-            gameStarted = true;
-            document.getElementById('intro-overlay').classList.remove('active');
-            if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({ type: 'restart' }));
-            }
+            socket.onclose = () => {
+                console.log("Disconnected");
+                // Optional: Show disconnect screen or auto-retry (removed auto-retry to avoid loop)
+            };
         }
 
         function restartGame() {
             document.getElementById('game-over-overlay').classList.remove('active');
-            document.body.classList.remove('insane');
-            if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({ type: 'restart' }));
-            }
+            document.getElementById('meta-lobby').style.display = 'flex';
+            fetchMeta();
         }
+
+        function showGameOver(data) {
+            const mins = Math.floor(data.survived / 60);
+            const secs = Math.floor(data.survived % 60).toString().padStart(2, '0');
+            document.getElementById('final-time').textContent = `${mins}:${secs}`;
+
+            // Update title
+            if (data.wave > 0) {
+                document.getElementById('game-over-title').textContent = "WAVE " + data.wave + " SURVIVED";
+            } else {
+                document.getElementById('game-over-title').textContent = "CONSUMED";
+            }
+            document.getElementById('game-over-overlay').classList.add('active');
+        }
+
 
         function updateHUD(state) {
             const me = state.players.find(p => p.id === myId);
             if (!me) return;
 
             // Health bar
-            document.getElementById('health-fill').style.width = me.health + '%';
+            document.getElementById('health-fill').style.width = Math.min(100, me.health) + '%';
+            document.getElementById('sanity-fill').style.width = Math.min(100, me.sanity) + '%';
 
-            // Sanity bar
-            document.getElementById('sanity-fill').style.width = me.sanity + '%';
             if (me.sanity < 30) {
                 document.getElementById('sanity-bar').classList.add('sanity-low');
                 document.body.classList.add('insane');
@@ -585,11 +766,15 @@
                 document.body.classList.remove('insane');
             }
 
-            // Timer
-            const timeLeft = Math.max(0, state.maxTime - state.time);
-            const mins = Math.floor(timeLeft / 60);
-            const secs = Math.floor(timeLeft % 60).toString().padStart(2, '0');
-            document.getElementById('timer').textContent = `${mins}:${secs}`;
+            // Timer / Wave
+            if (state.maxTime && state.maxTime < 9999) {
+                const timeLeft = Math.max(0, state.maxTime - state.time);
+                const mins = Math.floor(timeLeft / 60);
+                const secs = Math.floor(timeLeft % 60).toString().padStart(2, '0');
+                document.getElementById('timer').textContent = `${mins}:${secs}`;
+            } else {
+                document.getElementById('timer').textContent = `ENDLESS`; // Endless mode
+            }
 
             // Score
             document.getElementById('score').textContent = `SCORE: ${me.score}`;
@@ -609,29 +794,16 @@
             }
         }
 
-        function showGameOver(survived) {
-            const mins = Math.floor(survived / 60);
-            const secs = Math.floor(survived % 60).toString().padStart(2, '0');
-            document.getElementById('final-time').textContent = `${mins}:${secs}`;
-
-            const me = gameState?.players?.find(p => p.id === myId);
-            document.getElementById('final-score').textContent = me?.score || 0;
-            document.getElementById('game-over-title').textContent = me?.alive ? 'SURVIVED' : 'CONSUMED';
-
-            document.getElementById('game-over-overlay').classList.add('active');
-        }
-
         // Game loop
         let lastUpdate = 0;
         function gameLoop(timestamp) {
             requestAnimationFrame(gameLoop);
-
             if (!gameStarted || !gameState) return;
 
             const dt = (timestamp - lastUpdate) / 1000;
             lastUpdate = timestamp;
 
-            // Send movement with sprint support
+            // Movement logic
             const baseSpeed = 5;
             const speed = isSprinting ? baseSpeed * 1.8 : baseSpeed;
             let dx = 0, dy = 0;
@@ -643,13 +815,11 @@
             if ((dx !== 0 || dy !== 0) && socket?.readyState === WebSocket.OPEN) {
                 playerPos.x += dx;
                 playerPos.y += dy;
-                // Clamp to boundaries
                 playerPos.x = Math.max(-30, Math.min(30, playerPos.x));
                 playerPos.y = Math.max(-30, Math.min(30, playerPos.y));
                 socket.send(JSON.stringify({ type: 'move', pos: playerPos }));
             }
 
-            // Render
             render();
         }
 
@@ -664,168 +834,130 @@
 
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const scale = 15; // Pixels per unit
-
-            // Camera follows player
+            const scale = 15;
             const camX = me.pos.x;
             const camY = me.pos.y;
 
-            // Draw grid (subtle)
+            // Grid
             ctx.strokeStyle = 'rgba(50, 20, 20, 0.3)';
             ctx.lineWidth = 1;
             for (let x = -40; x <= 40; x += 5) {
                 const screenX = centerX + (x - camX) * scale;
-                ctx.beginPath();
-                ctx.moveTo(screenX, 0);
-                ctx.lineTo(screenX, canvas.height);
-                ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(screenX, 0); ctx.lineTo(screenX, canvas.height); ctx.stroke();
             }
             for (let y = -40; y <= 40; y += 5) {
                 const screenY = centerY + (y - camY) * scale;
-                ctx.beginPath();
-                ctx.moveTo(0, screenY);
-                ctx.lineTo(canvas.width, screenY);
-                ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, screenY); ctx.lineTo(canvas.width, screenY); ctx.stroke();
             }
 
-            // Draw entities
+            // Entities
             for (const e of gameState.entities) {
                 const sx = centerX + (e.pos.x - camX) * scale;
                 const sy = centerY + (e.pos.y - camY) * scale;
 
-                if (e.type === 'demogorgon') {
-                    // Detailed Demogorgon (Flower face)
-                    const petalCount = 5;
-                    const headRad = 25;
+                if (e.type === 'demogorgon' || e.type === 'demogorgon_boss') {
+                    const isBoss = e.type === 'demogorgon_boss';
+                    const headRad = isBoss ? 40 : 25;
+                    const petalColor = isBoss ? '#440000' : '#8b0000';
+                    const bodyColor = isBoss ? '#1a0505' : '#dcdcdc';
+
                     const time = Date.now() / 200;
 
-                    // Pale body/head
-                    ctx.fillStyle = '#dcdcdc';
+                    // Body
+                    ctx.fillStyle = bodyColor;
                     ctx.beginPath();
-                    ctx.arc(sx, sy, 20, 0, Math.PI * 2);
+                    ctx.arc(sx, sy, isBoss ? 30 : 20, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Open Flower Petals
-                    ctx.fillStyle = '#8b0000'; // Blood red
+                    // Petals
+                    ctx.fillStyle = petalColor;
+                    const petalCount = 5;
                     for (let i = 0; i < petalCount; i++) {
                         const angle = (i / petalCount) * Math.PI * 2 + (time * 0.1);
                         const px = sx + Math.cos(angle) * headRad;
                         const py = sy + Math.sin(angle) * headRad;
+                        const midAngle = angle + (isBoss ? 0 : 0.5); // Variation
 
                         ctx.beginPath();
                         ctx.moveTo(sx, sy);
                         ctx.quadraticCurveTo(
-                            sx + Math.cos(angle - 0.5) * 40,
-                            sy + Math.sin(angle - 0.5) * 40,
+                            sx + Math.cos(angle - 0.5) * (headRad + 15),
+                            sy + Math.sin(angle - 0.5) * (headRad + 15),
                             px, py
                         );
                         ctx.quadraticCurveTo(
-                            sx + Math.cos(angle + 0.5) * 40,
-                            sy + Math.sin(angle + 0.5) * 40,
+                            sx + Math.cos(angle + 0.5) * (headRad + 15),
+                            sy + Math.sin(angle + 0.5) * (headRad + 15),
                             sx, sy
                         );
                         ctx.fill();
                     }
 
-                    // Inner Mouth - Bloody Teeth
-                    ctx.fillStyle = '#330000';
+                    // Mouth
+                    ctx.fillStyle = '#110';
                     ctx.beginPath();
-                    ctx.arc(sx, sy, 12, 0, Math.PI * 2);
+                    ctx.arc(sx, sy, isBoss ? 20 : 12, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Teeth
-                    ctx.fillStyle = '#fff';
-                    for (let j = 0; j < 8; j++) {
-                        const ta = (j / 8) * Math.PI * 2 + (time * -0.2);
-                        const tx = sx + Math.cos(ta) * 8;
-                        const ty = sy + Math.sin(ta) * 8;
-                        ctx.beginPath();
-                        ctx.arc(tx, ty, 2, 0, Math.PI * 2);
-                        ctx.fill();
+                    // Boss Health Bar
+                    if (isBoss) {
+                        const hpPct = (e.health || 100) / 500; // Approx max health visualization
+                        // Actually backend doesn't send max health of entities in standard view.
+                        // Just draw a small bar
+                        ctx.fillStyle = 'red';
+                        ctx.fillRect(sx - 20, sy - 50, 40 * (e.health > 0), 5);
                     }
+
                 } else if (e.type === 'light_orb') {
-                    // Glowing orb
                     const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, 25);
                     grad.addColorStop(0, 'rgba(255, 255, 200, 0.9)');
-                    grad.addColorStop(0.5, 'rgba(255, 200, 100, 0.4)');
                     grad.addColorStop(1, 'transparent');
                     ctx.fillStyle = grad;
-                    ctx.beginPath();
-                    ctx.arc(sx, sy, 25, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.fillStyle = '#ffffcc';
-                    ctx.beginPath();
-                    ctx.arc(sx, sy, 5, 0, Math.PI * 2);
-                    ctx.fill();
+                    ctx.beginPath(); ctx.arc(sx, sy, 25, 0, Math.PI * 2); ctx.fill();
                 } else if (e.type === 'battery') {
-                    // Green battery
-                    ctx.fillStyle = '#0f0';
-                    ctx.fillRect(sx - 8, sy - 12, 16, 24);
-                    ctx.fillStyle = '#0a0';
-                    ctx.fillRect(sx - 4, sy - 16, 8, 4);
+                    ctx.fillStyle = '#0f0'; ctx.fillRect(sx - 8, sy - 12, 16, 24);
                 } else if (e.type === 'flare') {
-                    // Orange flare
                     ctx.fillStyle = '#f60';
                     ctx.beginPath();
-                    ctx.moveTo(sx, sy - 15);
-                    ctx.lineTo(sx + 10, sy + 10);
-                    ctx.lineTo(sx - 10, sy + 10);
-                    ctx.closePath();
+                    ctx.moveTo(sx, sy - 15); ctx.lineTo(sx + 10, sy + 10); ctx.lineTo(sx - 10, sy + 10); ctx.closePath();
                     ctx.fill();
                 }
             }
 
-            // Draw other players
+            // Players
             for (const p of gameState.players) {
                 if (p.id === myId || !p.alive) continue;
-
                 const sx = centerX + (p.pos.x - camX) * scale;
                 const sy = centerY + (p.pos.y - camY) * scale;
 
-                // Player light radius
                 const lightGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, p.lightRadius * scale);
                 lightGrad.addColorStop(0, 'rgba(255, 200, 150, 0.3)');
                 lightGrad.addColorStop(1, 'transparent');
                 ctx.fillStyle = lightGrad;
-                ctx.beginPath();
-                ctx.arc(sx, sy, p.lightRadius * scale, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(sx, sy, p.lightRadius * scale, 0, Math.PI * 2); ctx.fill();
 
-                // Player body
                 ctx.fillStyle = '#aaa';
-                ctx.beginPath();
-                ctx.arc(sx, sy, 12, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(sx, sy, 12, 0, Math.PI * 2); ctx.fill();
 
-                // Name
                 ctx.fillStyle = '#fff';
                 ctx.font = '12px sans-serif';
                 ctx.textAlign = 'center';
                 ctx.fillText(p.name, sx, sy - 20);
             }
 
-            // Draw self (center of screen with light)
+            // Self
             if (me.alive) {
-                // Player light
                 const lightGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, me.lightRadius * scale);
                 lightGrad.addColorStop(0, 'rgba(255, 200, 150, 0.4)');
                 lightGrad.addColorStop(1, 'transparent');
                 ctx.fillStyle = lightGrad;
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, me.lightRadius * scale, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(centerX, centerY, me.lightRadius * scale, 0, Math.PI * 2); ctx.fill();
 
-                // Player body
                 ctx.fillStyle = me.hasFlare ? '#ff8800' : '#fff';
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, 15, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = '#000';
-                ctx.lineWidth = 2;
-                ctx.stroke();
+                ctx.beginPath(); ctx.arc(centerX, centerY, 15, 0, Math.PI * 2); ctx.fill();
             }
 
-            // Darkness mask (fog of war based on sanity)
+            // Darkness
             const darknessRadius = (me.sanity / 100) * 300 + 100;
             const darkGrad = ctx.createRadialGradient(centerX, centerY, darknessRadius * 0.5, centerX, centerY, darknessRadius);
             darkGrad.addColorStop(0, 'transparent');
@@ -835,8 +967,9 @@
         }
 
         // Initialize
-        connect();
+        fetchMeta();
         requestAnimationFrame(gameLoop);
+
     </script>
 </body>
 

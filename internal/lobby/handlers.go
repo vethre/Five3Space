@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"main/internal/data"
+	"main/internal/upsidedown"
 )
 
 func getModeTexts(lang string, isLocked, isConstruct bool) (string, string) {
@@ -245,6 +246,52 @@ func NewCustomizeSaveHandler(store *data.Store) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func NewUpsideDownShopHandler(store *data.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID := ""
+		if c, err := r.Cookie("user_id"); err == nil && c.Value != "" {
+			userID = c.Value
+		} else if q := r.URL.Query().Get("userID"); q != "" {
+			userID = q
+		}
+
+		if userID == "" {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		meta := upsidedown.LoadPlayerMeta(store, userID)
+
+		if r.Method == http.MethodPost {
+			var req struct {
+				Action string `json:"action"` // "upgrade" or "class"
+				ID     string `json:"id"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, "Invalid request", http.StatusBadRequest)
+				return
+			}
+
+			success := false
+			if req.Action == "upgrade" {
+				success = meta.PurchaseUpgrade(upsidedown.UpgradeType(req.ID))
+			} else if req.Action == "class" {
+				success = meta.PurchaseClass(upsidedown.ClassID(req.ID))
+			}
+
+			if !success {
+				http.Error(w, "Purchase failed (insufficient shards or max level)", http.StatusBadRequest)
+				return
+			}
+
+			upsidedown.SavePlayerMeta(store, userID, meta)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(meta)
 	}
 }
 

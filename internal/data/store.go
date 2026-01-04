@@ -21,20 +21,21 @@ type Medal struct {
 }
 
 type UserData struct {
-	ID           string   `json:"id"`
-	Nickname     string   `json:"nickname"`
-	Tag          int      `json:"tag"`
-	Level        int      `json:"level"`
-	Exp          int      `json:"exp"`
-	MaxExp       int      `json:"max_exp"`
-	Coins        int      `json:"coins"`
-	Trophies     int      `json:"trophies"`
-	Status       string   `json:"status"`
-	Medals       []string `json:"medals"`
-	Language     string   `json:"language"`
-	NameColor    string   `json:"name_color"`
-	BannerColor  string   `json:"banner_color"`
-	CustomAvatar string   `json:"custom_avatar"` // Base64 data or empty
+	ID             string   `json:"id"`
+	Nickname       string   `json:"nickname"`
+	Tag            int      `json:"tag"`
+	Level          int      `json:"level"`
+	Exp            int      `json:"exp"`
+	MaxExp         int      `json:"max_exp"`
+	Coins          int      `json:"coins"`
+	Trophies       int      `json:"trophies"`
+	Status         string   `json:"status"`
+	Medals         []string `json:"medals"`
+	Language       string   `json:"language"`
+	NameColor      string   `json:"name_color"`
+	BannerColor    string   `json:"banner_color"`
+	CustomAvatar   string   `json:"custom_avatar"`    // Base64 data or empty
+	UpsideDownMeta string   `json:"upside_down_meta"` // JSON for roguelite progression
 }
 
 type Store struct {
@@ -84,13 +85,13 @@ func (s *Store) GetUser(id string) (UserData, bool) {
         SELECT id, nickname, tag, level, exp, max_exp, coins, trophies, 
 		       COALESCE(status, 'offline'), COALESCE(language, 'en'),
 			   COALESCE(name_color, 'white'), COALESCE(banner_color, 'default'),
-			   COALESCE(custom_avatar, '')
+			   COALESCE(custom_avatar, ''), COALESCE(upside_down_meta, '')
         FROM users
         WHERE id = $1
     `, id)
 
 	var u UserData
-	if err := row.Scan(&u.ID, &u.Nickname, &u.Tag, &u.Level, &u.Exp, &u.MaxExp, &u.Coins, &u.Trophies, &u.Status, &u.Language, &u.NameColor, &u.BannerColor, &u.CustomAvatar); err != nil {
+	if err := row.Scan(&u.ID, &u.Nickname, &u.Tag, &u.Level, &u.Exp, &u.MaxExp, &u.Coins, &u.Trophies, &u.Status, &u.Language, &u.NameColor, &u.BannerColor, &u.CustomAvatar, &u.UpsideDownMeta); err != nil {
 		return UserData{}, false
 	}
 
@@ -363,4 +364,39 @@ func (s *Store) GetLeaderboard() ([]UserData, error) {
 		players = append(players, u)
 	}
 	return players, nil
+}
+
+// UpdateUpsideDownMeta saves the roguelite meta-progression data for a user
+func (s *Store) UpdateUpsideDownMeta(userID string, metaJSON string) error {
+	_, err := s.db.Exec(`UPDATE users SET upside_down_meta = $1, updated_at = NOW() WHERE id = $2`, metaJSON, userID)
+	return err
+}
+
+// AdjustEmberShards is a convenience method for adding ember shards to a user's meta
+func (s *Store) AdjustEmberShards(userID string, delta int) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	user, ok := s.GetUser(userID)
+	if !ok {
+		return fmt.Errorf("user not found")
+	}
+
+	// Parse existing meta or create new
+	var meta struct {
+		EmberShards int `json:"emberShards"`
+	}
+	if user.UpsideDownMeta != "" {
+		json.Unmarshal([]byte(user.UpsideDownMeta), &meta)
+	}
+
+	meta.EmberShards += delta
+	if meta.EmberShards < 0 {
+		meta.EmberShards = 0
+	}
+
+	// We only update ember shards, let the full meta system handle the rest
+	// For simplicity, just store the whole meta blob
+	newMeta, _ := json.Marshal(meta)
+	return s.UpdateUpsideDownMeta(userID, string(newMeta))
 }

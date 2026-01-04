@@ -46,22 +46,34 @@ type Player struct {
 
 	Pos             Vec2    `json:"pos"`
 	Health          float64 `json:"health"`
+	MaxHealth       float64 `json:"maxHealth"`
 	Sanity          float64 `json:"sanity"`
+	MaxSanity       float64 `json:"maxSanity"`
 	Score           int     `json:"score"`
 	Alive           bool    `json:"alive"`
 	AvailableFlares int     `json:"availableFlares"`
 	HasFlare        bool    `json:"hasFlare"` // Active flare
 	FlareTime       float64 `json:"-"`        // Seconds remaining
+	FlareDuration   float64 `json:"-"`        // Max flare duration (modified by class)
 	LightRadius     float64 `json:"lightRadius"`
+	BaseLightRadius float64 `json:"-"`             // Base light radius (from upgrades)
+	SanityRegenMod  float64 `json:"-"`             // Sanity regen multiplier
+	SpeedMod        float64 `json:"-"`             // Movement speed multiplier
+	DamageResist    float64 `json:"-"`             // Damage resistance percentage
+	Kills           int     `json:"kills"`         // Demogorgons killed this run
+	SelectedClass   ClassID `json:"selectedClass"` // Character class for this run
 }
 
 type Entity struct {
 	ID           string  `json:"id"`
-	Type         string  `json:"type"` // "demogorgon", "light_orb", "battery", "flare"
+	Type         string  `json:"type"` // "demogorgon", "demogorgon_boss", "light_orb", "battery", "flare"
 	Pos          Vec2    `json:"pos"`
 	Active       bool    `json:"active"`
-	Health       int     `json:"-"`
+	Health       int     `json:"health"` // Now exposed for bosses
+	MaxHealth    int     `json:"-"`
 	StunnedUntil float64 `json:"-"`
+	IsBoss       bool    `json:"isBoss"`
+	SpeedMod     float64 `json:"-"` // Individual speed modifier
 }
 
 type Game struct {
@@ -76,6 +88,15 @@ type Game struct {
 	gameTime   float64
 	spawnTimer float64
 	difficulty float64 // Increases over time
+
+	// Roguelite additions
+	endlessMode   bool        // If true, no timer - wave-based
+	currentWave   int         // Current wave number (endless mode)
+	waveTimer     float64     // Time until next wave
+	runConfig     *RunConfig  // Active run modifiers
+	combinedMods  RunModifier // Pre-calculated combined modifiers
+	bossActive    bool        // Is there a boss currently spawned?
+	resourceTimer float64     // Timer for resource spawning
 }
 
 func NewGame(store *data.Store) *Game {
@@ -136,30 +157,79 @@ func (g *Game) startGame() {
 	g.difficulty = 1.0
 	g.spawnTimer = 5.0 // First spawn in 5 seconds
 	g.entities = make([]*Entity, 0)
+	g.resourceTimer = 3.0 // Resource spawn timer
 
-	// Spawn initial resources
-	for i := 0; i < 10; i++ {
+	// Initialize run config if not set
+	if g.runConfig == nil {
+		g.runConfig = &RunConfig{
+			ActiveModifiers: []ModifierID{},
+			EndlessMode:     false,
+			SelectedClass:   ClassSurvivor,
+		}
+	}
+
+	// Calculate combined modifiers
+	g.combinedMods = g.runConfig.GetCombinedModifiers()
+	g.endlessMode = g.runConfig.EndlessMode
+	g.currentWave = 0
+	g.waveTimer = 10.0 // First wave in 10 seconds (endless mode)
+	g.bossActive = false
+
+	// Spawn initial resources (affected by modifiers)
+	resourceCount := int(10.0 * g.combinedMods.ResourceMod)
+	for i := 0; i < resourceCount; i++ {
 		g.spawnResource(ResourceLightOrb)
 	}
-	for i := 0; i < 5; i++ {
+	for i := 0; i < int(5.0*g.combinedMods.ResourceMod); i++ {
 		g.spawnResource(ResourceBattery)
 	}
 	for i := 0; i < 3; i++ {
 		g.spawnResource(ResourceFlare)
 	}
 
-	// Reset all players
+	// Reset all players with meta-progression bonuses
 	for p := range g.players {
-		p.Health = MaxHealth
-		p.Sanity = MaxSanity
+		// Load player's meta-progression
+		meta := LoadPlayerMeta(g.store, p.UserID)
+
+		// Get character class
+		class := CharacterClasses[g.runConfig.SelectedClass]
+		if !meta.UnlockedClasses[g.runConfig.SelectedClass] {
+			class = CharacterClasses[ClassSurvivor] // Fallback to default
+		}
+		p.SelectedClass = g.runConfig.SelectedClass
+
+		// Calculate max stats with upgrades and class modifiers
+		baseMaxHealth := float64(MaxHealth) * (1.0 + meta.GetUpgradeBonus(UpgradeMaxHealth))
+		p.MaxHealth = baseMaxHealth * class.HealthMod
+		p.Health = p.MaxHealth
+
+		baseMaxSanity := float64(MaxSanity) * (1.0 + meta.GetUpgradeBonus(UpgradeMaxSanity))
+		p.MaxSanity = baseMaxSanity * class.SanityMod
+		p.Sanity = p.MaxSanity
+
+		// Calculate derived stats
+		p.BaseLightRadius = 3.0 * (1.0 + meta.GetUpgradeBonus(UpgradeLightRadius)) * class.LightMod
+		p.LightRadius = p.BaseLightRadius
+		p.SanityRegenMod = (1.0 + meta.GetUpgradeBonus(UpgradeSanityRegen)) * class.SanityRegenMod
+		p.SpeedMod = (1.0 + meta.GetUpgradeBonus(UpgradeMoveSpeed)) * class.SpeedMod
+		p.DamageResist = meta.GetUpgradeBonus(UpgradeDamageResist)
+		p.FlareDuration = 15.0 * class.FlareDuration
+
+		// Starting flares from upgrades + class
+		startFlares := int(meta.GetUpgradeBonus(UpgradeStartFlares)*100/100) + class.StartingFlares
+		p.AvailableFlares = startFlares
+
 		p.Score = 0
+		p.Kills = 0
 		p.Alive = true
-		p.Alive = true
-		p.AvailableFlares = 0
 		p.HasFlare = false
 		p.FlareTime = 0
-		p.LightRadius = 3.0 // Base visibility
 		p.Pos = Vec2{X: rand.Float64()*20 - 10, Y: rand.Float64()*20 - 10}
+
+		// Increment total runs
+		meta.TotalRuns++
+		SavePlayerMeta(g.store, p.UserID, meta)
 	}
 }
 
@@ -197,6 +267,28 @@ func (g *Game) spawnDemogorgon() {
 	g.entities = append(g.entities, e)
 }
 
+func (g *Game) spawnBoss(health int) {
+	// Boss spawns further out
+	angle := rand.Float64() * 2 * math.Pi
+	dist := 40.0
+	pos := Vec2{
+		X: math.Cos(angle) * dist,
+		Y: math.Sin(angle) * dist,
+	}
+
+	e := &Entity{
+		ID:        "boss_" + uuid.NewString()[:8],
+		Type:      "demogorgon_boss",
+		Pos:       pos,
+		Active:    true,
+		Health:    health,
+		MaxHealth: health,
+		IsBoss:    true,
+		SpeedMod:  0.8, // Slower but tanky
+	}
+	g.entities = append(g.entities, e)
+}
+
 func (g *Game) update(dt float64) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
@@ -208,25 +300,70 @@ func (g *Game) update(dt float64) {
 	g.gameTime += dt
 	g.difficulty = 1.0 + g.gameTime/60.0 // Increase difficulty over time
 
-	// Check game end
-	if g.gameTime >= GameDuration {
+	// GAME END CHECK
+	if !g.endlessMode && g.gameTime >= GameDuration {
 		g.endGame()
 		return
 	}
 
-	// Spawn demogorgons
-	g.spawnTimer -= dt
-	if g.spawnTimer <= 0 {
-		demoCount := int(g.difficulty) // More demos as game progresses
-		for i := 0; i < demoCount; i++ {
-			g.spawnDemogorgon()
+	// WAVE SYSTEM (Endless Only)
+	if g.endlessMode {
+		g.waveTimer -= dt
+		if g.waveTimer <= 0 && !g.bossActive {
+			g.currentWave++
+			wave := GenerateWave(g.currentWave)
+
+			// Spawn wave enemies
+			count := int(float64(wave.DemogorgonCount) * g.combinedMods.SpawnRateMod)
+			for i := 0; i < count; i++ {
+				g.spawnDemogorgon()
+			}
+
+			if wave.HasBoss {
+				g.spawnBoss(wave.BossHealth)
+				g.bossActive = true
+			}
+
+			// Reset timer for next wave
+			g.waveTimer = 30.0 // New wave every 30s
+
+			// Heal players slightly on wave complete
+			for p := range g.players {
+				if p.Alive {
+					p.Health = math.Min(p.MaxHealth, p.Health+20)
+					p.Sanity = math.Min(p.MaxSanity, p.Sanity+30)
+				} else {
+					// Revive dead players
+					p.Alive = true
+					p.Health = p.MaxHealth * 0.4
+					p.Sanity = p.MaxSanity * 0.4
+					p.Pos = Vec2{X: rand.Float64()*10 - 5, Y: rand.Float64()*10 - 5}
+				}
+			}
 		}
-		g.spawnTimer = DemoSpawnInterval / g.difficulty
+	} else {
+		// CLASSIC SPAWN LOGIC
+		g.spawnTimer -= dt
+		if g.spawnTimer <= 0 {
+			demoCount := int(g.difficulty * g.combinedMods.SpawnRateMod)
+			for i := 0; i < demoCount; i++ {
+				g.spawnDemogorgon()
+			}
+			g.spawnTimer = (DemoSpawnInterval / g.difficulty)
+		}
 	}
 
-	// Occasionally spawn resources
-	if rand.Float64() < 0.01 { // ~1% chance per tick
-		g.spawnResource(ResourceLightOrb)
+	// RESOURCE SPAWNING
+	g.resourceTimer -= dt
+	if g.resourceTimer <= 0 {
+		// ~10s per resource batch, modified by config
+		if rand.Float64() < 0.5*g.combinedMods.ResourceMod {
+			g.spawnResource(ResourceLightOrb)
+		}
+		if rand.Float64() < 0.2*g.combinedMods.ResourceMod {
+			g.spawnResource(ResourceBattery)
+		}
+		g.resourceTimer = 10.0 / g.combinedMods.ResourceMod
 	}
 
 	// Update players
@@ -256,22 +393,27 @@ func (g *Game) update(dt float64) {
 			p.FlareTime -= dt
 			if p.FlareTime <= 0 {
 				p.HasFlare = false
-				p.LightRadius = 3.0
+				p.LightRadius = p.BaseLightRadius
 			}
 		}
 
 		// Sanity drain/restore
 		if nearLight {
-			p.Sanity = math.Min(MaxSanity, p.Sanity+LightRestoreRate*dt)
-			p.LightRadius = 5.0
+			regen := LightRestoreRate * p.SanityRegenMod * g.combinedMods.LightRestoreMod
+			p.Sanity = math.Min(p.MaxSanity, p.Sanity+regen*dt)
+			p.LightRadius = 6.0 // Boosted light radius when safe
 		} else {
-			p.Sanity = math.Max(0, p.Sanity-SanityDrainRate*dt*g.difficulty)
-			p.LightRadius = math.Max(1.5, 3.0*(p.Sanity/MaxSanity))
+			drain := SanityDrainRate * g.difficulty * g.combinedMods.SanityDrainMod
+			p.Sanity = math.Max(0, p.Sanity-drain*dt)
+			// Dimming light mechanic
+			ratio := p.Sanity / p.MaxSanity
+			p.LightRadius = math.Max(1.0, p.BaseLightRadius*ratio)
 		}
 
 		// Health drain when insane
 		if p.Sanity <= 0 {
-			p.Health -= HealthDrainRate * dt * g.difficulty
+			drain := HealthDrainRate * g.difficulty * (1.0 - p.DamageResist)
+			p.Health -= drain * dt
 			if p.Health <= 0 {
 				p.Alive = false
 				p.Health = 0
@@ -279,7 +421,7 @@ func (g *Game) update(dt float64) {
 		}
 
 		// Survival score
-		p.Score += int(dt * 10 * g.difficulty)
+		p.Score += int(dt * 10 * g.difficulty * g.combinedMods.EmberMultiplier)
 	}
 
 	// Game over if everyone dead
@@ -288,9 +430,9 @@ func (g *Game) update(dt float64) {
 		return
 	}
 
-	// Update demogorgons - chase nearest player
+	// Update demogorgons
 	for _, e := range g.entities {
-		if e.Type != "demogorgon" || !e.Active {
+		if (e.Type != "demogorgon" && e.Type != "demogorgon_boss") || !e.Active {
 			continue
 		}
 
@@ -314,26 +456,52 @@ func (g *Game) update(dt float64) {
 		}
 
 		if nearestPlayer != nil {
-			// Move towards player (slower if player has flare)
-			speed := 3.0 * g.difficulty
-			if nearestPlayer.HasFlare && nearestPlayer.FlareTime > 0 {
-				speed = 1.0 // Demogorgons fear light
+			// Move towards player
+			// Base speed modified by difficulty, run mods, and entity type
+			speed := 3.0 * g.difficulty * g.combinedMods.EnemySpeedMod
+			if e.IsBoss {
+				speed *= 1.2
+			}
+			if e.SpeedMod > 0 {
+				speed *= e.SpeedMod
+			}
+
+			// Fear light mechanic
+			if nearestPlayer.HasFlare && nearestPlayer.FlareTime > 0 && !e.IsBoss {
+				speed = -2.0 // Run away!
 			}
 
 			dx := nearestPlayer.Pos.X - e.Pos.X
 			dy := nearestPlayer.Pos.Y - e.Pos.Y
 			dist := math.Sqrt(dx*dx + dy*dy)
-			if dist > 0 {
-				e.Pos.X += (dx / dist) * speed * dt
-				e.Pos.Y += (dy / dist) * speed * dt
-			}
 
-			// Attack if close
-			if dist < 2 {
-				nearestPlayer.Health -= 20 * dt * g.difficulty
-				if nearestPlayer.Health <= 0 {
-					nearestPlayer.Alive = false
-					nearestPlayer.Health = 0
+			// Detect player check
+			detectionRange := 20.0 * g.combinedMods.EnemySightMod
+			if dist < detectionRange {
+				if dist > 0 {
+					e.Pos.X += (dx / dist) * speed * dt
+					e.Pos.Y += (dy / dist) * speed * dt
+				}
+
+				// Attack
+				attackRange := 2.0
+				if e.IsBoss {
+					attackRange = 3.5
+				}
+
+				if dist < attackRange {
+					damage := 20.0 * g.difficulty
+					if e.IsBoss {
+						damage = 40.0
+					}
+					// Apply player resistance
+					damage *= (1.0 - nearestPlayer.DamageResist)
+
+					nearestPlayer.Health -= damage * dt
+					if nearestPlayer.Health <= 0 {
+						nearestPlayer.Alive = false
+						nearestPlayer.Health = 0
+					}
 				}
 			}
 		}
@@ -391,6 +559,24 @@ func (g *Game) endGame() {
 			exp += 200
 		}
 
+		// Calculate Roguelite Currency (Ember Shards)
+		shardMultiplier := g.combinedMods.EmberMultiplier
+		shards := CalculateEmberShards(g.gameTime, p.Score, p.Kills, p.Alive, shardMultiplier)
+
+		// Update backend stats
+		g.store.AdjustEmberShards(p.UserID, shards)
+
+		// Update Meta Stats
+		meta := LoadPlayerMeta(g.store, p.UserID)
+		if g.gameTime > meta.BestSurvival {
+			meta.BestSurvival = g.gameTime
+		}
+		meta.TotalKills += p.Kills
+		if g.endlessMode && g.currentWave > meta.HighestWave {
+			meta.HighestWave = g.currentWave
+		}
+		SavePlayerMeta(g.store, p.UserID, meta)
+
 		// Use centralized result processor to handle Level Up logic correctly
 		err := g.store.ProcessGameResult(p.UserID, trophies, coins, exp)
 		if err != nil {
@@ -407,6 +593,7 @@ func (g *Game) endGame() {
 	g.broadcastJSON(map[string]interface{}{
 		"type":     "game_over",
 		"survived": g.gameTime,
+		"wave":     g.currentWave, // Send reached wave
 	})
 }
 
@@ -498,6 +685,57 @@ func (g *Game) HandleWS(w http.ResponseWriter, r *http.Request) {
 			nick = u.Nickname
 		}
 	}
+
+	// Parse Roguelite Params
+	classID := ClassID(r.URL.Query().Get("class"))
+	if classID == "" {
+		classID = ClassSurvivor
+	}
+
+	modsStr := r.URL.Query().Get("mods")
+	endless := r.URL.Query().Get("endless") == "true"
+
+	g.mu.Lock()
+	// Host Logic: First player sets the run modifiers
+	// (Check against <= 1 because this player is not registered yet, but might be re-connecting?)
+	// Actually register channel logic handles the counting. But here we can check len(g.players)
+	if len(g.players) == 0 {
+		if modsStr != "" {
+			// simplistic split by comma
+			// would need strings package but trying to avoid new imports if possible
+			// actually we can just pass json since valid ModifierIDs don't have commas
+			// let's assume javascript joins with comma
+			// simple manual split or rely on one mod for now?
+			// Let's assume frontend sends valid data
+			// Actually strings import is likely already there or easy to add.
+			// But let's cheat and assume proper strings.Split wrapper isn't needed if we assume frontend sends correct IDs.
+			// Actually, let's just use strings.Split since "strings" is a standard lib.
+		}
+
+		// Re-initialize run config
+		g.runConfig = &RunConfig{
+			ActiveModifiers: []ModifierID{}, // Fill this
+			EndlessMode:     endless,
+			SelectedClass:   classID, // This might be ignored in favor of individual class
+		}
+
+		// quick parse mods
+		currentMod := ""
+		for _, char := range modsStr {
+			if char == ',' {
+				if currentMod != "" {
+					g.runConfig.ActiveModifiers = append(g.runConfig.ActiveModifiers, ModifierID(currentMod))
+				}
+				currentMod = ""
+			} else {
+				currentMod += string(char)
+			}
+		}
+		if currentMod != "" {
+			g.runConfig.ActiveModifiers = append(g.runConfig.ActiveModifiers, ModifierID(currentMod))
+		}
+	}
+	g.mu.Unlock()
 
 	p := &Player{
 		ID:          "u_" + uuid.NewString()[:8],
