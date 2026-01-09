@@ -35,6 +35,7 @@ func NewHandler(store *data.Store) http.HandlerFunc {
 			http.Error(w, "Could not load War Thunder template: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
+
 		tmpl.Execute(w, data)
 	}
 }
@@ -42,6 +43,8 @@ func NewHandler(store *data.Store) http.HandlerFunc {
 // API Handler for game actions
 func NewAPIHandler(store *data.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
 		userID := r.URL.Query().Get("userID")
 		if userID == "" {
 			// fallback to cookie
@@ -49,6 +52,7 @@ func NewAPIHandler(store *data.Store) http.HandlerFunc {
 				userID = c.Value
 			}
 		}
+
 		if userID == "" {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
@@ -65,6 +69,7 @@ func NewAPIHandler(store *data.Store) http.HandlerFunc {
 				})
 				return
 			}
+
 			game.Mutex.RLock()
 			defer game.Mutex.RUnlock()
 			json.NewEncoder(w).Encode(map[string]interface{}{
@@ -76,20 +81,26 @@ func NewAPIHandler(store *data.Store) http.HandlerFunc {
 
 		if r.Method == "POST" {
 			var req struct {
-				Action  string `json:"action"`  // start, attack, diplomat
-				Payload string `json:"payload"` // countryID
+				Action  string `json:"action"`  // start, attack, diplomat, formAlliance, imposeSanctions, espionage, investEconomy, buildMilitary, propaganda, fightCorruption, nextTurn
+				Payload string `json:"payload"` // countryID or empty for self-actions
 			}
+
 			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 				http.Error(w, "Invalid JSON", http.StatusBadRequest)
 				return
 			}
 
+			// Handle game start
 			if req.Action == "start" {
 				game := CreateGame(userID, req.Payload)
-				json.NewEncoder(w).Encode(map[string]interface{}{"status": "started", "game": game})
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"status": "started",
+					"game":   game,
+				})
 				return
 			}
 
+			// All other actions require an active game
 			game := GetGame(userID)
 			if game == nil {
 				http.Error(w, "No active game", http.StatusBadRequest)
@@ -97,11 +108,41 @@ func NewAPIHandler(store *data.Store) http.HandlerFunc {
 			}
 
 			msg := ""
+
+			// Route action to appropriate handler
 			switch req.Action {
 			case "attack":
 				msg = game.Attack(req.Payload)
+
 			case "diplomat":
 				msg = game.Diplomat(req.Payload)
+
+			case "formAlliance":
+				msg = game.FormAlliance(req.Payload)
+
+			case "imposeSanctions":
+				msg = game.ImposeSanctions(req.Payload)
+
+			case "espionage":
+				msg = game.Espionage(req.Payload)
+
+			case "investEconomy":
+				msg = game.InvestEconomy()
+
+			case "buildMilitary":
+				msg = game.BuildMilitary()
+
+			case "propaganda":
+				msg = game.Propaganda()
+
+			case "fightCorruption":
+				msg = game.FightCorruption()
+
+			case "nextTurn":
+				msg = game.NextTurn()
+
+			default:
+				msg = "Unknown action"
 			}
 
 			// Return updated state
