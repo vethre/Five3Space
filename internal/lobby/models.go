@@ -161,6 +161,10 @@ type Translations struct {
 	FishingGameOver  string
 	FishingPlayAgain string
 	FishingExit      string
+
+	// War Thunder
+	WarThunderTitle string
+	WarThunderSub   string
 }
 
 type PageData struct {
@@ -290,6 +294,9 @@ var texts = map[string]Translations{
 		FishingGameOver:  "Frozen Over!",
 		FishingPlayAgain: "Fish Again",
 		FishingExit:      "Warm Up",
+
+		WarThunderTitle: "War Thunder",
+		WarThunderSub:   "Political Simulator",
 	},
 	"ua": {
 		LobbyName:   "П'ЯТЬ3 Ігро-Space",
@@ -406,6 +413,9 @@ var texts = map[string]Translations{
 		FishingGameOver:  "Ти замерз!",
 		FishingPlayAgain: "Знов за рибку",
 		FishingExit:      "Зігрітись",
+
+		WarThunderTitle: "War Thunder",
+		WarThunderSub:   "Політичний Симулятор",
 	},
 	"ru": {
 		LobbyName:   "ПЯТЬ3 Игро-Space",
@@ -522,5 +532,8 @@ var texts = map[string]Translations{
 		FishingGameOver:  "Ты замёрз!",
 		FishingPlayAgain: "Рыбачить ещё",
 		FishingExit:      "Греться",
+
+		WarThunderTitle: "War Thunder",
+		WarThunderSub:   "Политический Симулятор",
 	},
 }

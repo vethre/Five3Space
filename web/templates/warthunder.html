@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="{{.Lang}}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>War Thunder: Political Simulator</title>
+    <link rel="stylesheet" href="/static/css/warthunder.css">
+    <script>
+        window.USER_ID = "{{.UserID}}";
+    </script>
+</head>
+<body>
+    <div id="game-container">
+        <!-- View: Country Selection -->
+        <div id="view-selection" class="view active">
+            <header>
+                <h1>Global Command</h1>
+                <p>Select a nation to lead.</p>
+            </header>
+            <div id="map-container">
+                <!-- SVG Map will be injected here -->
+                <svg id="world-map" viewBox="0 0 1000 500">
+                    <!-- Simple approximated paths for major countries -->
+                    <!-- North America -->
+                    <path id="us" class="country" d="M150,120 L280,120 L290,180 L200,200 L140,160 Z" data-name="United States"></path>
+                    
+                    <!-- South America -->
+                    <path id="br" class="country" d="M280,300 L350,300 L380,380 L320,450 L280,350 Z" data-name="Brazil"></path>
+                    
+                    <!-- Europe -->
+                    <path id="uk" class="country" d="M460,110 L480,110 L480,140 L460,140 Z" data-name="United Kingdom"></path>
+                    <path id="fr" class="country" d="M460,150 L500,150 L500,180 L460,180 Z" data-name="France"></path>
+                    <path id="de" class="country" d="M500,140 L540,140 L540,170 L500,170 Z" data-name="Germany"></path>
+                    <path id="ua" class="country" d="M550,145 L600,145 L600,175 L550,175 Z" data-name="Ukraine"></path>
+                    
+                    <!-- Asia -->
+                    <path id="ru" class="country" d="M550,50 L900,50 L950,150 L600,140 Z" data-name="Russia"></path>
+                    <path id="cn" class="country" d="M650,180 L800,180 L800,250 L650,250 Z" data-name="China"></path>
+                    <path id="jp" class="country" d="M850,180 L880,180 L870,230 L840,220 Z" data-name="Japan"></path>
+                    
+                    <!-- Africa -->
+                    <path id="za" class="country" d="M500,400 L560,400 L550,450 L510,450 Z" data-name="South Africa"></path>
+                    <path id="mg" class="country" d="M580,380 L610,380 L600,430 L580,420 Z" data-name="Madagascar"></path>
+                </svg>
+                <div id="selection-tooltip" class="tooltip"></div>
+            </div>
+            <div id="selection-panel" class="hidden">
+                <h2 id="sel-name">Country Name</h2>
+                <div class="stats-grid">
+                    <div class="stat"><span>Population:</span> <span id="sel-pop">0</span></div>
+                    <div class="stat"><span>Economy:</span> <span id="sel-eco">0</span></div>
+                    <div class="stat"><span>Military:</span> <span id="sel-mil">0</span></div>
+                </div>
+                <button id="btn-start" class="primary-btn">ASSUME CONTROL</button>
+            </div>
+        </div>
+
+        <!-- View: Gameplay Dashboard -->
+        <div id="view-dashboard" class="view">
+            <aside class="sidebar">
+                <div class="profile-card">
+                    <div class="flag-icon" id="dashboard-flag"></div>
+                    <h2 id="dashboard-country">Country</h2>
+                    <div class="status-indicator">LEADER</div>
+                </div>
+                
+                <nav class="actions-nav">
+                    <button class="nav-btn active" data-tab="overview">Overview</button>
+                    <button class="nav-btn" data-tab="war">War Room</button>
+                    <button class="nav-btn" data-tab="diplomacy">Diplomacy</button>
+                </nav>
+
+                <div class="resources-panel">
+                    <h3>Resources</h3>
+                    <div class="res-row">
+                        <span>💰 Economy</span>
+                        <span id="res-economy">$0B</span>
+                    </div>
+                    <div class="res-row">
+                        <span>⚔️ Military</span>
+                        <span id="res-military">0</span>
+                    </div>
+                    <div class="res-row">
+                        <span>⚖️ Stability</span>
+                        <span id="res-stability">0%</span>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="main-content">
+                <div id="tab-overview" class="tab-content active">
+                    <h2>Recent Events</h2>
+                    <ul id="event-log" class="console-log">
+                        <!-- Events go here -->
+                    </ul>
+                </div>
+
+                <div id="tab-war" class="tab-content">
+                    <h2>War Room</h2>
+                    <div class="target-grid" id="war-targets">
+                        <!-- Attack targets go here -->
+                    </div>
+                </div>
+                
+                <div id="tab-diplomacy" class="tab-content">
+                    <h2>Diplomatic Channels</h2>
+                    <div class="target-grid" id="diplo-targets">
+                        <!-- Diplo targets go here -->
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <div id="notification-area"></div>
+
+    <script src="/static/js/warthunder.js"></script>
+</body>
+</html>

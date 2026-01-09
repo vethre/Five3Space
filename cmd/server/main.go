@@ -14,6 +14,7 @@ import (
 	"main/internal/presence"
 	"main/internal/slotix"
 	"main/internal/upsidedown"
+	"main/internal/warthunder"
 	"net/http"
 	"os"
 )
@@ -147,6 +148,8 @@ func main() {
 
 	http.HandleFunc("/express", lobby.NewExpressHandler(store))
 	http.HandleFunc("/fishing", lobby.NewFishingHandler(store))
+	http.HandleFunc("/warthunder", warthunder.NewHandler(store))
+	http.HandleFunc("/api/warthunder", warthunder.NewAPIHandler(store))
 
 	fs := http.FileServer(http.Dir("./web/static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))

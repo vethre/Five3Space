@@ -202,6 +202,11 @@ func renderLobby(w http.ResponseWriter, r *http.Request, store *data.Store) {
 			SafeGradient: template.CSS("linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%)"),
 			BtnText:      btn1, StatusText: stat1, URL: fmt.Sprintf("/fishing?lang=%s&userID=%s", lang, user.ID),
 		},
+		{
+			ID: "warthunder", Title: t.WarThunderTitle, Subtitle: t.WarThunderSub,
+			SafeGradient: template.CSS("linear-gradient(135deg, #4b6cb7 0%, #182848 100%)"),
+			BtnText:      btn1, StatusText: stat1, URL: fmt.Sprintf("/warthunder?lang=%s&userID=%s", lang, user.ID),
+		},
 	}
 
 	pageData := PageData{
